@@ -1,77 +1,92 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Settings, ExternalLink } from 'lucide-react';
+import { saveUserConfig } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export default function ConfigPage() {
   const [scriptUrl, setScriptUrl] = useState('');
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    const savedUrl = localStorage.getItem('googleScriptUrl');
-    if (savedUrl) {
-      setScriptUrl(savedUrl);
-    }
-  }, []);
-
-  const handleSave = async () => {
-    // Valider le format de l'URL
-    if (!scriptUrl.includes('script.google.com') || !scriptUrl.includes('/exec')) {
-      alert('⚠️ URL invalide. Elle doit ressembler à : https://script.google.com/macros/s/.../exec');
-      return;
-    }
-
-    // Enregistrer l'URL
-    localStorage.setItem('googleScriptUrl', scriptUrl);
-    
-    // Tester la connexion
-    setSaved(true);
-    
-    try {
-      const testUrl = scriptUrl + '?action=read&table=Parametres&callback=testCallback' + Date.now();
-      
-      await new Promise((resolve, reject) => {
-        const callbackName = 'testCallback' + Date.now();
-        const script = document.createElement('script');
-        const timeout = setTimeout(() => {
-          delete (window as any)[callbackName];
-          if (document.body.contains(script)) {
-            document.body.removeChild(script);
-          }
-          reject(new Error('Timeout'));
-        }, 10000);
-        
-        (window as any)[callbackName] = (data: any) => {
-          clearTimeout(timeout);
-          delete (window as any)[callbackName];
-          if (document.body.contains(script)) {
-            document.body.removeChild(script);
-          }
-          resolve(data);
-        };
-        
-        script.src = testUrl;
-        script.onerror = () => {
-          clearTimeout(timeout);
-          delete (window as any)[callbackName];
-          if (document.body.contains(script)) {
-            document.body.removeChild(script);
-          }
-          reject(new Error('Erreur de chargement'));
-        };
-        document.body.appendChild(script);
-      });
-      
-      alert('✅ Connexion réussie ! Redirection vers le dashboard...');
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1000);
-    } catch (error) {
-      setSaved(false);
-      alert('❌ Impossible de se connecter au Google Script. Vérifiez :\n\n1. L\'URL est correcte\n2. Le script est bien déployé\n3. Les permissions sont : "Exécuter en tant que: Moi" et "Accès: Tout le monde"');
-      console.error('Erreur de test:', error);
+  const [userEmail, setUserEmail] = useState<string>('');
+useEffect(() => {
+  const getUserEmail = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.email) {
+      setUserEmail(session.user.email);
     }
   };
+  getUserEmail();
+  
+  const savedUrl = localStorage.getItem('googleScriptUrl');
+  if (savedUrl) {
+    setScriptUrl(savedUrl);
+  }
+}, []);
 
+const handleSave = async () => {
+  if (!scriptUrl.includes('script.google.com') || !scriptUrl.includes('/exec')) {
+    alert('⚠️ URL invalide. Elle doit ressembler à : https://script.google.com/macros/s/.../exec');
+    return;
+  }
+
+  if (!userEmail) {
+    alert('⚠️ Email utilisateur non trouvé. Veuillez vous reconnecter.');
+    return;
+  }
+
+  setSaved(true);
+  
+  try {
+    const testUrl = scriptUrl + '?action=read&table=Parametres&callback=testCallback' + Date.now();
+    
+    await new Promise((resolve, reject) => {
+      const callbackName = 'testCallback' + Date.now();
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => {
+        delete (window as any)[callbackName];
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+        reject(new Error('Timeout'));
+      }, 10000);
+      
+      (window as any)[callbackName] = (data: any) => {
+        clearTimeout(timeout);
+        delete (window as any)[callbackName];
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+        resolve(data);
+      };
+      
+      script.src = testUrl;
+      script.onerror = () => {
+        clearTimeout(timeout);
+        delete (window as any)[callbackName];
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+        reject(new Error('Erreur de chargement'));
+      };
+      document.body.appendChild(script);
+    });
+    
+    // Sauvegarder dans Supabase
+    await saveUserConfig(userEmail, scriptUrl);
+    
+    // Sauvegarder aussi en local
+    localStorage.setItem('googleScriptUrl', scriptUrl);
+    
+    alert('✅ Configuration sauvegardée ! Redirection...');
+    setTimeout(() => {
+      window.location.href = '/gestion';
+    }, 1000);
+  } catch (error) {
+    setSaved(false);
+    alert('❌ Impossible de se connecter au Google Script. Vérifiez :\n\n1. L\'URL est correcte\n2. Le script est bien déployé\n3. Les permissions sont : "Exécuter en tant que: Moi" et "Accès: Tout le monde"');
+    console.error('Erreur de test:', error);
+  }
+};
   const testConnection = async () => {
     if (!scriptUrl.trim()) {
       alert('⚠️ Veuillez entrer une URL d\'abord');

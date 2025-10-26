@@ -42,7 +42,7 @@ import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
 import { Categorie } from '@/types';
 import { chargerCategories,sauvegarderCategorie,supprimerCategorie} from '@/lib/api';
-import { ConfigPage} from '@app/Config/Page';
+import { ConfigPage} from '@/app/Config/Page';
 
 // Icônes
 import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X } from 'lucide-react';

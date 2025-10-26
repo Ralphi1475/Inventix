@@ -73,7 +73,7 @@ export default function GestionApp() {
 			const scriptUrl = localStorage.getItem('googleScriptUrl');
 			if (!scriptUrl) {
 				// Pas d'URL configurée, rediriger vers la config
-				window.location.href = '/config';
+				window.location.href = '/Conf2';
 				return;
 			}
 			}

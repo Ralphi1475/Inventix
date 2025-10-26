@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Edit2, Trash2, RefreshCw } from 'lucide-react'; // ✅ Ajout RefreshCw
+import { Plus, Search, Edit2, Trash2, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { Article, Categorie } from '@/types';
 import { ArticleForm } from './ArticleForm';
 
@@ -10,7 +10,7 @@ interface ArticlesProps {
   setArticles: React.Dispatch<React.SetStateAction<Article[]>>;
   onSave: (article: Article, action: 'create' | 'update') => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onRefresh: () => Promise<void>; // ✅ Ajout
+  onRefresh: () => Promise<void>;
 }
 
 export function Articles({ articles, categories, setArticles, onSave, onDelete, onRefresh }: ArticlesProps) {
@@ -18,7 +18,7 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategorie, setFilterCategorie] = useState('');
-  const [isRefreshing, setIsRefreshing] = useState(false); // ✅ État de chargement
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const filteredArticles = useMemo(() => {
     if (!Array.isArray(articles)) return [];
@@ -32,7 +32,6 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
     });
   }, [articles, searchTerm, filterCategorie]);
 
-  // ✅ Fonction de refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -71,7 +70,6 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Articles</h2>
         <div className="flex space-x-2">
-          {/* ✅ Bouton Refresh */}
           <button 
             onClick={handleRefresh} 
             disabled={isRefreshing}
@@ -108,6 +106,7 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
+                <th className="p-3 text-left">Image</th> {/* ✅ Nouvelle colonne */}
                 <th className="p-3 text-left">N°</th>
                 <th className="p-3 text-left">Catégorie</th>
                 <th className="p-3 text-left">Nom</th>
@@ -121,11 +120,28 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
             <tbody>
               {filteredArticles.map(article => (
                 <tr key={article.id} className="border-b hover:bg-gray-50">
+                  {/* ✅ Cellule image */}
+                  <td className="p-3">
+                    {article.image ? (
+                      <img 
+                        src={article.image} 
+                        alt={article.nom} 
+                        className="w-12 h-12 object-contain rounded border"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 flex items-center justify-center text-gray-400">
+                        <ImageIcon size={20} />
+                      </div>
+                    )}
+                  </td>
                   <td className="p-3 font-mono">{article.numero}</td>
                   <td className="p-3"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">{article.categorie}</span></td>
                   <td className="p-3 font-medium">{article.nom}</td>
                   <td className="p-3">{article.prixAchat.toFixed(2)} €</td>
-                  <td className="p-3 font-bold">{article.prixVenteTTC?.toFixed(2)} €</td>
+                  <td className="p-3 font-bold">{(article.prixVenteTTC ?? 0).toFixed(2)} €</td>
                   <td className="p-3 text-sm">{article.unite}</td>
                   <td className="p-3"><span className={`font-bold ${article.stock < 10 ? 'text-red-600' : 'text-green-600'}`}>{article.stock}</span></td>
                   <td className="p-3">

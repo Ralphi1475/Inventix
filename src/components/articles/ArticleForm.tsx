@@ -1,15 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Article, Categorie } from '@/types';
-
-// ✅ Import de la fonction utilitaire pour récupérer l'URL du script
-const getGoogleScriptUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    const url = localStorage.getItem('googleScriptUrl');
-    return url || '';
-  }
-  return '';
-};
+import { uploadImage } from '@/lib/api';
 
 interface ArticleFormProps {
   article: Article | null;
@@ -51,44 +43,21 @@ export function ArticleForm({ article, categories, onSubmit, onCancel }: Article
       return;
     }
 
+    // Limite de taille : 2 MB
+    if (file.size > 2 * 1024 * 1024) {
+      alert('⚠️ L\'image est trop volumineuse (max 2 MB).\nVeuillez choisir une image plus petite.');
+      return;
+    }
+
     setUploading(true);
 
     try {
-      const scriptUrl = getGoogleScriptUrl();
-      if (!scriptUrl) {
-        alert('⚠️ URL du Google Script non configurée.\nAllez dans Configuration pour la définir.');
-        return;
-      }
-
-      // Lire le fichier comme ArrayBuffer
-      const arrayBuffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-
-      // Convertir en chaîne binaire (requis par Google Apps Script)
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-
-      // Appel POST vers le script avec action=uploadImage
-      const response = await fetch(`${scriptUrl}?action=uploadImage`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': file.type,
-        },
-        body: binary,
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setFormData(prev => ({ ...prev, image: result.url }));
-      } else {
-        alert('❌ Erreur lors de l’upload :\n' + (result.error || 'Erreur inconnue'));
-      }
+      const imageUrl = await uploadImage(file);
+      setFormData(prev => ({ ...prev, image: imageUrl }));
+      alert('✅ Image uploadée avec succès !');
     } catch (err) {
       console.error('Erreur upload:', err);
-      alert('⚠️ Une erreur est survenue lors de l’upload.\nVérifiez votre connexion et les permissions du script.');
+      alert('❌ Erreur lors de l\'upload de l\'image.\n\n' + (err instanceof Error ? err.message : 'Erreur inconnue'));
     } finally {
       setUploading(false);
     }
@@ -147,17 +116,21 @@ export function ArticleForm({ article, categories, onSubmit, onCancel }: Article
             <textarea value={formData.description} onChange={(e) => handleChange('description', e.target.value)} rows={3} className="w-full px-3 py-2 border rounded-lg" />
           </div>
 
-          {/* ✅ Section Upload Image */}
           <div>
-            <label className="block text-sm font-medium mb-1">Image de l'article</label>
+            <label className="block text-sm font-medium mb-1">Image de l&apos;article</label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               onChange={handleImageUpload}
               className="w-full px-3 py-2 border rounded-lg"
               disabled={uploading}
             />
-            {uploading && <p className="text-sm text-blue-600 mt-1">Upload en cours...</p>}
+            {uploading && (
+              <div className="flex items-center space-x-2 mt-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <p className="text-sm text-blue-600">Upload en cours...</p>
+              </div>
+            )}
             {formData.image && (
               <div className="mt-2">
                 <img 
@@ -165,6 +138,12 @@ export function ArticleForm({ article, categories, onSubmit, onCancel }: Article
                   alt="Aperçu" 
                   className="max-w-32 max-h-32 object-contain border rounded shadow-sm" 
                 />
+                <button
+                  onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                  className="mt-2 text-sm text-red-600 hover:text-red-800"
+                >
+                  Supprimer l&apos;image
+                </button>
               </div>
             )}
           </div>

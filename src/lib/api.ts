@@ -503,47 +503,33 @@ export const supprimerMouvement = async (mouvementId: string) => {
   }
 };
 /**
- * Upload une image vers Google Drive via Apps Script
+ * Upload une image via ImgBB (via API Route Next.js)
  */
 export const uploadImage = async (file: File): Promise<string> => {
   try {
     console.log('📤 Upload image:', file.name, file.size, 'bytes');
     
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = async () => {
-        try {
-          const base64Data = reader.result as string;
-          const fileName = `art_img_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-          
-          console.log('📦 Préparation upload, taille base64:', base64Data.length);
-          
-          // Utiliser fetchJSONP pour éviter CORS
-          const result = await fetchJSONP(
-            `?action=uploadImage&imageData=${encodeURIComponent(base64Data)}&fileName=${encodeURIComponent(fileName)}`
-          );
-          
-          if (result.success) {
-            console.log('✅ Image uploadée:', result.url);
-            resolve(result.url);
-          } else {
-            throw new Error(result.error || 'Erreur upload');
-          }
-        } catch (error) {
-          console.error('❌ Erreur upload:', error);
-          reject(error);
-        }
-      };
-      
-      reader.onerror = () => {
-        const error = new Error('Erreur lecture fichier');
-        console.error('❌', error);
-        reject(error);
-      };
-      
-      reader.readAsDataURL(file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      body: formData,
     });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur upload');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log('✅ Image uploadée:', result.url);
+      return result.url;
+    } else {
+      throw new Error(result.error || 'Erreur upload');
+    }
   } catch (error) {
     console.error('❌ Erreur uploadImage:', error);
     throw error;

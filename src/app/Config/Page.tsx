@@ -13,13 +13,116 @@ export default function ConfigPage() {
     }
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Valider le format de l'URL
+    if (!scriptUrl.includes('script.google.com') || !scriptUrl.includes('/exec')) {
+      alert('⚠️ URL invalide. Elle doit ressembler à : https://script.google.com/macros/s/.../exec');
+      return;
+    }
+
+    // Enregistrer l'URL
     localStorage.setItem('googleScriptUrl', scriptUrl);
+    
+    // Tester la connexion
     setSaved(true);
-    setTimeout(() => {
+    
+    try {
+      const testUrl = scriptUrl + '?action=read&table=Parametres&callback=testCallback' + Date.now();
+      
+      await new Promise((resolve, reject) => {
+        const callbackName = 'testCallback' + Date.now();
+        const script = document.createElement('script');
+        const timeout = setTimeout(() => {
+          delete (window as any)[callbackName];
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+          reject(new Error('Timeout'));
+        }, 10000);
+        
+        (window as any)[callbackName] = (data: any) => {
+          clearTimeout(timeout);
+          delete (window as any)[callbackName];
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+          resolve(data);
+        };
+        
+        script.src = testUrl;
+        script.onerror = () => {
+          clearTimeout(timeout);
+          delete (window as any)[callbackName];
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+          reject(new Error('Erreur de chargement'));
+        };
+        document.body.appendChild(script);
+      });
+      
+      alert('✅ Connexion réussie ! Redirection vers le dashboard...');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
+    } catch (error) {
       setSaved(false);
-      window.location.href = '/';
-    }, 2000);
+      alert('❌ Impossible de se connecter au Google Script. Vérifiez :\n\n1. L\'URL est correcte\n2. Le script est bien déployé\n3. Les permissions sont : "Exécuter en tant que: Moi" et "Accès: Tout le monde"');
+      console.error('Erreur de test:', error);
+    }
+  };
+
+  const testConnection = async () => {
+    if (!scriptUrl.trim()) {
+      alert('⚠️ Veuillez entrer une URL d\'abord');
+      return;
+    }
+
+    if (!scriptUrl.includes('script.google.com') || !scriptUrl.includes('/exec')) {
+      alert('⚠️ URL invalide. Elle doit ressembler à : https://script.google.com/macros/s/.../exec');
+      return;
+    }
+
+    try {
+      const testUrl = scriptUrl + '?action=read&table=Parametres&callback=testCallback' + Date.now();
+      
+      await new Promise((resolve, reject) => {
+        const callbackName = 'testCallback' + Date.now();
+        const script = document.createElement('script');
+        const timeout = setTimeout(() => {
+          delete (window as any)[callbackName];
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+          reject(new Error('Timeout'));
+        }, 10000);
+        
+        (window as any)[callbackName] = (data: any) => {
+          clearTimeout(timeout);
+          delete (window as any)[callbackName];
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+          resolve(data);
+        };
+        
+        script.src = testUrl;
+        script.onerror = () => {
+          clearTimeout(timeout);
+          delete (window as any)[callbackName];
+          if (document.body.contains(script)) {
+            document.body.removeChild(script);
+          }
+          reject(new Error('Erreur de chargement'));
+        };
+        document.body.appendChild(script);
+      });
+      
+      alert('✅ Connexion réussie ! Vous pouvez maintenant enregistrer la configuration.');
+    } catch (error) {
+      alert('❌ Échec de la connexion. Vérifiez :\n\n1. L\'URL est correcte et se termine par /exec\n2. Le script est bien déployé\n3. Permissions : "Exécuter en tant que: Moi" et "Accès: Tout le monde"\n4. Votre connexion Internet');
+      console.error('Erreur de test:', error);
+    }
   };
 
   const TEMPLATE_SHEET_ID = '1hybDHrIclQYeVHAGmrxIv26fP7b1TVsGuJgq172ClRw';
@@ -140,7 +243,7 @@ export default function ConfigPage() {
               <div className="flex-1">
                 <h2 className="text-2xl font-bold mb-3 text-blue-900">Créer votre Google Sheet</h2>
                 <p className="text-gray-700 mb-4">Cliquez sur le bouton pour créer une copie du Google Sheet template.</p>
-                <a href={templateLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md">
+                <a href={templateLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md transition-all">
                   <ExternalLink size={20} />
                   <span>Créer ma copie du Google Sheet</span>
                 </a>
@@ -170,8 +273,8 @@ export default function ConfigPage() {
                 <div className="mt-4 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto max-h-96">
                   <pre className="text-xs whitespace-pre-wrap font-mono">{googleScriptCode}</pre>
                 </div>
-                <button onClick={() => { navigator.clipboard.writeText(googleScriptCode); alert('Code copié !'); }} className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-bold">
-                  Copier le code
+                <button onClick={() => { navigator.clipboard.writeText(googleScriptCode); alert('✅ Code copié dans le presse-papier !'); }} className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-bold transition-all">
+                  📋 Copier le code
                 </button>
               </div>
             </div>
@@ -185,10 +288,10 @@ export default function ConfigPage() {
                 <ol className="list-decimal list-inside space-y-3 text-gray-700">
                   <li>Cliquez sur Déployer - Nouveau déploiement</li>
                   <li>Type : Application Web</li>
-                  <li className="font-bold text-green-700">Exécuter en tant que : Moi</li>
-                  <li className="font-bold text-green-700">Qui a accès : Tout le monde</li>
-                  <li>Déployer et autoriser</li>
-                  <li>Copiez URL du déploiement</li>
+                  <li className="font-bold text-green-700">⚠️ Exécuter en tant que : Moi</li>
+                  <li className="font-bold text-green-700">⚠️ Qui a accès : Tout le monde</li>
+                  <li>Déployer et autoriser toutes les permissions</li>
+                  <li className="font-bold">📋 Copiez l&apos;URL du déploiement (elle se termine par /exec)</li>
                 </ol>
               </div>
             </div>
@@ -198,16 +301,23 @@ export default function ConfigPage() {
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0 w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-xl">4</div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-3 text-orange-900">Configurer application</h2>
-                <label className="block text-sm font-bold mb-2 text-gray-700">URL de votre Google Apps Script :</label>
-                <input type="text" value={scriptUrl} onChange={(e) => setScriptUrl(e.target.value)} placeholder="https://script.google.com/macros/s/..." className="w-full px-4 py-3 border-2 border-orange-300 rounded-lg mb-4 focus:outline-none focus:border-orange-500" />
-                <button onClick={handleSave} disabled={!scriptUrl.trim()} className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg ${scriptUrl.trim() ? 'bg-orange-600 text-white hover:bg-orange-700 cursor-pointer' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
-                  {scriptUrl.trim() ? 'Enregistrer et démarrer' : 'Entrez URL du script'}
-                </button>
+                <h2 className="text-2xl font-bold mb-3 text-orange-900">Configurer l&apos;application</h2>
+                <label className="block text-sm font-bold mb-2 text-gray-700">Collez l&apos;URL de votre Google Apps Script ici :</label>
+                <input type="text" value={scriptUrl} onChange={(e) => setScriptUrl(e.target.value)} placeholder="https://script.google.com/macros/s/AKfycby.../exec" className="w-full px-4 py-3 border-2 border-orange-300 rounded-lg mb-4 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200" />
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button onClick={testConnection} disabled={!scriptUrl.trim()} className={`flex-1 py-3 rounded-lg font-bold transition-all ${scriptUrl.trim() ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
+                    🔍 Tester la connexion
+                  </button>
+                  <button onClick={handleSave} disabled={!scriptUrl.trim()} className={`flex-1 py-3 rounded-lg font-bold transition-all ${scriptUrl.trim() ? 'bg-orange-600 text-white hover:bg-orange-700 cursor-pointer' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
+                    💾 Enregistrer et démarrer
+                  </button>
+                </div>
+                
                 {saved && (
-                  <div className="mt-4 bg-green-100 border-2 border-green-500 text-green-800 p-4 rounded-lg">
-                    <p className="font-bold text-lg">Configuration enregistrée !</p>
-                    <p className="text-sm">Redirection en cours...</p>
+                  <div className="mt-4 bg-green-100 border-2 border-green-500 text-green-800 p-4 rounded-lg animate-pulse">
+                    <p className="font-bold text-lg">✅ Configuration enregistrée avec succès !</p>
+                    <p className="text-sm">Redirection vers le dashboard en cours...</p>
                   </div>
                 )}
               </div>
@@ -215,11 +325,24 @@ export default function ConfigPage() {
           </div>
 
           <div className="bg-red-50 border-l-4 border-red-500 rounded-lg shadow p-6">
-            <h3 className="font-bold text-red-900 text-xl mb-3">Sécurité</h3>
+            <h3 className="font-bold text-red-900 text-xl mb-3">⚠️ Sécurité et bonnes pratiques</h3>
             <ul className="list-disc list-inside space-y-2 text-gray-700">
-              <li>Ne partagez JAMAIS URL du Google Apps Script</li>
-              <li>Gardez votre Google Sheet privé</li>
-              <li>Noms des onglets doivent être exacts</li>
+              <li><strong>Ne partagez JAMAIS</strong> l&apos;URL de votre Google Apps Script</li>
+              <li>Gardez votre Google Sheet <strong>privé</strong></li>
+              <li>Les noms des onglets doivent être <strong>exactement</strong> : Articles, Client_Fournisseurs, Mouvements, Facturation, Achats, Categories, Parametres</li>
+              <li>Vous pouvez revenir sur cette page à tout moment pour modifier la configuration</li>
+            </ul>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-300 rounded-lg p-6">
+            <h3 className="font-bold text-blue-900 text-lg mb-2">💡 Besoin d&apos;aide ?</h3>
+            <p className="text-gray-700 text-sm mb-2">Si vous rencontrez des problèmes, vérifiez que :</p>
+            <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+              <li>L&apos;URL se termine bien par <code className="bg-gray-200 px-1 rounded">/exec</code></li>
+              <li>Les permissions du script sont correctes (Exécuter : Moi / Accès : Tout le monde)</li>
+              <li>Tous les 7 onglets existent dans votre Google Sheet</li>
+              <li>Les noms des onglets correspondent exactement (majuscules, underscores, etc.)</li>
+              <li>Vous avez autorisé toutes les permissions lors du déploiement</li>
             </ul>
           </div>
         </div>

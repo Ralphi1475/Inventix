@@ -1,13 +1,31 @@
 // /src/lib/api.ts
 import { Article, Contact, Mouvement, Parametres, FactureResume, Categorie } from '@/types';
 
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTrMkWeN31Eh81waVJ_IE9qPMHKcVzE9_nEIzHAEY0zhHD_Z7EkCys8lisyFvCSkby/exec';
+// ✅ Fonction pour obtenir l'URL depuis le localStorage
+const getGoogleScriptUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const url = localStorage.getItem('googleScriptUrl');
+    if (!url) {
+      console.warn('⚠️ URL Google Script non configurée');
+      return '';
+    }
+    return url;
+  }
+  return '';
+};
 
 /**
  * Fonction utilitaire pour effectuer des requêtes JSONP vers Google Apps Script
  */
-export const fetchJSONP = (url: string): Promise<any> => {
+export const fetchJSONP = (endpoint: string): Promise<any> => {
   return new Promise((resolve, reject) => {
+    const baseUrl = getGoogleScriptUrl();
+    
+    if (!baseUrl) {
+      reject(new Error('URL Google Script non configurée. Veuillez aller dans Configuration.'));
+      return;
+    }
+
     const callbackName = 'jsonpCallback' + Date.now();
     const script = document.createElement('script');
     (window as any)[callbackName] = (data: any) => {
@@ -15,7 +33,10 @@ export const fetchJSONP = (url: string): Promise<any> => {
       document.body.removeChild(script);
       resolve(data);
     };
-    script.src = url + '&callback=' + callbackName;
+    
+    const separator = endpoint.includes('?') ? '&' : '?';
+    script.src = baseUrl + endpoint + separator + 'callback=' + callbackName;
+    
     script.onerror = () => {
       delete (window as any)[callbackName];
       document.body.removeChild(script);
@@ -30,7 +51,7 @@ export const fetchJSONP = (url: string): Promise<any> => {
  */
 export const chargerDonnees = async () => {
   // Articles
-  const dataArticles = await fetchJSONP(`${GOOGLE_SCRIPT_URL}?action=read&table=Articles`);
+  const dataArticles = await fetchJSONP(`?action=read&table=Articles`);
   let articlesData: Article[] = [];
   if (dataArticles.success && dataArticles.data?.length > 1) {
     articlesData = dataArticles.data.slice(1).map((row: any[], index: number) => ({
@@ -51,7 +72,7 @@ export const chargerDonnees = async () => {
   }
 
   // Contacts (clients + fournisseurs)
-  const dataContacts = await fetchJSONP(`${GOOGLE_SCRIPT_URL}?action=read&table=Client_Fournisseurs`);
+  const dataContacts = await fetchJSONP(`?action=read&table=Client_Fournisseurs`);
   let clientsData: Contact[] = [], fournisseursData: Contact[] = [];
   if (dataContacts.success && dataContacts.data?.length > 1) {
     const contactsData = dataContacts.data.slice(1).map((row: any[]) => ({
@@ -74,7 +95,7 @@ export const chargerDonnees = async () => {
   }
 
   // Achats (doit venir APRÈS les fournisseurs pour remplir les noms)
-  const dataAchats = await fetchJSONP(`${GOOGLE_SCRIPT_URL}?action=read&table=Achats`);
+  const dataAchats = await fetchJSONP(`?action=read&table=Achats`);
   let achatsData: any[] = [];
   if (dataAchats.success && dataAchats.data?.length > 1) {
     achatsData = dataAchats.data.slice(1).map((row: any[]) => {
@@ -102,44 +123,43 @@ export const chargerDonnees = async () => {
   }
 
   // Mouvements
-  // Mouvements
-const dataMouvements = await fetchJSONP(`${GOOGLE_SCRIPT_URL}?action=read&table=Mouvements`);
-let mouvementsData: Mouvement[] = [];
-if (dataMouvements.success && dataMouvements.data?.length > 1) {
-  mouvementsData = dataMouvements.data.slice(1).map((row: any[]) => ({
-    id: row[0] ? String(row[0]) : String(Date.now() + Math.random()),
-    date: row[1] || '',
-    type: row[2] || '',
-    articleId: row[3] ? String(row[3]) : '',
-    quantite: parseFloat(row[4]) || 0,
-    clientId: row[5] ? String(row[5]) : undefined,
-    fournisseurId: row[6] ? String(row[6]) : undefined,
-    reference: row[7] || '',
-    modePaiement: row[8] || '',
-    nomArticle: row[9] || '',
-    prixUnitaire: parseFloat(row[10]) || 0,
-    emplacement: row[11] || '',     // ✅ Nouveau (colonne L)
-    nomClient: row[12] || ''         // ✅ Nouveau (colonne M)
-  }));
-}
+  const dataMouvements = await fetchJSONP(`?action=read&table=Mouvements`);
+  let mouvementsData: Mouvement[] = [];
+  if (dataMouvements.success && dataMouvements.data?.length > 1) {
+    mouvementsData = dataMouvements.data.slice(1).map((row: any[]) => ({
+      id: row[0] ? String(row[0]) : String(Date.now() + Math.random()),
+      date: row[1] || '',
+      type: row[2] || '',
+      articleId: row[3] ? String(row[3]) : '',
+      quantite: parseFloat(row[4]) || 0,
+      clientId: row[5] ? String(row[5]) : undefined,
+      fournisseurId: row[6] ? String(row[6]) : undefined,
+      reference: row[7] || '',
+      modePaiement: row[8] || '',
+      nomArticle: row[9] || '',
+      prixUnitaire: parseFloat(row[10]) || 0,
+      emplacement: row[11] || '',
+      nomClient: row[12] || ''
+    }));
+  }
 
   // Factures
-const dataFacturation = await fetchJSONP(`${GOOGLE_SCRIPT_URL}?action=read&table=Facturation`);
-let facturesData: FactureResume[] = [];
-if (dataFacturation.success && dataFacturation.data?.length > 1) {
-  facturesData = dataFacturation.data.slice(1).map((row: any[]) => ({
-    id: row[0] || String(Date.now() + Math.random()),
-    reference: row[1] || '',
-    date: row[2] || '',
-    client: row[3] || '',
-    modePaiement: row[4] || '',
-    montant: parseFloat(row[5]) || 0,
-    emplacement: row[6] || ''  // ✅ Nouveau
-  }));
-}
+  const dataFacturation = await fetchJSONP(`?action=read&table=Facturation`);
+  let facturesData: FactureResume[] = [];
+  if (dataFacturation.success && dataFacturation.data?.length > 1) {
+    facturesData = dataFacturation.data.slice(1).map((row: any[]) => ({
+      id: row[0] || String(Date.now() + Math.random()),
+      reference: row[1] || '',
+      date: row[2] || '',
+      client: row[3] || '',
+      modePaiement: row[4] || '',
+      montant: parseFloat(row[5]) || 0,
+      emplacement: row[6] || ''
+    }));
+  }
 
   // Paramètres
-  const dataParametres = await fetchJSONP(`${GOOGLE_SCRIPT_URL}?action=read&table=Parametres`);
+  const dataParametres = await fetchJSONP(`?action=read&table=Parametres`);
   let params: Parametres = {
     societe_nom: '',
     societe_adresse: '',
@@ -193,13 +213,11 @@ export const sauvegarderArticle = async (article: Article, action: 'create' | 'u
     article.unite || 'Pièce',
     article.conditionnement || ''
   ];
-  const url = `${GOOGLE_SCRIPT_URL}?action=${action}&table=Articles&row=${encodeURIComponent(JSON.stringify(row))}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=${action}&table=Articles&row=${encodeURIComponent(JSON.stringify(row))}`);
 };
 
 export const supprimerArticle = async (id: string) => {
-  const url = `${GOOGLE_SCRIPT_URL}?action=delete&table=Articles&id=${id}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=delete&table=Articles&id=${id}`);
 };
 
 export const sauvegarderContact = async (contact: Contact, action: 'create' | 'update') => {
@@ -218,13 +236,11 @@ export const sauvegarderContact = async (contact: Contact, action: 'create' | 'u
     contact.numeroCompte,
     contact.email
   ];
-  const url = `${GOOGLE_SCRIPT_URL}?action=${action}&table=Client_Fournisseurs&row=${encodeURIComponent(JSON.stringify(row))}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=${action}&table=Client_Fournisseurs&row=${encodeURIComponent(JSON.stringify(row))}`);
 };
 
 export const supprimerContact = async (id: string) => {
-  const url = `${GOOGLE_SCRIPT_URL}?action=delete&table=Client_Fournisseurs&id=${id}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=delete&table=Client_Fournisseurs&id=${id}`);
 };
 
 export const enregistrerMouvement = async (mouvement: Omit<Mouvement, 'id'> & { nomArticle?: string; prixUnitaire?: number; emplacement?: string; nomClient?: string }) => {
@@ -241,11 +257,10 @@ export const enregistrerMouvement = async (mouvement: Omit<Mouvement, 'id'> & { 
     newMouvement.modePaiement || '',
     newMouvement.nomArticle || '',
     newMouvement.prixUnitaire || 0,
-    newMouvement.emplacement || '',  // ✅ Colonne L
-    newMouvement.nomClient || ''     // ✅ Colonne M
+    newMouvement.emplacement || '',
+    newMouvement.nomClient || ''
   ];
-  const url = `${GOOGLE_SCRIPT_URL}?action=create&table=Mouvements&row=${encodeURIComponent(JSON.stringify(row))}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=create&table=Mouvements&row=${encodeURIComponent(JSON.stringify(row))}`);
 };
 
 export const sauvegarderFacture = async (facture: FactureResume) => {
@@ -256,10 +271,9 @@ export const sauvegarderFacture = async (facture: FactureResume) => {
     facture.client,
     facture.modePaiement,
     facture.montant.toFixed(2),
-    facture.emplacement || ''  // ✅ Nouveau (colonne G)
+    facture.emplacement || ''
   ];
-  const url = `${GOOGLE_SCRIPT_URL}?action=create&table=Facturation&row=${encodeURIComponent(JSON.stringify(row))}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=create&table=Facturation&row=${encodeURIComponent(JSON.stringify(row))}`);
 };
 
 export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
@@ -279,8 +293,7 @@ export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
     achat.categorie,
     nomFournisseur
   ];
-  const url = `${GOOGLE_SCRIPT_URL}?action=create&table=Achats&row=${encodeURIComponent(JSON.stringify(row))}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=create&table=Achats&row=${encodeURIComponent(JSON.stringify(row))}`);
 };
 
 export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
@@ -300,24 +313,21 @@ export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
     achat.categorie,
     nomFournisseur
   ];
-  const url = `${GOOGLE_SCRIPT_URL}?action=update&table=Achats&row=${encodeURIComponent(JSON.stringify(row))}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=update&table=Achats&row=${encodeURIComponent(JSON.stringify(row))}`);
 };
 
 export const supprimerAchat = async (id: string) => {
-  const url = `${GOOGLE_SCRIPT_URL}?action=delete&table=Achats&id=${id}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=delete&table=Achats&id=${id}`);
 };
 
 export const sauvegarderParametres = async (params: Parametres) => {
   const rows = Object.entries(params).map(([cle, valeur]) => [cle, valeur || '']);
-  const url = `${GOOGLE_SCRIPT_URL}?action=saveAll&table=Parametres&rows=${encodeURIComponent(JSON.stringify(rows))}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=saveAll&table=Parametres&rows=${encodeURIComponent(JSON.stringify(rows))}`);
 };
 
 // Charger les catégories
 export async function chargerCategories(): Promise<Categorie[]> {
-  const data = await fetchJSONP(`${GOOGLE_SCRIPT_URL}?action=read&table=Categories`);
+  const data = await fetchJSONP(`?action=read&table=Categories`);
   let categoriesData: Categorie[] = [];
   if (data.success && data.data?.length > 1) {
     categoriesData = data.data.slice(1).map((row: any[]) => ({
@@ -332,20 +342,20 @@ export async function chargerCategories(): Promise<Categorie[]> {
 export async function sauvegarderCategorie(categorie: Categorie, isUpdate: boolean = false): Promise<void> {
   const row = [categorie.id, categorie.denomination];
   const action = isUpdate ? 'update' : 'create';
-  const url = `${GOOGLE_SCRIPT_URL}?action=${action}&table=Categories&row=${encodeURIComponent(JSON.stringify(row))}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=${action}&table=Categories&row=${encodeURIComponent(JSON.stringify(row))}`);
 }
+
 // Supprimer une catégorie
 export async function supprimerCategorie(id: string): Promise<void> {
-  const url = `${GOOGLE_SCRIPT_URL}?action=delete&table=Categories&id=${id}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=delete&table=Categories&id=${id}`);
 }
+
+// Supprimer une facture
 export const supprimerFacture = async (factureId: string) => {
-  const url = `${GOOGLE_SCRIPT_URL}?action=delete&table=Facturation&id=${factureId}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=delete&table=Facturation&id=${factureId}`);
 };
 
+// Supprimer un mouvement
 export const supprimerMouvement = async (mouvementId: string) => {
-  const url = `${GOOGLE_SCRIPT_URL}?action=delete&table=Mouvements&id=${mouvementId}`;
-  return await fetchJSONP(url);
+  return await fetchJSONP(`?action=delete&table=Mouvements&id=${mouvementId}`);
 };

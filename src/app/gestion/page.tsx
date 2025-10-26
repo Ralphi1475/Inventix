@@ -205,7 +205,7 @@ export default function GestionApp() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <div className="w-64 bg-blue-900 text-white p-4 hidden md:block overflow-y-auto">
-        <h1 className="text-2xl font-bold mb-8">Gestion - Les petites mains de Stessy</h1>
+        <h1 className="text-2xl font-bold mb-8">Inventix</h1>
         <nav className="space-y-2">
           <NavItem icon={<BarChart3 size={20} />} label="Dashboard" active={currentPage === 'dashboard'} onClick={() => setCurrentPage('dashboard')} />
           <div className="pt-4 pb-2 px-3 text-xs font-semibold text-blue-300">CATALOGUE</div>

@@ -2,9 +2,18 @@
 import React, { useState } from 'react';
 import { Article, Categorie } from '@/types';
 
+// ✅ Import de la fonction utilitaire pour récupérer l'URL du script
+const getGoogleScriptUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const url = localStorage.getItem('googleScriptUrl');
+    return url || '';
+  }
+  return '';
+};
+
 interface ArticleFormProps {
   article: Article | null;
-  categories: Categorie[]; // ✅ Ajout
+  categories: Categorie[];
   onSubmit: (data: Article) => void;
   onCancel: () => void;
 }
@@ -26,8 +35,63 @@ export function ArticleForm({ article, categories, onSubmit, onCancel }: Article
     conditionnement: ''
   });
 
+  const [uploading, setUploading] = useState(false);
+
   const handleChange = (field: keyof Article, value: string | number) => { 
     setFormData(prev => ({ ...prev, [field]: value })); 
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Format non supporté. Veuillez choisir une image JPEG, PNG, WebP ou GIF.');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const scriptUrl = getGoogleScriptUrl();
+      if (!scriptUrl) {
+        alert('⚠️ URL du Google Script non configurée.\nAllez dans Configuration pour la définir.');
+        return;
+      }
+
+      // Lire le fichier comme ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+
+      // Convertir en chaîne binaire (requis par Google Apps Script)
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+
+      // Appel POST vers le script avec action=uploadImage
+      const response = await fetch(`${scriptUrl}?action=uploadImage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: binary,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setFormData(prev => ({ ...prev, image: result.url }));
+      } else {
+        alert('❌ Erreur lors de l’upload :\n' + (result.error || 'Erreur inconnue'));
+      }
+    } catch (err) {
+      console.error('Erreur upload:', err);
+      alert('⚠️ Une erreur est survenue lors de l’upload.\nVérifiez votre connexion et les permissions du script.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = () => { 
@@ -82,6 +146,29 @@ export function ArticleForm({ article, categories, onSubmit, onCancel }: Article
             <label className="block text-sm font-medium mb-1">Description</label>
             <textarea value={formData.description} onChange={(e) => handleChange('description', e.target.value)} rows={3} className="w-full px-3 py-2 border rounded-lg" />
           </div>
+
+          {/* ✅ Section Upload Image */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Image de l'article</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="w-full px-3 py-2 border rounded-lg"
+              disabled={uploading}
+            />
+            {uploading && <p className="text-sm text-blue-600 mt-1">Upload en cours...</p>}
+            {formData.image && (
+              <div className="mt-2">
+                <img 
+                  src={formData.image} 
+                  alt="Aperçu" 
+                  className="max-w-32 max-h-32 object-contain border rounded shadow-sm" 
+                />
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Prix achat (€) *</label>

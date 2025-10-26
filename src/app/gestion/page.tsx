@@ -41,8 +41,8 @@ import { ParametresSociete } from '@/components/settings/ParametresSociete';
 import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
 import { Categorie } from '@/types';
-import { chargerCategories,sauvegarderCategorie,supprimerCategorie
-} from '@/lib/api';
+import { chargerCategories,sauvegarderCategorie,supprimerCategorie} from '@/lib/api';
+import { ConfigPage} from './Config/Page';
 
 // Icônes
 import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X } from 'lucide-react';
@@ -168,6 +168,8 @@ export default function GestionApp() {
         />;
       case 'parametres':
         return <ParametresSociete parametres={parametres} onSave={sauvegarderParametres} />;
+		    case 'config':
+      return <ConfigPage />;
       default:
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
     }
@@ -231,6 +233,7 @@ export default function GestionApp() {
         <button onClick={() => setCurrentPage('vente-comptoir')} className="p-2"><ShoppingCart size={24} /></button>
         <button onClick={() => setCurrentPage('clients')} className="p-2"><Users size={24} /></button>
         <button onClick={() => setCurrentPage('factures')} className="p-2"><FileText size={24} /></button>
+		<button onClick={() => setCurrentPage('config')} className="p-2"><Settings size={24} /></button>
       </div>
       <div className="flex-1 p-4 md:p-8 mb-16 md:mb-0 overflow-auto">
         {renderPage()}

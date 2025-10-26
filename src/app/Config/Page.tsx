@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, Download, ExternalLink } from 'lucide-react';
 
 export default function ConfigPage() {
   const [scriptUrl, setScriptUrl] = useState('');
@@ -16,9 +16,15 @@ export default function ConfigPage() {
   const handleSave = () => {
     localStorage.setItem('googleScriptUrl', scriptUrl);
     setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-    window.location.href = '/';
+    setTimeout(() => {
+      setSaved(false);
+      window.location.href = '/';
+    }, 2000);
   };
+
+  // ✅ REMPLACEZ "VOTRE_ID_SHEET_TEMPLATE" par l'ID de votre Google Sheet template
+  const TEMPLATE_SHEET_ID = '1hybDHrIclQYeVHAGmrxIv26fP7b1TVsGuJgq172ClRw';
+  const templateLink = `https://docs.google.com/spreadsheets/d/${TEMPLATE_SHEET_ID}/copy`;
 
   // ✅ Code Google Apps Script en tant que STRING
   const googleScriptCode = `// Code.gs - À copier dans votre Google Apps Script
@@ -139,111 +145,205 @@ function doGet(e) {
 }`;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-8">
-        <div className="flex items-center space-x-2 mb-6">
-          <Settings size={32} className="text-blue-600" />
-          <h1 className="text-3xl font-bold">Configuration de l'application</h1>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg shadow-lg p-8 mb-6">
+          <div className="flex items-center space-x-3 mb-2">
+            <Settings size={40} />
+            <h1 className="text-4xl font-bold">Configuration d'Inventix</h1>
+          </div>
+          <p className="text-blue-100">Configurez votre propre instance d'Inventix en 4 étapes simples</p>
         </div>
 
         <div className="space-y-6">
-          {/* Étape 1 */}
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded">
-            <h2 className="text-xl font-bold mb-4 text-blue-900">📋 Étape 1 : Créer votre Google Sheet</h2>
-            <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>Créez un nouveau <a href="https://sheets.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-bold">Google Sheet</a></li>
-              <li>Créez les feuilles suivantes (onglets) :
-                <ul className="list-disc list-inside ml-6 mt-2">
-                  <li><strong>Articles</strong></li>
-                  <li><strong>Client_Fournisseurs</strong></li>
-                  <li><strong>Mouvements</strong></li>
-                  <li><strong>Facturation</strong></li>
-                  <li><strong>Achats</strong></li>
-                  <li><strong>Categories</strong></li>
-                  <li><strong>Parametres</strong></li>
-                </ul>
-              </li>
-              <li className="mt-2">Dans chaque feuille, créez une première ligne d'en-têtes (vous pouvez les personnaliser)</li>
-            </ol>
-          </div>
-
-          {/* Étape 2 */}
-          <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded">
-            <h2 className="text-xl font-bold mb-4 text-green-900">⚙️ Étape 2 : Installer le Google Apps Script</h2>
-            <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>Dans votre Google Sheet, allez dans <strong>Extensions → Apps Script</strong></li>
-              <li>Supprimez tout le code présent</li>
-              <li>Copiez-collez le code ci-dessous :</li>
-            </ol>
-            
-            <div className="mt-4 bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-              <pre className="text-xs whitespace-pre-wrap">{googleScriptCode}</pre>
-            </div>
-            
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(googleScriptCode);
-                alert('Code copié dans le presse-papier !');
-              }}
-              className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              📋 Copier le code
-            </button>
-          </div>
-
-          {/* Étape 3 */}
-          <div className="bg-purple-50 border-l-4 border-purple-500 p-6 rounded">
-            <h2 className="text-xl font-bold mb-4 text-purple-900">🚀 Étape 3 : Déployer le script</h2>
-            <ol className="list-decimal list-inside space-y-2 text-gray-700">
-              <li>Dans l'éditeur Apps Script, cliquez sur <strong>Déployer → Nouveau déploiement</strong></li>
-              <li>Type : <strong>Application Web</strong></li>
-              <li>Description : "API Gestion Stock" (ou autre)</li>
-              <li><strong>Exécuter en tant que : Moi</strong> ⚠️ IMPORTANT</li>
-              <li><strong>Qui a accès : Tout le monde</strong> ⚠️ IMPORTANT</li>
-              <li>Cliquez sur <strong>Déployer</strong></li>
-              <li>Autorisez l'accès (cliquez sur "Paramètres avancés" si nécessaire)</li>
-              <li><strong>Copiez l'URL du déploiement</strong> (elle se termine par <code>/exec</code>)</li>
-            </ol>
-          </div>
-
-          {/* Étape 4 */}
-          <div className="bg-orange-50 border-l-4 border-orange-500 p-6 rounded">
-            <h2 className="text-xl font-bold mb-4 text-orange-900">🔗 Étape 4 : Configurer l'application</h2>
-            <label className="block text-sm font-medium mb-2">
-              Collez l'URL de votre Google Apps Script ici :
-            </label>
-            <input
-              type="text"
-              value={scriptUrl}
-              onChange={(e) => setScriptUrl(e.target.value)}
-              placeholder="https://script.google.com/macros/s/AKfycby.../exec"
-              className="w-full px-4 py-3 border-2 border-orange-300 rounded-lg mb-4 focus:outline-none focus:border-orange-500"
-            />
-            <button
-              onClick={handleSave}
-              disabled={!scriptUrl.trim()}
-              className={`w-full py-3 rounded-lg font-bold ${
-                scriptUrl.trim()
-                  ? 'bg-orange-600 text-white hover:bg-orange-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              💾 Enregistrer et démarrer l'application
-            </button>
-            {saved && (
-              <div className="mt-4 bg-green-100 border border-green-500 text-green-800 p-3 rounded">
-                ✅ Configuration enregistrée ! Redirection en cours...
+          {/* Étape 1 : Créer le Google Sheet */}
+          <div className="bg-white border-l-4 border-blue-500 rounded-lg shadow p-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-xl">
+                1
               </div>
-            )}
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold mb-3 text-blue-900">📋 Créer votre Google Sheet</h2>
+                <p className="text-gray-700 mb-4">
+                  Cliquez sur le bouton ci-dessous pour créer automatiquement une copie du Google Sheet template avec la structure complète et prête à l'emploi.
+                </p>
+                
+                
+                  href={templateLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md transition-all hover:shadow-lg"
+                >
+                  <ExternalLink size={20} />
+                  <span>📊 Créer ma copie du Google Sheet</span>
+                </a>
+                
+                <div className="mt-4 bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                  <p className="font-bold text-blue-900 mb-2">✅ Ce qui sera créé automatiquement :</p>
+                  <ul className="list-disc list-inside text-sm space-y-1 text-gray-700">
+                    <li><strong>7 onglets</strong> avec les en-têtes corrects (Articles, Client_Fournisseurs, Mouvements, Facturation, Achats, Categories, Parametres)</li>
+                    <li>Client <strong>"VENTE COMPTOIR"</strong> déjà configuré</li>
+                    <li>Structure prête à l'emploi - commencez à utiliser immédiatement</li>
+                  </ul>
+                </div>
+
+                <div className="mt-4 bg-yellow-50 border border-yellow-300 p-3 rounded">
+                  <p className="text-sm text-yellow-800">
+                    💡 <strong>Astuce :</strong> Vous pouvez renommer votre copie comme vous voulez (ex: "Inventaire Ma Boutique")
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Étape 2 : Installer le script */}
+          <div className="bg-white border-l-4 border-purple-500 rounded-lg shadow p-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-xl">
+                2
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold mb-3 text-purple-900">⚙️ Installer le Google Apps Script</h2>
+                
+                <div className="space-y-3 mb-4">
+                  <p className="text-gray-700">
+                    <strong>Dans votre copie du Google Sheet</strong>, suivez ces étapes :
+                  </p>
+                  <ol className="list-decimal list-inside space-y-2 text-gray-700 ml-4">
+                    <li>Allez dans <strong>Extensions → Apps Script</strong></li>
+                    <li>Supprimez tout le code présent (s'il y en a)</li>
+                    <li>Copiez le code ci-dessous et collez-le dans l'éditeur</li>
+                    <li>Cliquez sur le bouton <strong>💾 (Enregistrer)</strong></li>
+                  </ol>
+                </div>
+                
+                <div className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto max-h-96 relative">
+                  <pre className="text-xs whitespace-pre-wrap font-mono">{googleScriptCode}</pre>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(googleScriptCode);
+                    alert('✅ Code copié dans le presse-papier !');
+                  }}
+                  className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-bold"
+                >
+                  📋 Copier le code
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Étape 3 : Déployer */}
+          <div className="bg-white border-l-4 border-green-500 rounded-lg shadow p-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-xl">
+                3
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold mb-3 text-green-900">🚀 Déployer le script</h2>
+                
+                <ol className="list-decimal list-inside space-y-3 text-gray-700">
+                  <li>Dans l'éditeur Apps Script, cliquez sur <strong>Déployer → Nouveau déploiement</strong></li>
+                  <li>Cliquez sur l'icône ⚙️ à côté de "Sélectionner le type"</li>
+                  <li>Sélectionnez <strong>Application Web</strong></li>
+                  <li>
+                    <div className="ml-6 mt-2 space-y-1">
+                      <p>Description : <code className="bg-gray-100 px-2 py-1 rounded">API Inventix</code> (ou autre)</p>
+                      <p className="font-bold text-green-700">⚠️ Exécuter en tant que : <strong>Moi</strong></p>
+                      <p className="font-bold text-green-700">⚠️ Qui a accès : <strong>Tout le monde</strong></p>
+                    </div>
+                  </li>
+                  <li>Cliquez sur <strong>Déployer</strong></li>
+                  <li>
+                    <strong>Autorisez l'accès</strong> :
+                    <ul className="list-disc list-inside ml-6 mt-2 text-sm">
+                      <li>Connectez-vous avec votre compte Google</li>
+                      <li>Si vous voyez "Application non vérifiée", cliquez sur <strong>"Paramètres avancés"</strong></li>
+                      <li>Puis cliquez sur <strong>"Accéder à [nom du projet] (non sécurisé)"</strong></li>
+                      <li>Acceptez les autorisations</li>
+                    </ul>
+                  </li>
+                  <li className="font-bold text-green-700">
+                    📋 <strong>Copiez l'URL du déploiement</strong> (elle se termine par <code className="bg-gray-100 px-2 py-1 rounded">/exec</code>)
+                  </li>
+                </ol>
+
+                <div className="mt-4 bg-green-50 border border-green-300 p-3 rounded">
+                  <p className="text-sm text-green-800">
+                    ✅ <strong>Important :</strong> L'URL ressemble à <code>https://script.google.com/macros/s/AKfycby.../exec</code>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Étape 4 : Configurer l'app */}
+          <div className="bg-white border-l-4 border-orange-500 rounded-lg shadow p-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-xl">
+                4
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold mb-3 text-orange-900">🔗 Configurer l'application</h2>
+                
+                <label className="block text-sm font-bold mb-2 text-gray-700">
+                  Collez l'URL de votre Google Apps Script ici :
+                </label>
+                <input
+                  type="text"
+                  value={scriptUrl}
+                  onChange={(e) => setScriptUrl(e.target.value)}
+                  placeholder="https://script.google.com/macros/s/AKfycby.../exec"
+                  className="w-full px-4 py-3 border-2 border-orange-300 rounded-lg mb-4 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                />
+                
+                <button
+                  onClick={handleSave}
+                  disabled={!scriptUrl.trim()}
+                  className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all ${
+                    scriptUrl.trim()
+                      ? 'bg-orange-600 text-white hover:bg-orange-700 hover:shadow-xl cursor-pointer'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {scriptUrl.trim() ? '💾 Enregistrer et démarrer l\'application' : '⚠️ Veuillez entrer l\'URL du script'}
+                </button>
+                
+                {saved && (
+                  <div className="mt-4 bg-green-100 border-2 border-green-500 text-green-800 p-4 rounded-lg animate-pulse">
+                    <p className="font-bold text-lg">✅ Configuration enregistrée avec succès !</p>
+                    <p className="text-sm">Redirection vers le dashboard en cours...</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Notes importantes */}
-          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded">
-            <h3 className="font-bold text-yellow-900 mb-2">⚠️ Important</h3>
-            <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-              <li>Ne partagez JAMAIS l'URL de votre Google Apps Script</li>
-              <li>Gardez votre Google Sheet privé</li>
+          <div className="bg-red-50 border-l-4 border-red-500 rounded-lg shadow p-6">
+            <h3 className="font-bold text-red-900 text-xl mb-3">⚠️ Sécurité et bonnes pratiques</h3>
+            <ul className="list-disc list-inside space-y-2 text-gray-700">
+              <li><strong>Ne partagez JAMAIS</strong> l'URL de votre Google Apps Script avec qui que ce soit</li>
+              <li>Gardez votre Google Sheet <strong>privé</strong> (ne le partagez pas publiquement)</li>
+              <li>Les noms des onglets doivent être <strong>EXACTEMENT</strong> comme indiqué (respectez les majuscules/minuscules)</li>
               <li>Vous pouvez modifier cette configuration à tout moment en revenant sur cette page</li>
+              <li>Pour réinitialiser : supprimez la configuration dans votre navigateur et recommencez</li>
+            </ul>
+          </div>
+
+          {/* Aide supplémentaire */}
+          <div className="bg-blue-50 border border-blue-300 rounded-lg p-6">
+            <h3 className="font-bold text-blue-900 text-lg mb-2">💡 Besoin d'aide ?</h3>
+            <p className="text-gray-700 text-sm">
+              Si vous rencontrez des problèmes lors de la configuration, vérifiez que :
+            </p>
+            <ul className="list-disc list-inside text-sm text-gray-700 mt-2 space-y-1">
+              <li>Vous avez bien copié l'URL complète du déploiement (avec <code>/exec</code> à la fin)</li>
+              <li>Les permissions du script sont bien configurées (Exécuter en tant que : Moi / Accès : Tout le monde)</li>
+              <li>Les 7 onglets sont bien présents dans votre Google Sheet</li>
+              <li>Les noms des onglets correspondent exactement (Articles, Client_Fournisseurs, etc.)</li>
             </ul>
           </div>
         </div>
@@ -251,3 +351,14 @@ function doGet(e) {
     </div>
   );
 }
+```
+
+## 🔧 Ce que vous devez faire :
+
+**Ligne 24** : Remplacez `'VOTRE_ID_SHEET_TEMPLATE'` par l'ID de votre Google Sheet template
+
+### Comment trouver l'ID ?
+
+Si votre URL de partage est :
+```
+https://docs.google.com/spreadsheets/d/1abc123XYZ456/edit?usp=sharing

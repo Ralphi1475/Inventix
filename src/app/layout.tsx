@@ -6,7 +6,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Gestion de Stock Pro",
+  title: "Inventix",
   description: "Application de gestion de stock, ventes et achats",
 };
 

@@ -68,7 +68,16 @@ export default function GestionApp() {
     societe_tva: '',
     societe_iban: ''
   });
-
+		useEffect(() => {
+			if (typeof window !== 'undefined') {
+			const scriptUrl = localStorage.getItem('googleScriptUrl');
+			if (!scriptUrl) {
+				// Pas d'URL configurée, rediriger vers la config
+				window.location.href = '/config';
+				return;
+			}
+			}
+		}, []);
   useEffect(() => {
     const load = async () => {
       setLoading(true);

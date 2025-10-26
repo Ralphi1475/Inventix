@@ -26,7 +26,7 @@ export const fetchJSONP = (endpoint: string): Promise<any> => {
       console.error(error.message);
       alert(error.message + '\n\nRedirection vers la configuration...');
       setTimeout(() => {
-        window.location.href = '/config';
+        window.location.href = '/Config';
       }, 2000);
       reject(error);
       return;

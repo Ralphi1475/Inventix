@@ -112,7 +112,6 @@ export function VenteClient({
     setLoading(true);
     try {
       const reference = 'V' + Date.now();
-      // ✅ Formater la date en DD/MM/YYYY HH:MM:SS au lieu d'utiliser toLocaleDateString
       const [year, month, day] = dateVente.split('-');
       const date = `${day}/${month}/${year} 00:00:00`;
       
@@ -201,11 +200,29 @@ export function VenteClient({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
               {articlesFiltr.map((article: Article) => (
-                <div key={article.numero} className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onClick={() => ajouterAuPanier(article)}>
-                  <p className="font-medium">{article.nom}</p>
-                  <p className="text-sm text-black">{article.numero}</p>
-                  <p className="text-blue-600 font-bold">{article.prixVenteTTC?.toFixed(2)} €</p>
-                  <p className="text-xs text-black">Stock: {article.stock}</p>
+                <div 
+                  key={article.numero} 
+                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex gap-3" 
+                  onClick={() => ajouterAuPanier(article)}
+                >
+                  {article.image && (
+                    <div className="flex-shrink-0">
+                      <img 
+                        src={article.image} 
+                        alt={article.nom}
+                        className="w-16 h-16 object-cover rounded border"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{article.nom}</p>
+                    <p className="text-sm text-gray-600">{article.numero}</p>
+                    <p className="text-blue-600 font-bold">{article.prixVenteTTC?.toFixed(2)} €</p>
+                    <p className="text-xs text-gray-500">Stock: {article.stock}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -214,14 +231,24 @@ export function VenteClient({
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-xl font-bold mb-4">Panier</h3>
           {panier.length === 0 ? (
-            <p className="text-black text-center py-8">Panier vide</p>
+            <p className="text-gray-500 text-center py-8">Panier vide</p>
           ) : (
             <>
               <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
                 {panier.map((ligne) => (
                   <div key={ligne.article.numero} className="border-b pb-2">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-1">
+                        {ligne.article.image && (
+                          <img 
+                            src={ligne.article.image} 
+                            alt={ligne.article.nom}
+                            className="w-10 h-10 object-cover rounded border"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
                         <p className="font-medium text-sm">{ligne.article.nom}</p>
                       </div>
                       <button 

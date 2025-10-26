@@ -40,7 +40,7 @@ export default function Home() {
         window.location.href = '/gestion';
       } else {
         console.log('⚙️ Pas de config, redirection...');
-        window.location.href = '@/app/Config/';
+        window.location.href = '/Config';
       }
     } catch (error) {
       console.error('❌ Erreur:', error);

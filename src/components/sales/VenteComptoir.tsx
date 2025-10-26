@@ -31,7 +31,7 @@ export function VenteComptoir({
   if (!clientComptoir) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-600">Le client "VENTE COMPTOIR" n'existe pas. Veuillez le créer dans la section Clients.</p>
+        <p className="text-red-600">Le client &quot;VENTE COMPTOIR&quot; n&apos;existe pas. Veuillez le créer dans la section Clients.</p>
       </div>
     );
   }
@@ -119,7 +119,6 @@ export function VenteComptoir({
     setLoading(true);
     try {
       const reference = 'VC' + Date.now();
-      // ✅ Formater la date en DD/MM/YYYY HH:MM:SS
       const [year, month, day] = dateVente.split('-');
       const date = `${day}/${month}/${year} 00:00:00`;
       
@@ -210,10 +209,22 @@ export function VenteComptoir({
                   className="border rounded-lg p-3 hover:bg-blue-50 cursor-pointer transition"
                   onClick={() => ajouterAuPanier(article)}
                 >
+                  {article.image && (
+                    <div className="mb-2">
+                      <img 
+                        src={article.image} 
+                        alt={article.nom}
+                        className="w-full h-24 object-cover rounded border"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                   <p className="font-medium text-sm">{article.nom}</p>
-                  <p className="text-xs text-black mb-1">{article.numero}</p>
+                  <p className="text-xs text-gray-600 mb-1">{article.numero}</p>
                   <p className="text-blue-600 font-bold text-lg">{article.prixVenteTTC?.toFixed(2)} €</p>
-                  <p className="text-xs text-black">Stock: {article.stock}</p>
+                  <p className="text-xs text-gray-500">Stock: {article.stock}</p>
                 </div>
               ))}
             </div>
@@ -222,14 +233,24 @@ export function VenteComptoir({
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-xl font-bold mb-4">Panier</h3>
           {panier.length === 0 ? (
-            <p className="text-black text-center py-8">Panier vide</p>
+            <p className="text-gray-500 text-center py-8">Panier vide</p>
           ) : (
             <>
               <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
                 {panier.map((ligne) => (
                   <div key={ligne.article.numero} className="border-b pb-2">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-1">
+                        {ligne.article.image && (
+                          <img 
+                            src={ligne.article.image} 
+                            alt={ligne.article.nom}
+                            className="w-10 h-10 object-cover rounded border"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
                         <p className="font-medium text-sm">{ligne.article.nom}</p>
                       </div>
                       <button 

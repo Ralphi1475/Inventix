@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Edit2, Trash2, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, RefreshCw, ImageIcon } from 'lucide-react';
 import { Article, Categorie } from '@/types';
 import { ArticleForm } from './ArticleForm';
 
@@ -19,6 +19,8 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategorie, setFilterCategorie] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [zoomedImageName, setZoomedImageName] = useState<string>('');
 
   const filteredArticles = useMemo(() => {
     if (!Array.isArray(articles)) return [];
@@ -106,7 +108,7 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="p-3 text-left">Image</th> {/* ✅ Nouvelle colonne */}
+                <th className="p-3 text-left">Image</th>
                 <th className="p-3 text-left">N°</th>
                 <th className="p-3 text-left">Catégorie</th>
                 <th className="p-3 text-left">Nom</th>
@@ -120,17 +122,24 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
             <tbody>
               {filteredArticles.map(article => (
                 <tr key={article.id} className="border-b hover:bg-gray-50">
-                  {/* ✅ Cellule image */}
                   <td className="p-3">
                     {article.image ? (
-                      <img 
-                        src={article.image} 
-                        alt={article.nom} 
-                        className="w-12 h-12 object-contain rounded border"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
+                      <div 
+                        className="w-12 h-12 cursor-pointer"
+                        onClick={() => {
+                          setZoomedImage(article.image);
+                          setZoomedImageName(article.nom || 'Article');
                         }}
-                      />
+                      >
+                        <img 
+                          src={article.image} 
+                          alt={article.nom} 
+                          className="w-full h-full object-contain rounded border"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
                     ) : (
                       <div className="w-12 h-12 flex items-center justify-center text-gray-400">
                         <ImageIcon size={20} />
@@ -156,7 +165,40 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
           </table>
         </div>
       </div>
+
       {showForm && <ArticleForm article={editingArticle} categories={categories} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditingArticle(null); }} />}
+
+      {/* ✅ Lightbox pour agrandir l'image */}
+      {zoomedImage && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div 
+            className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              className="absolute top-3 right-3 bg-black bg-opacity-50 text-white rounded-full w-9 h-9 flex items-center justify-center z-10 hover:bg-opacity-70 transition"
+              onClick={() => setZoomedImage(null)}
+              aria-label="Fermer"
+            >
+              ✕
+            </button>
+            <img 
+              src={zoomedImage} 
+              alt={zoomedImageName}
+              className="max-w-full max-h-[80vh] object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/placeholder.jpg';
+              }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-center py-2 text-sm">
+              {zoomedImageName}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

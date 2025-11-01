@@ -596,25 +596,27 @@ export function Factures({
                     {/* ✅ Bouton Modifier */}
                     {onUpdateMouvement && onUpdateFacture && (
                       <button 
-  onClick={() => {
-    console.log('🔍 Clic sur Modifier');
-    console.log('onUpdateMouvement:', !!onUpdateMouvement);
-    console.log('onUpdateFacture:', !!onUpdateFacture);
-    console.log('onCreateMouvement:', !!onCreateMouvement);
+						onClick={() => {
+						console.log('🔍 Clic sur Modifier');
+						console.log('Props:', {
+						onUpdateMouvement: !!onUpdateMouvement,
+						onUpdateFacture: !!onUpdateFacture,
+						onCreateMouvement: !!onCreateMouvement
+						});
     
-    if (!onUpdateMouvement || !onUpdateFacture || !onCreateMouvement) {
-      alert('⚠️ Fonctions manquantes!\n\nonUpdateMouvement: ' + !!onUpdateMouvement + '\nonUpdateFacture: ' + !!onUpdateFacture + '\nonCreateMouvement: ' + !!onCreateMouvement);
-      return;
-    }
+						if (!onUpdateMouvement || !onUpdateFacture || !onCreateMouvement) {
+						alert('⚠️ Fonctions manquantes!\n\nonUpdateMouvement: ' + !!onUpdateMouvement + '\nonUpdateFacture: ' + !!onUpdateFacture + '\nonCreateMouvement: ' + !!onCreateMouvement);
+						return;
+						}
     
-    ouvrirModificationFacture(facture.reference);
-  }}
-  className="flex items-center space-x-1 text-orange-600 hover:text-orange-800 hover:bg-orange-50 px-2 py-1 rounded transition"
-  title="Modifier la facture"
->
-  <Edit size={18} />
-  <span className="text-sm">Modifier</span>
-</button>
+						ouvrirModificationFacture(facture.reference);
+						}}
+						className="flex items-center space-x-1 text-orange-600 hover:text-orange-800 hover:bg-orange-50 px-2 py-1 rounded transition"
+						title="Modifier la facture"
+						>
+								<Edit size={18} />
+								<span className="text-sm">Modifier</span>
+							</button>
                     )}
                     
                     {/* Bouton Supprimer */}

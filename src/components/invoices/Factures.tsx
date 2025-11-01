@@ -109,7 +109,12 @@ export function Factures({
   const [dateModifiee, setDateModifiee] = useState('');
   const [modePaiementModifie, setModePaiementModifie] = useState('');
   const [emplacementModifie, setEmplacementModifie] = useState('');
-
+  
+  console.log('🔍 Vérification des props:');
+  console.log('onUpdateMouvement existe?', !!onUpdateMouvement);
+  console.log('onUpdateFacture existe?', !!onUpdateFacture);
+  console.log('onCreateMouvement existe?', !!onCreateMouvement);
+  
   const facturesFiltrees = useMemo(() => {
     let filtered = [...factures];
     if (dateDebut) filtered = filtered.filter(f => f.date >= dateDebut);

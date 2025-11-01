@@ -13,7 +13,9 @@ import {
   supprimerAchat,
   sauvegarderParametres,
   supprimerFacture,
-  supprimerMouvement
+  supprimerMouvement,
+  modifierMouvement,      // ✅ Ajouté
+  modifierFacture         // ✅ Ajouté
 } from '@/lib/api';
 import { 
   calculerArticlesAvecPrix, 
@@ -68,16 +70,18 @@ export default function GestionApp() {
     societe_tva: '',
     societe_iban: ''
   });
-		useEffect(() => {
-			if (typeof window !== 'undefined') {
-			const scriptUrl = localStorage.getItem('googleScriptUrl');
-			if (!scriptUrl) {
-				// Pas d'URL configurée, rediriger vers la config
-				window.location.href = '/Conf2';
-				return;
-			}
-			}
-		}, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const scriptUrl = localStorage.getItem('googleScriptUrl');
+      if (!scriptUrl) {
+        // Pas d'URL configurée, rediriger vers la config
+        window.location.href = '/Conf2';
+        return;
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -146,20 +150,23 @@ export default function GestionApp() {
           setArticles={setArticles} 
           onSaveArticle={sauvegarderArticle} 
         />;
-	  case 'factures':
-	  return (
-		  <Factures 
-		  factures={factures} 
-		  mouvements={mouvements} 
-		  articles={articlesAvecPrix} 
-		  clients={clients} 
-		  parametres={parametres}
-		  onDeleteFacture={supprimerFacture}
-		  onDeleteMouvement={supprimerMouvement}
-		  onUpdateArticle={(article) => sauvegarderArticle(article, 'update')}
-		  onRefresh={rechargerDonnees}
-		  />
-	  );
+      case 'factures':
+        return (
+          <Factures 
+            factures={factures} 
+            mouvements={mouvements} 
+            articles={articlesAvecPrix} 
+            clients={clients} 
+            parametres={parametres}
+            onDeleteFacture={supprimerFacture}
+            onDeleteMouvement={supprimerMouvement}
+            onUpdateArticle={(article) => sauvegarderArticle(article, 'update')}
+            onUpdateMouvement={modifierMouvement}      // ✅ Ajouté
+            onCreateMouvement={enregistrerMouvement}   // ✅ Ajouté
+            onUpdateFacture={modifierFacture}          // ✅ Ajouté
+            onRefresh={rechargerDonnees}
+          />
+        );
       case 'achats':
         return <Achats 
           achats={achats} 
@@ -177,8 +184,8 @@ export default function GestionApp() {
         />;
       case 'parametres':
         return <ParametresSociete parametres={parametres} onSave={sauvegarderParametres} />;
-		    case 'config':
-      return <ConfigPage />;
+      case 'config':
+        return <ConfigPage />;
       default:
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
     }
@@ -233,7 +240,7 @@ export default function GestionApp() {
           <NavItem icon={<ShoppingCart size={20} />} label="Achats / Frais" active={currentPage === 'achats'} onClick={() => setCurrentPage('achats')} />
           <NavItem icon={<Package size={20} />} label="Catégories" active={currentPage === 'categories'} onClick={() => setCurrentPage('categories')} />
           <NavItem icon={<Settings size={20} />} label="Ma Société" active={currentPage === 'parametres'} onClick={() => setCurrentPage('parametres')} />
-		  <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'config'} onClick={() => setCurrentPage('config')} />
+          <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'config'} onClick={() => setCurrentPage('config')} />
         </nav>
       </div>
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-2 z-50">
@@ -242,7 +249,7 @@ export default function GestionApp() {
         <button onClick={() => setCurrentPage('vente-comptoir')} className="p-2"><ShoppingCart size={24} /></button>
         <button onClick={() => setCurrentPage('clients')} className="p-2"><Users size={24} /></button>
         <button onClick={() => setCurrentPage('factures')} className="p-2"><FileText size={24} /></button>
-		<button onClick={() => setCurrentPage('config')} className="p-2"><Settings size={24} /></button>
+        <button onClick={() => setCurrentPage('config')} className="p-2"><Settings size={24} /></button>
       </div>
       <div className="flex-1 p-4 md:p-8 mb-16 md:mb-0 overflow-auto">
         {renderPage()}

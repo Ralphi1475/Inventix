@@ -430,8 +430,16 @@ export const supprimerAchat = async (id: string) => {
 
 export const sauvegarderParametres = async (params: Parametres) => {
   try {
-    const rows = Object.entries(params).map(([cle, valeur]) => [cle, valeur || '']);
-    const result = await fetchJSONP(`?action=saveAll&table=Parametres&rows=${encodeURIComponent(JSON.stringify(rows))}`);
+    // ✅ Créer les lignes de données (clé, valeur)
+    const dataRows = Object.entries(params).map(([cle, valeur]) => [cle, valeur || '']);
+    
+    // ✅ AJOUTER la ligne d'en-têtes au début
+    const rowsAvecEnTetes = [
+      ['Clé', 'Valeur'],  // ← En-têtes
+      ...dataRows          // ← Données
+    ];
+    
+    const result = await fetchJSONP(`?action=saveAll&table=Parametres&rows=${encodeURIComponent(JSON.stringify(rowsAvecEnTetes))}`);
     console.log('✅ Paramètres sauvegardés');
     return result;
   } catch (error) {

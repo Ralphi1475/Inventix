@@ -163,7 +163,7 @@ export default function GestionApp() {
             onUpdateArticle={(article) => sauvegarderArticle(article, 'update')}
             onUpdateMouvement={modifierMouvement}      // ✅ Ajouté
             onCreateMouvement={enregistrerMouvement}   // ✅ Ajouté
-            onUpdateFacture={modifierFacture}          // ✅ Ajouté
+            onUpdateFacture={modifierFacture}          // ✅ Ajouté facture
             onRefresh={rechargerDonnees}
           />
         );

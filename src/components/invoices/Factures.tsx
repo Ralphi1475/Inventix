@@ -518,7 +518,7 @@ export function Factures({
 
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-6">Factures</h2>
+      <h2 className="text-3xl font-bold mb-6">Factures [VERSION 2.0]</h2>
       
       {/* Filtres */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">

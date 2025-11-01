@@ -583,6 +583,8 @@ export function Factures({
                 <td className="p-3 font-bold">{facture.montant.toFixed(2)} €</td>
                 <td className="p-3">
                   <div className="flex items-center space-x-2">
+    {/* 🔴 TEST - SI VOUS VOYEZ CE TEXTE, LE FICHIER EST À JOUR */}
+    <span className="bg-red-500 text-white px-2 py-1 text-xs">VERSION TEST</span
                     {/* Bouton Voir */}
                     <button 
                       onClick={() => genererFactureDetail(facture.reference)} 

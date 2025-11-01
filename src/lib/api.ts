@@ -543,3 +543,56 @@ export const uploadImage = async (file: File): Promise<string> => {
     throw error;
   }
 };
+// =============== AJOUTEZ CES FONCTIONS À LA FIN DU FICHIER api.ts ===============
+
+/**
+ * Modifier un mouvement existant
+ */
+export const modifierMouvement = async (mouvement: Mouvement) => {
+  try {
+    const row = [
+      mouvement.id,
+      mouvement.date,
+      mouvement.type,
+      mouvement.articleId,
+      mouvement.quantite,
+      mouvement.clientId || '',
+      mouvement.fournisseurId || '',
+      mouvement.reference || '',
+      mouvement.modePaiement || '',
+      mouvement.nomArticle || '',
+      mouvement.prixUnitaire || 0,
+      mouvement.emplacement || '',
+      mouvement.nomClient || ''
+    ];
+    const result = await fetchJSONP(`?action=update&table=Mouvements&row=${encodeURIComponent(JSON.stringify(row))}`);
+    console.log('✅ Mouvement modifié:', mouvement.id);
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur modification mouvement:', error);
+    throw error;
+  }
+};
+
+/**
+ * Modifier une facture existante
+ */
+export const modifierFacture = async (facture: FactureResume) => {
+  try {
+    const row = [
+      facture.id,
+      facture.reference,
+      facture.date,
+      facture.client,
+      facture.modePaiement,
+      facture.montant.toFixed(2),
+      facture.emplacement || ''
+    ];
+    const result = await fetchJSONP(`?action=update&table=Facturation&row=${encodeURIComponent(JSON.stringify(row))}`);
+    console.log('✅ Facture modifiée:', facture.reference);
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur modification facture:', error);
+    throw error;
+  }
+};

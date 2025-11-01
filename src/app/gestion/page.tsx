@@ -37,7 +37,7 @@ import { Fournisseurs } from '@/components/contacts/Fournisseurs';
 import { VenteClient } from '@/components/sales/VenteClient';
 import { VenteComptoir } from '@/components/sales/VenteComptoir';
 import { EntreesStock } from '@/components/stock/EntreesStock';
-import { Factures } from '@/components/invoices/FacturesNew';
+import { Factures } from '@/components/invoices/TestFactures';
 import { Achats } from '@/components/purchases/Achats';
 import { ParametresSociete } from '@/components/settings/ParametresSociete';
 import { NavItem } from '@/components/layout/NavItem';
@@ -151,21 +151,8 @@ export default function GestionApp() {
           onSaveArticle={sauvegarderArticle} 
         />;
       case 'factures':
-        return (
-          <Factures 
-            factures={factures} 
-            mouvements={mouvements} 
-            articles={articlesAvecPrix} 
-            clients={clients} 
-            parametres={parametres}
-            onDeleteFacture={supprimerFacture}
-            onDeleteMouvement={supprimerMouvement}
-            onUpdateArticle={(article) => sauvegarderArticle(article, 'update')}
-            onUpdateMouvement={modifierMouvement}      // ✅ Ajouté
-            onCreateMouvement={enregistrerMouvement}   // ✅ Ajouté
-            onUpdateFacture={modifierFacture}          // ✅ Ajouté facture
-            onRefresh={rechargerDonnees}
-          />
+        return (<TestFactures />
+
         );
       case 'achats':
         return <Achats 

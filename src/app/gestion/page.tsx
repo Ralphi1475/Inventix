@@ -37,7 +37,7 @@ import { Fournisseurs } from '@/components/contacts/Fournisseurs';
 import { VenteClient } from '@/components/sales/VenteClient';
 import { VenteComptoir } from '@/components/sales/VenteComptoir';
 import { EntreesStock } from '@/components/stock/EntreesStock';
-import { Factures } from '@/components/invoices/TestFactures';
+import { Factures } from '@/components/invoices/Factures';
 import { Achats } from '@/components/purchases/Achats';
 import { ParametresSociete } from '@/components/settings/ParametresSociete';
 import { NavItem } from '@/components/layout/NavItem';
@@ -151,6 +151,11 @@ export default function GestionApp() {
           onSaveArticle={sauvegarderArticle} 
         />;
       case 'factures':
+	  console.log('🔍 Fonctions disponibles :', {
+  modifierMouvement: typeof modifierMouvement,
+  modifierFacture: typeof modifierFacture,
+  enregistrerMouvement: typeof enregistrerMouvement
+});
         return (<Factures 
             factures={factures} 
             mouvements={mouvements} 

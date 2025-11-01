@@ -581,16 +581,17 @@ export function Factures({
                   </span>
                 </td>
                 <td className="p-3 font-bold">{facture.montant.toFixed(2)} €</td>
-                <td className="p-3">
-                  <div className="flex items-center space-x-2">
-    {/* 🔴 TEST - SI VOUS VOYEZ CE TEXTE, LE FICHIER EST À JOUR */}
-    <span className="bg-red-500 text-white px-2 py-1 text-xs">VERSION TEST</span
-                    {/* Bouton Voir */}
-                    <button 
-                      onClick={() => genererFactureDetail(facture.reference)} 
-                      className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition"
-                      title="Prévisualiser la facture"
-                    >
+				<td className="p-3">
+				<div className="flex items-center space-x-2">
+				{/* 🔴 TEST - SI VOUS VOYEZ CE TEXTE, LE FICHIER EST À JOUR */}
+				<span className="bg-red-500 text-white px-2 py-1 text-xs">VERSION TEST</span>
+    
+				{/* Bouton Voir */}
+				<button 
+				onClick={() => genererFactureDetail(facture.reference)} 
+				className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition"
+				title="Prévisualiser la facture"
+				>
                       <FileText size={18} />
                       <span className="text-sm">Voir</span>
                     </button>

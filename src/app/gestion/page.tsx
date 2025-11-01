@@ -151,8 +151,20 @@ export default function GestionApp() {
           onSaveArticle={sauvegarderArticle} 
         />;
       case 'factures':
-        return (<TestFactures />
-
+        return (<Factures 
+            factures={factures} 
+            mouvements={mouvements} 
+            articles={articlesAvecPrix} 
+            clients={clients} 
+            parametres={parametres}
+            onDeleteFacture={supprimerFacture}
+            onDeleteMouvement={supprimerMouvement}
+            onUpdateArticle={(article) => sauvegarderArticle(article, 'update')}
+            onUpdateMouvement={modifierMouvement}      // ✅ Ajouté
+            onCreateMouvement={enregistrerMouvement}   // ✅ Ajouté
+            onUpdateFacture={modifierFacture}          // ✅ Ajouté facture
+            onRefresh={rechargerDonnees}
+          />
         );
       case 'achats':
         return <Achats 

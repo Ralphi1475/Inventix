@@ -37,7 +37,7 @@ import { Fournisseurs } from '@/components/contacts/Fournisseurs';
 import { VenteClient } from '@/components/sales/VenteClient';
 import { VenteComptoir } from '@/components/sales/VenteComptoir';
 import { EntreesStock } from '@/components/stock/EntreesStock';
-import { Factures } from '@/components/invoices/Factures';
+import { Factures } from '@/components/invoices/FacturesNew';
 import { Achats } from '@/components/purchases/Achats';
 import { ParametresSociete } from '@/components/settings/ParametresSociete';
 import { NavItem } from '@/components/layout/NavItem';

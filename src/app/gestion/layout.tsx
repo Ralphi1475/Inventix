@@ -1,7 +1,9 @@
+import { DataProvider } from '@/context/DataContext';
+
 export default function GestionLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <DataProvider>{children}</DataProvider>;
 }

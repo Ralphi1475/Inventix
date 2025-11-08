@@ -28,6 +28,7 @@ export function VenteClient({
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [dateVente, setDateVente] = useState(new Date().toISOString().split('T')[0]);
+  const [commentaire, setCommentaire] = useState('');
 
   const articlesFiltr = useMemo(() => {
     if (!Array.isArray(articles)) return [];
@@ -127,6 +128,7 @@ export function VenteClient({
           nomArticle: ligne.article.nom,
           prixUnitaire: ligne.prixUnitairePersonnalise ?? ligne.article.prixVenteTTC,
           emplacement: '',
+		  commentaire,
           nomClient: clientSelectionne.societe || `${clientSelectionne.nom} ${clientSelectionne.prenom}`.trim()
         });
         const newStock = ligne.article.stock - ligne.quantite;
@@ -142,7 +144,8 @@ export function VenteClient({
         client: nomClient,
         modePaiement,
         montant: totalTTC,
-        emplacement: ''
+        emplacement: '',
+		commentaire
       });
       alert('Vente enregistrée avec succès !');
       setPanier([]);
@@ -185,6 +188,15 @@ export function VenteClient({
                   className="w-full px-3 py-2 border rounded-lg"
                 />
               </div>
+			  <div>
+					<label className="block text-sm font-medium mb-2">Commentaire (facultatif)</label>
+					<textarea
+						value={commentaire}
+						onChange={(e) => setCommentaire(e.target.value)}
+						className="w-full px-3 py-2 border rounded-lg"
+						rows={2}
+						/>
+					</div>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-4">

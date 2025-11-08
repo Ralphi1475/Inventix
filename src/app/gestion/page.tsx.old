@@ -1,7 +1,7 @@
 'use client';
-import React, { useState, useMemo } from 'react';
-import { useData } from '@/context/DataContext';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
+  chargerDonnees,
   sauvegarderArticle,
   supprimerArticle,
   sauvegarderContact,
@@ -13,14 +13,19 @@ import {
   supprimerAchat,
   sauvegarderParametres,
   supprimerFacture,
-  supprimerMouvement,
-  sauvegarderCategorie,
-  supprimerCategorie
+  supprimerMouvement
 } from '@/lib/api';
 import { 
   calculerArticlesAvecPrix, 
   calculerStats 
 } from '@/lib/calculations';
+import { 
+  Article, 
+  Contact, 
+  Mouvement, 
+  Parametres, 
+  FactureResume 
+} from '@/types';
 
 // Composants UI
 import { Dashboard } from '@/components/dashboard/Dashboard';
@@ -35,6 +40,8 @@ import { Achats } from '@/components/purchases/Achats';
 import { ParametresSociete } from '@/components/settings/ParametresSociete';
 import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
+import { Categorie } from '@/types';
+import { chargerCategories,sauvegarderCategorie,supprimerCategorie} from '@/lib/api';
 import ConfigPage from '@/app/Config/Page';
 
 // Icônes
@@ -42,23 +49,59 @@ import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Se
 
 export default function GestionApp() {
   const [currentPage, setCurrentPage] = useState('dashboard');
-  
-  const {
-    loading,
-    articles,
-    clients,
-    fournisseurs,
-    mouvements,
-    factures,
-    achats,
-    categories,
-    parametres,
-    setArticles,
-    setClients,
-    setFournisseurs,
-    setCategories,
-    rechargerDonnees
-  } = useData();
+  const [loading, setLoading] = useState(true);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [clients, setClients] = useState<Contact[]>([]);
+  const [fournisseurs, setFournisseurs] = useState<Contact[]>([]);
+  const [mouvements, setMouvements] = useState<Mouvement[]>([]);
+  const [factures, setFactures] = useState<FactureResume[]>([]);
+  const [achats, setAchats] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Categorie[]>([]);
+  const [parametres, setParametres] = useState<Parametres>({
+    societe_nom: '',
+    societe_adresse: '',
+    societe_code_postal: '',
+    societe_ville: '',
+    societe_pays: 'Belgique',
+    societe_telephone: '',
+    societe_email: '',
+    societe_tva: '',
+    societe_iban: ''
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const scriptUrl = localStorage.getItem('googleScriptUrl');
+      if (!scriptUrl) {
+        alert('⚠️ URL perdue ! Vérifiez la console (F12)');
+        window.location.href = '/config';
+        return;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await chargerDonnees();
+        const cats = await chargerCategories();
+        setArticles(data.articles);
+        setClients(data.clients);
+        setFournisseurs(data.fournisseurs);
+        setMouvements(data.mouvements);
+        setFactures(data.factures);
+        setAchats(data.achats);
+        setParametres(data.parametres);
+        setCategories(cats);
+      } catch (err) {
+        console.error('❌ Erreur chargement:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const articlesAvecPrix = useMemo(() => {
     return calculerArticlesAvecPrix(articles);
@@ -67,6 +110,11 @@ export default function GestionApp() {
   const stats = useMemo(() => {
     return calculerStats(articles, articlesAvecPrix, mouvements, clients);
   }, [articles, articlesAvecPrix, mouvements, clients]);
+
+  // ✅ Fonction pour mettre à jour une facture
+  const miseAJourFacture = async (factureModifiee: FactureResume) => {
+    await sauvegarderFacture(factureModifiee); // Utilise la même fonction que pour la création
+  };
 
   const renderPage = () => {
     switch(currentPage) {
@@ -140,6 +188,24 @@ export default function GestionApp() {
         return <ConfigPage />;
       default:
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
+    }
+  };
+
+  const rechargerDonnees = async () => {
+    try {
+      const data = await chargerDonnees();
+      const cats = await chargerCategories();
+      setArticles(data.articles);
+      setClients(data.clients);
+      setFournisseurs(data.fournisseurs);
+      setMouvements(data.mouvements);
+      setFactures(data.factures);
+      setAchats(data.achats);
+      setParametres(data.parametres);
+      setCategories(cats);
+    } catch (err) {
+      console.error('❌ Erreur rechargement:', err);
+      throw err;
     }
   };
 

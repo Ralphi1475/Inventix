@@ -1,10 +1,6 @@
 // /src/lib/api.ts
 import { Article, Contact, Mouvement, Parametres, FactureResume, Categorie } from '@/types';
 
-// ✅ Configuration du cache
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes en millisecondes
-const CACHE_KEY_PREFIX = 'cache_';
-
 // ✅ Fonction pour obtenir l'URL depuis le localStorage
 const getGoogleScriptUrl = (): string => {
   if (typeof window !== 'undefined') {
@@ -16,65 +12,6 @@ const getGoogleScriptUrl = (): string => {
     return url;
   }
   return '';
-};
-
-// ✅ NOUVEAU : Gestion du cache
-interface CacheData {
-  data: any;
-  timestamp: number;
-}
-
-const getCachedData = (key: string): any | null => {
-  if (typeof window === 'undefined') return null;
-  
-  try {
-    const cached = localStorage.getItem(CACHE_KEY_PREFIX + key);
-    if (!cached) return null;
-    
-    const { data, timestamp }: CacheData = JSON.parse(cached);
-    const now = Date.now();
-    
-    // Vérifier si le cache est encore valide
-    if (now - timestamp < CACHE_DURATION) {
-      console.log(`✅ Cache HIT pour ${key} (${Math.round((now - timestamp) / 1000)}s)`);
-      return data;
-    } else {
-      console.log(`⏰ Cache EXPIRED pour ${key}`);
-      localStorage.removeItem(CACHE_KEY_PREFIX + key);
-      return null;
-    }
-  } catch (error) {
-    console.error('❌ Erreur lecture cache:', error);
-    return null;
-  }
-};
-
-const setCachedData = (key: string, data: any): void => {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    const cacheData: CacheData = {
-      data,
-      timestamp: Date.now()
-    };
-    localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify(cacheData));
-    console.log(`💾 Cache SAVED pour ${key}`);
-  } catch (error) {
-    console.error('❌ Erreur sauvegarde cache:', error);
-  }
-};
-
-// ✅ NOUVEAU : Fonction pour vider le cache manuellement
-export const clearCache = (): void => {
-  if (typeof window === 'undefined') return;
-  
-  const keys = Object.keys(localStorage);
-  keys.forEach(key => {
-    if (key.startsWith(CACHE_KEY_PREFIX)) {
-      localStorage.removeItem(key);
-    }
-  });
-  console.log('🗑️ Cache vidé');
 };
 
 /**
@@ -150,23 +87,9 @@ export const fetchJSONP = (endpoint: string): Promise<any> => {
 };
 
 /**
- * ✅ OPTIMISÉ : Charge toutes les données depuis Google Sheets avec cache
+ * Charge toutes les données depuis Google Sheets
  */
-export const chargerDonnees = async (forceRefresh: boolean = false) => {
-  const CACHE_KEY = 'all_data';
-  
-  // ✅ Vérifier le cache d'abord (sauf si forceRefresh)
-  if (!forceRefresh) {
-    const cachedData = getCachedData(CACHE_KEY);
-    if (cachedData) {
-      console.log('🚀 Données chargées depuis le cache (instantané!)');
-      return cachedData;
-    }
-  }
-  
-  console.log('📡 Chargement des données depuis Google Sheets...');
-  const startTime = Date.now();
-  
+export const chargerDonnees = async () => {
   try {
     // Articles
     const dataArticles = await fetchJSONP(`?action=read&table=Articles`);
@@ -303,7 +226,7 @@ export const chargerDonnees = async (forceRefresh: boolean = false) => {
       });
     }
 
-    const result = {
+    return {
       articles: articlesData,
       clients: clientsData,
       fournisseurs: fournisseursData,
@@ -312,87 +235,92 @@ export const chargerDonnees = async (forceRefresh: boolean = false) => {
       achats: achatsData,
       parametres: params
     };
-    
-    // ✅ Sauvegarder dans le cache
-    setCachedData(CACHE_KEY, result);
-    
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`✅ Données chargées en ${duration}s et mises en cache`);
-    
-    return result;
   } catch (error) {
-    console.error('❌ Erreur chargement données:', error);
+    console.error('❌ Erreur lors du chargement des données:', error);
     throw error;
   }
 };
 
-// ✅ Après chaque modification, vider le cache pour forcer un refresh
-const invalidateCache = () => {
-  clearCache();
-  console.log('🔄 Cache invalidé - prochain chargement sera frais');
+// =============== FONCTIONS DE SAUVEGARDE ===============
+
+export const sauvegarderArticle = async (article: Article, action: 'create' | 'update') => {
+  try {
+    const prixVenteHT = article.prixAchat * (1 + article.margePercent / 100);
+    const prixVenteTTC = prixVenteHT * (1 + article.tauxTVA / 100);
+    const row = [
+      article.id,
+      article.numero,
+      article.categorie,
+      article.nom,
+      article.description,
+      article.image,
+      article.prixAchat,
+      article.margePercent,
+      article.tauxTVA,
+      article.stock,
+      article.emplacement,
+      prixVenteTTC.toFixed(2),
+      article.unite || 'Pièce',
+      article.conditionnement || ''
+    ];
+    const result = await fetchJSONP(`?action=${action}&table=Articles&row=${encodeURIComponent(JSON.stringify(row))}`);
+    console.log('✅ Article sauvegardé:', article.nom);
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde article:', error);
+    throw error;
+  }
 };
 
-// Reste de votre code inchangé...
-export const sauvegarderArticle = async (article: Article, action: 'create' | 'update'): Promise<void> => {
-  const prixVenteHT = article.prixAchat * (1 + article.margePercent / 100);
-  const prixVenteTTC = prixVenteHT * (1 + article.tauxTVA / 100);
-  const row = [
-    article.id,
-    article.numero,
-    article.categorie,
-    article.nom,
-    article.description,
-    article.image,
-    article.prixAchat,
-    article.margePercent,
-    article.tauxTVA,
-    article.stock,
-    article.emplacement,
-    prixVenteTTC.toFixed(2),
-    article.unite || 'Pièce',
-    article.conditionnement || ''
-  ];
-  const result = await fetchJSONP(`?action=${action}&table=Articles&row=${encodeURIComponent(JSON.stringify(row))}`);
-  invalidateCache(); // ✅ Vider le cache
-  console.log('✅ Article sauvegardé:', article.nom);
-  return result;
+export const supprimerArticle = async (id: string) => {
+  try {
+    const result = await fetchJSONP(`?action=delete&table=Articles&id=${id}`);
+    console.log('✅ Article supprimé:', id);
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur suppression article:', error);
+    throw error;
+  }
 };
 
-export const supprimerArticle = async (articleId: string) => {
-  const result = await fetchJSONP(`?action=delete&table=Articles&id=${articleId}`);
-  invalidateCache(); // ✅ Vider le cache
-  return result;
+export const sauvegarderContact = async (contact: Contact, action: 'create' | 'update') => {
+  try {
+    const row = [
+      contact.id,
+      contact.type,
+      contact.societe,
+      contact.nom,
+      contact.prenom,
+      contact.adresse,
+      contact.codePostal,
+      contact.ville,
+      contact.pays,
+      contact.mobile,
+      contact.numeroTVA,
+      contact.numeroCompte,
+      contact.email
+    ];
+    const result = await fetchJSONP(`?action=${action}&table=Client_Fournisseurs&row=${encodeURIComponent(JSON.stringify(row))}`);
+    console.log('✅ Contact sauvegardé:', contact.societe || contact.nom);
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde contact:', error);
+    throw error;
+  }
 };
 
-export const sauvegarderContact = async (contact: Contact, action: 'create' | 'update'): Promise<void> => {
-  const row = [
-    contact.id,
-    contact.type,
-    contact.societe,
-    contact.nom,
-    contact.prenom,
-    contact.adresse,
-    contact.codePostal,
-    contact.ville,
-    contact.pays,
-    contact.mobile,
-    contact.numeroTVA,
-    contact.numeroCompte,
-    contact.email
-  ];
-  const result = await fetchJSONP(`?action=${action}&table=Client_Fournisseurs&row=${encodeURIComponent(JSON.stringify(row))}`);
-  invalidateCache(); // ✅ Vider le cache
-  console.log('✅ Contact sauvegardé:', contact.societe || contact.nom);
-  return result;
+export const supprimerContact = async (id: string) => {
+  try {
+    const result = await fetchJSONP(`?action=delete&table=Client_Fournisseurs&id=${id}`);
+    console.log('✅ Contact supprimé:', id);
+    return result;
+  } catch (error) {
+    console.error('❌ Erreur suppression contact:', error);
+    throw error;
+  }
 };
 
-export const supprimerContact = async (contactId: string) => {
-  const result = await fetchJSONP(`?action=delete&table=Client_Fournisseurs&id=${contactId}`);
-  invalidateCache(); // ✅ Vider le cache
-  return result;
-};
-
-// ✅ FONCTION pour enregistrer un mouvement (16 colonnes)
+// ✅ FONCTION UNIQUE pour enregistrer un mouvement (16 colonnes)
 export async function enregistrerMouvement(mouvement: any): Promise<boolean> {
   const {
     id = String(Date.now() + Math.floor(Math.random() * 10000)),
@@ -406,8 +334,8 @@ export async function enregistrerMouvement(mouvement: any): Promise<boolean> {
     modePaiement = '',
     nomArticle = '',
     prixUnitaire = 0,
-    emplacement = '',
     nomClient = '',
+    emplacement = '',
     rectDate = '',
     colonne6 = '',
     commentaire = ''
@@ -425,19 +353,19 @@ export async function enregistrerMouvement(mouvement: any): Promise<boolean> {
     modePaiement,
     nomArticle,
     prixUnitaire,
-    emplacement,
     nomClient,
+    emplacement,
     rectDate,
     colonne6,
-    commentaire
+    commentaire // ✅ Colonne 16 → "Commentaire"
   ];
 
   const result = await fetchJSONP(`?action=create&table=Mouvements&row=${encodeURIComponent(JSON.stringify(row))}`);
-  invalidateCache(); // ✅ Vider le cache
   console.log('✅ Mouvement enregistré avec commentaire');
   return result.success === true;
 }
 
+// ✅ FONCTION UNIQUE pour sauvegarder une facture (8 colonnes)
 export const sauvegarderFacture = async (facture: any) => {
   const {
     id = String(Date.now()),
@@ -458,11 +386,10 @@ export const sauvegarderFacture = async (facture: any) => {
     modePaiement,
     montant,
     emplacement,
-    commentaire
+    commentaire // ✅ Colonne 8 → "Commentaire"
   ];
 
   const result = await fetchJSONP(`?action=create&table=Facturation&row=${encodeURIComponent(JSON.stringify(row))}`);
-  invalidateCache(); // ✅ Vider le cache
   console.log('✅ Facture sauvegardée avec commentaire');
   return result;
 };
@@ -486,7 +413,6 @@ export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
       nomFournisseur
     ];
     const result = await fetchJSONP(`?action=create&table=Achats&row=${encodeURIComponent(JSON.stringify(row))}`);
-    invalidateCache(); // ✅ Vider le cache
     console.log('✅ Achat sauvegardé:', achat.reference);
     return result;
   } catch (error) {
@@ -514,7 +440,6 @@ export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
       nomFournisseur
     ];
     const result = await fetchJSONP(`?action=update&table=Achats&row=${encodeURIComponent(JSON.stringify(row))}`);
-    invalidateCache(); // ✅ Vider le cache
     console.log('✅ Achat modifié:', achat.reference);
     return result;
   } catch (error) {
@@ -526,7 +451,6 @@ export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
 export const supprimerAchat = async (id: string) => {
   try {
     const result = await fetchJSONP(`?action=delete&table=Achats&id=${id}`);
-    invalidateCache(); // ✅ Vider le cache
     console.log('✅ Achat supprimé:', id);
     return result;
   } catch (error) {
@@ -539,7 +463,6 @@ export const sauvegarderParametres = async (params: Parametres) => {
   try {
     const rows = Object.entries(params).map(([cle, valeur]) => [cle, valeur || '']);
     const result = await fetchJSONP(`?action=saveAll&table=Parametres&rows=${encodeURIComponent(JSON.stringify(rows))}`);
-    invalidateCache(); // ✅ Vider le cache
     console.log('✅ Paramètres sauvegardés');
     return result;
   } catch (error) {
@@ -570,7 +493,6 @@ export async function sauvegarderCategorie(categorie: Categorie, isUpdate: boole
     const row = [categorie.id, categorie.denomination];
     const action = isUpdate ? 'update' : 'create';
     const result = await fetchJSONP(`?action=${action}&table=Categories&row=${encodeURIComponent(JSON.stringify(row))}`);
-    invalidateCache(); // ✅ Vider le cache
     console.log('✅ Catégorie sauvegardée:', categorie.denomination);
     return result;
   } catch (error) {
@@ -582,7 +504,6 @@ export async function sauvegarderCategorie(categorie: Categorie, isUpdate: boole
 export async function supprimerCategorie(id: string): Promise<void> {
   try {
     const result = await fetchJSONP(`?action=delete&table=Categories&id=${id}`);
-    invalidateCache(); // ✅ Vider le cache
     console.log('✅ Catégorie supprimée:', id);
     return result;
   } catch (error) {
@@ -594,7 +515,6 @@ export async function supprimerCategorie(id: string): Promise<void> {
 export const supprimerFacture = async (factureId: string) => {
   try {
     const result = await fetchJSONP(`?action=delete&table=Facturation&id=${factureId}`);
-    invalidateCache(); // ✅ Vider le cache
     console.log('✅ Facture supprimée:', factureId);
     return result;
   } catch (error) {
@@ -606,7 +526,6 @@ export const supprimerFacture = async (factureId: string) => {
 export const supprimerMouvement = async (mouvementId: string) => {
   try {
     const result = await fetchJSONP(`?action=delete&table=Mouvements&id=${mouvementId}`);
-    invalidateCache(); // ✅ Vider le cache
     console.log('✅ Mouvement supprimé:', mouvementId);
     return result;
   } catch (error) {
@@ -615,6 +534,9 @@ export const supprimerMouvement = async (mouvementId: string) => {
   }
 };
 
+/**
+ * Upload une image via ImgBB (via API Route Next.js)
+ */
 export const uploadImage = async (file: File): Promise<string> => {
   try {
     console.log('📤 Upload image:', file.name, file.size, 'bytes');

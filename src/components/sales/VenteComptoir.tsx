@@ -26,6 +26,7 @@ export function VenteComptoir({
   const [loading, setLoading] = useState(false);
   const [dateVente, setDateVente] = useState(new Date().toISOString().split('T')[0]);
   const [emplacement, setEmplacement] = useState('');
+  const [commentaire, setCommentaire] = useState('');
 
   const clientComptoir = clients.find((c: Contact) => c.societe === 'VENTE COMPTOIR');
   if (!clientComptoir) {
@@ -134,7 +135,8 @@ export function VenteComptoir({
           nomArticle: ligne.article.nom,
           prixUnitaire: ligne.prixUnitairePersonnalise ?? ligne.article.prixVenteTTC,
           emplacement,
-          nomClient: 'VENTE COMPTOIR'
+          nomClient: 'VENTE COMPTOIR',
+		  commentaire,
         });
         const newStock = ligne.article.stock - ligne.quantite;
         const updatedArticle = { ...ligne.article, stock: newStock };
@@ -148,7 +150,8 @@ export function VenteComptoir({
         client: 'VENTE COMPTOIR',
         modePaiement,
         montant: totalTTC,
-        emplacement
+        emplacement,
+		commentaire,
       });
       alert('Vente comptoir enregistrée avec succès !');
       setPanier([]);
@@ -190,6 +193,15 @@ export function VenteComptoir({
               </div>
             </div>
           </div>
+		  <div>
+					<label className="block text-sm font-medium mb-2">Commentaire (facultatif)</label>
+					<textarea
+					value={commentaire}
+					onChange={(e) => setCommentaire(e.target.value)}
+					className="w-full px-3 py-2 border rounded-lg"
+					rows={2}
+				/>
+		  </div>
           
           <div className="bg-white rounded-lg shadow p-4">
             <div className="relative mb-4">

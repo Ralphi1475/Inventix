@@ -73,7 +73,8 @@ export interface FactureResume {
   client: string;
   modePaiement: string;
   montant: number;
-  emplacement?: string; // ✅ Nouveau
+  emplacement?: string;
+  commentaire?: string;  // ✅ Nouveau
 }
 
 export interface Categorie {

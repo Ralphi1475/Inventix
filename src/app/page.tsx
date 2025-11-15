@@ -36,7 +36,7 @@ export default function Home() {
     
     console.log('✅ Redirection vers l\'application...');
     // ✅ Redirection directe vers l'application (plus de Google Sheets !)
-    window.location.href = '/gestion';
+    window.location.href = '/Config';
   };
 
   if (loading) {

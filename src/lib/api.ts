@@ -97,15 +97,15 @@ export const chargerDonnees = async (forceRefresh: boolean = false) => {
 const parametres: Parametres = parametresRaw && parametresRaw.length > 0 
   ? toCamelCase(parametresRaw[0]) 
   : {
-      societeNom: '',
-      societeAdresse: '',
-      societeCodePostal: '',
-      societeVille: '',
-      societePays: '',
-      societeTelephone: '',
-      societeEmail: '',
-      societeTva: '',
-      societeIban: ''
+      societe_nom: '',           // ✅ Bon
+      societe_adresse: '',       // ✅ Bon
+      societe_code_postal: '',   // ✅ Bon
+      societe_ville: '',         // ✅ Bon
+      societe_pays: '',          // ✅ Bon
+      societe_telephone: '',     // ✅ Bon
+      societe_email: '',         // ✅ Bon
+      societe_tva: '',           // ✅ Bon
+      societe_iban: ''           // ✅ Bon
     } as Parametres;
 
     const categories: Categorie[] = categoriesRaw ? toCamelCase(categoriesRaw) : [];

@@ -208,7 +208,7 @@ export default function EditFacturePage() {
           emplacement,
           nomClient,
           commentaire // ✅ Passé à chaque mouvement
-        });
+        }, articles);
 
         // Mettre à jour le stock
         const newStock = ligne.article.stock - ligne.quantite;

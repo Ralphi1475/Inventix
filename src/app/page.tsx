@@ -38,7 +38,7 @@ export default function Home() {
     // ✅ Redirection directe vers l'application (plus de Google Sheets !)
     window.location.href = '/gestion';
   };
-
+//resubmit
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

@@ -6,33 +6,61 @@ import { ContactForm } from './ContactForm';
 
 interface ClientsProps {
   contacts: Contact[];
-  setClients: React.Dispatch<React.SetStateAction<Contact[]>>; // ✅
+  setClients: React.Dispatch<React.SetStateAction<Contact[]>>;
   onSave: (contact: Contact, action: 'create' | 'update') => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onRefresh?: () => Promise<void>; // ✅ Ajout de onRefresh
 }
 
-export function Clients({ contacts, setClients, onSave, onDelete }: ClientsProps) {
+export function Clients({ contacts, setClients, onSave, onDelete, onRefresh }: ClientsProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (formData: Contact) => {
-    if (editingContact) {
-      const updatedContacts = contacts.map(c => c.id === editingContact.id ? { ...formData, id: c.id } : c);
-      setClients(updatedContacts);
-      await onSave({ ...formData, id: editingContact.id }, 'update');
-    } else {
-      const newContact = { ...formData, id: String(Date.now()), type: 'client' };
-      setClients([...contacts, newContact]);
-      await onSave(newContact, 'create');
+    try {
+      setLoading(true);
+      
+      if (editingContact) {
+        // Modification
+        await onSave({ ...formData, id: editingContact.id }, 'update');
+      } else {
+        // Création
+        const newContact = { ...formData, id: String(Date.now()), type: 'client' };
+        await onSave(newContact, 'create');
+      }
+      
+      // ✅ Recharger les données depuis la base
+      if (onRefresh) {
+        await onRefresh();
+      }
+      
+      setShowForm(false);
+      setEditingContact(null);
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde client:', error);
+      alert('Erreur lors de la sauvegarde du client');
+    } finally {
+      setLoading(false);
     }
-    setShowForm(false);
-    setEditingContact(null);
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
-      setClients(contacts.filter(c => c.id !== id));
-      await onDelete(id);
+      try {
+        setLoading(true);
+        await onDelete(id);
+        
+        // ✅ Recharger les données depuis la base
+        if (onRefresh) {
+          await onRefresh();
+        }
+      } catch (error) {
+        console.error('❌ Erreur suppression client:', error);
+        alert('Erreur lors de la suppression du client');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -40,7 +68,11 @@ export function Clients({ contacts, setClients, onSave, onDelete }: ClientsProps
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Clients</h2>
-        <button onClick={() => { setShowForm(true); setEditingContact(null); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700">
+        <button 
+          onClick={() => { setShowForm(true); setEditingContact(null); }} 
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
+          disabled={loading}
+        >
           <Plus size={20} />
           <span>Nouveau Client</span>
         </button>
@@ -68,9 +100,21 @@ export function Clients({ contacts, setClients, onSave, onDelete }: ClientsProps
                   <td className="p-3">{contact.email}</td>
                   <td className="p-3">
                     <div className="flex space-x-2">
-                      <button onClick={() => { setEditingContact(contact); setShowForm(true); }} className="text-blue-600 hover:text-blue-800"><Edit2 size={18} /></button>
+                      <button 
+                        onClick={() => { setEditingContact(contact); setShowForm(true); }} 
+                        className="text-blue-600 hover:text-blue-800"
+                        disabled={loading}
+                      >
+                        <Edit2 size={18} />
+                      </button>
                       {contact.societe !== 'VENTE COMPTOIR' && (
-                        <button onClick={() => handleDelete(contact.id)} className="text-red-600 hover:text-red-800"><Trash2 size={18} /></button>
+                        <button 
+                          onClick={() => handleDelete(contact.id)} 
+                          className="text-red-600 hover:text-red-800"
+                          disabled={loading}
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       )}
                     </div>
                   </td>
@@ -80,7 +124,15 @@ export function Clients({ contacts, setClients, onSave, onDelete }: ClientsProps
           </table>
         </div>
       </div>
-      {showForm && <ContactForm contact={editingContact} type="client" onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditingContact(null); }} />}
+      {showForm && (
+        <ContactForm 
+          contact={editingContact} 
+          type="client" 
+          onSubmit={handleSubmit} 
+          onCancel={() => { setShowForm(false); setEditingContact(null); }}
+          loading={loading}
+        />
+      )}
     </div>
   );
 }

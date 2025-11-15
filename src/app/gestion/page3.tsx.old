@@ -77,24 +77,16 @@ export default function GestionApp() {
     await sauvegarderContact(contact, action === 'update');
   };
 
-  const handleDeleteArticle = async (id: string) => {
-    await supprimerArticle(id);
-  };
-
-  const handleDeleteContact = async (id: string) => {
-    await supprimerContact(id);
-  };
-
   const renderPage = () => {
     switch(currentPage) {
       case 'dashboard':
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
       case 'articles':
-        return <Articles articles={articlesAvecPrix} categories={categories} setArticles={setArticles} onSave={handleSaveArticle} onDelete={handleDeleteArticle} onRefresh={rechargerDonnees} />;
+        return <Articles articles={articlesAvecPrix} categories={categories} setArticles={setArticles} onSave={handleSaveArticle} onDelete={supprimerArticle} onRefresh={rechargerDonnees} />;
       case 'clients':
-        return <Clients contacts={clients} setClients={setClients} onSave={handleSaveContact} onDelete={handleDeleteContact} />;
+        return <Clients contacts={clients} setClients={setClients} onSave={handleSaveContact} onDelete={supprimerContact} />;
       case 'fournisseurs':
-        return <Fournisseurs contacts={fournisseurs} setFournisseurs={setFournisseurs} onSave={handleSaveContact} onDelete={handleDeleteContact} />;
+        return <Fournisseurs contacts={fournisseurs} setFournisseurs={setFournisseurs} onSave={handleSaveContact} onDelete={supprimerContact} />;
       case 'vente-client':
         return <VenteClient 
           articles={articlesAvecPrix} 

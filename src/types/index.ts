@@ -35,7 +35,7 @@ export interface Contact {
 export interface Mouvement {
   id: string;
   date: string;
-  type: 'entree' | 'vente' | 'venteComptoir'; // ✅ Ajout venteComptoir
+  type: 'entree' | 'vente' | 'venteComptoir';
   articleId: string;
   quantite: number;
   clientId?: string;
@@ -44,8 +44,11 @@ export interface Mouvement {
   modePaiement?: string;
   nomArticle?: string;
   prixUnitaire?: number;
-  emplacement?: string;  // ✅ Nouveau
-  nomClient?: string;    // ✅ Nouveau
+  emplacement?: string;
+  nomClient?: string;
+  rectDate?: string;
+  colonne6?: string;
+  commentaire?: string;
 }
 
 export interface Parametres {
@@ -63,7 +66,7 @@ export interface Parametres {
 export interface LignePanier {
   article: Article;
   quantite: number;
-  prixUnitairePersonnalise?: number; // ✅ Nouveau champ optionnel
+  prixUnitairePersonnalise?: number;
 }
 
 export interface FactureResume {
@@ -74,7 +77,7 @@ export interface FactureResume {
   modePaiement: string;
   montant: number;
   emplacement?: string;
-  commentaire?: string;  // ✅ Nouveau
+  commentaire?: string;
 }
 
 export interface Categorie {

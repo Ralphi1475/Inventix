@@ -189,8 +189,6 @@ export default function GestionApp() {
         />;
       case 'parametres':
         return <ParametresSociete parametres={parametres} onSave={handleSaveParametres} />;
-      case 'config':
-        return <ConfigPage />;
       default:
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
     }

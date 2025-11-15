@@ -266,40 +266,46 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
           <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'config'} onClick={() => setCurrentPage('config')} />
         </nav>
       </div>
-<div className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-3 z-50 shadow-lg border-t-2 border-blue-800">
+<div className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-3 z-50 shadow-lg border-t-2 border-blue-800 overflow-x-auto">
   <button 
     onClick={() => setCurrentPage('dashboard')} 
-    className={`p-2 rounded-lg transition-colors ${currentPage === 'dashboard' ? 'bg-blue-700' : ''}`}
+    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'dashboard' ? 'bg-blue-700' : ''}`}
   >
     <BarChart3 size={24} />
   </button>
   <button 
     onClick={() => setCurrentPage('articles')} 
-    className={`p-2 rounded-lg transition-colors ${currentPage === 'articles' ? 'bg-blue-700' : ''}`}
+    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'articles' ? 'bg-blue-700' : ''}`}
   >
     <Package size={24} />
   </button>
   <button 
+    onClick={() => setCurrentPage('vente-client')} 
+    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'vente-client' ? 'bg-blue-700' : ''}`}
+  >
+    <TrendingUp size={24} />
+  </button>
+  <button 
     onClick={() => setCurrentPage('vente-comptoir')} 
-    className={`p-2 rounded-lg transition-colors ${currentPage === 'vente-comptoir' ? 'bg-blue-700' : ''}`}
+    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'vente-comptoir' ? 'bg-blue-700' : ''}`}
   >
     <ShoppingCart size={24} />
   </button>
   <button 
     onClick={() => setCurrentPage('clients')} 
-    className={`p-2 rounded-lg transition-colors ${currentPage === 'clients' ? 'bg-blue-700' : ''}`}
+    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'clients' ? 'bg-blue-700' : ''}`}
   >
     <Users size={24} />
   </button>
   <button 
     onClick={() => setCurrentPage('factures')} 
-    className={`p-2 rounded-lg transition-colors ${currentPage === 'factures' ? 'bg-blue-700' : ''}`}
+    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'factures' ? 'bg-blue-700' : ''}`}
   >
     <FileText size={24} />
   </button>
   <button 
     onClick={() => setCurrentPage('parametres')} 
-    className={`p-2 rounded-lg transition-colors ${currentPage === 'parametres' ? 'bg-blue-700' : ''}`}
+    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'parametres' ? 'bg-blue-700' : ''}`}
   >
     <Settings size={24} />
   </button>

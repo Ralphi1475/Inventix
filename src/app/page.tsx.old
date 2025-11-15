@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, getUserConfig } from '@/lib/supabase';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 
@@ -30,13 +30,22 @@ export default function Home() {
 
     const email = session.user.email;
     console.log('👤 Utilisateur connecté:', email);
-    
-    // ✅ Stockage de l'email pour filtrer les données par utilisateur
-    localStorage.setItem('user_email', email);
-    
-    console.log('✅ Redirection vers l\'application...');
-    // ✅ Redirection directe vers l'application (plus de Google Sheets !)
-    window.location.href = '/gestion';
+
+    try {
+      const scriptUrl = await getUserConfig(email);
+
+      if (scriptUrl) {
+        console.log('✅ Config trouvée, chargement...');
+        localStorage.setItem('googleScriptUrl', scriptUrl);
+        window.location.href = '/gestion';
+      } else {
+        console.log('⚙️ Pas de config, redirection...');
+        window.location.href = '/Config';
+      }
+    } catch (error) {
+      console.error('❌ Erreur:', error);
+      setLoading(false);
+    }
   };
 
   if (loading) {

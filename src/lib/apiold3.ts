@@ -1,6 +1,6 @@
 // /src/lib/api.ts
 import { Article, Contact, Mouvement, Parametres, FactureResume, Categorie } from '@/types';
-import { supabase, getCurrentUserEmail } from './supabase';
+import { supabase } from './supabase';
 
 // ============================================================================
 // FONCTIONS DE CONVERSION ENTRE camelCase ET snake_case
@@ -35,22 +35,15 @@ const toCamelCase = (obj: any): any => {
 };
 
 // ============================================================================
-// CHARGEMENT DES DONNÉES (filtré par utilisateur)
+// CHARGEMENT DES DONNÉES
 // ============================================================================
 
 export const chargerDonnees = async (forceRefresh: boolean = false) => {
   console.log('📡 Chargement des données depuis Supabase...');
   const startTime = Date.now();
 
-  const userEmail = getCurrentUserEmail();
-  if (!userEmail) {
-    throw new Error('Utilisateur non connecté');
-  }
-
-  console.log('👤 Chargement des données pour:', userEmail);
-
   try {
-    // Chargement parallèle de toutes les données (filtré par user_email)
+    // Chargement parallèle de toutes les données
     const [
       { data: articlesRaw, error: articlesError },
       { data: contactsRaw, error: contactsError },
@@ -60,13 +53,13 @@ export const chargerDonnees = async (forceRefresh: boolean = false) => {
       { data: parametresRaw, error: parametresError },
       { data: categoriesRaw, error: categoriesError }
     ] = await Promise.all([
-      supabase.from('articles').select('*').eq('user_email', userEmail).order('nom'),
-      supabase.from('contacts').select('*').eq('user_email', userEmail).order('societe'),
-      supabase.from('achats').select('*').eq('user_email', userEmail).order('date_achat', { ascending: false }),
-      supabase.from('mouvements').select('*').eq('user_email', userEmail).order('date', { ascending: false }),
-      supabase.from('factures').select('*').eq('user_email', userEmail).order('date', { ascending: false }),
-      supabase.from('parametres').select('*').eq('user_email', userEmail),
-      supabase.from('categories').select('*').eq('user_email', userEmail).order('denomination')
+      supabase.from('articles').select('*').order('nom'),
+      supabase.from('contacts').select('*').order('societe'),
+      supabase.from('achats').select('*').order('date_achat', { ascending: false }),
+      supabase.from('mouvements').select('*').order('date', { ascending: false }),
+      supabase.from('factures').select('*').order('date', { ascending: false }),
+      supabase.from('parametres').select('*'),
+      supabase.from('categories').select('*').order('denomination')
     ]);
 
     // Gestion des erreurs
@@ -103,7 +96,6 @@ export const chargerDonnees = async (forceRefresh: boolean = false) => {
 
     const loadTime = Date.now() - startTime;
     console.log(`✅ Données chargées depuis Supabase en ${loadTime}ms`);
-    console.log(`📊 Stats: ${articles.length} articles, ${contacts.length} contacts, ${mouvements.length} mouvements`);
 
     return {
       articles,
@@ -127,9 +119,6 @@ export const chargerDonnees = async (forceRefresh: boolean = false) => {
 
 export const sauvegarderArticle = async (article: Article, isUpdate: boolean = false) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const articleData = toSnakeCase({
       id: article.id,
       numero: article.numero,
@@ -143,16 +132,14 @@ export const sauvegarderArticle = async (article: Article, isUpdate: boolean = f
       stock: article.stock,
       emplacement: article.emplacement,
       unite: article.unite,
-      conditionnement: article.conditionnement,
-      userEmail: userEmail  // ✅ Ajout automatique de l'email
+      conditionnement: article.conditionnement
     });
 
     if (isUpdate) {
       const { error } = await supabase
         .from('articles')
         .update(articleData)
-        .eq('id', article.id)
-        .eq('user_email', userEmail);  // ✅ Sécurité supplémentaire
+        .eq('id', article.id);
       
       if (error) throw error;
       console.log('✅ Article modifié:', article.nom);
@@ -174,14 +161,10 @@ export const sauvegarderArticle = async (article: Article, isUpdate: boolean = f
 
 export const supprimerArticle = async (id: string) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const { error } = await supabase
       .from('articles')
       .delete()
-      .eq('id', id)
-      .eq('user_email', userEmail);  // ✅ Ne peut supprimer que ses propres articles
+      .eq('id', id);
     
     if (error) throw error;
     console.log('✅ Article supprimé:', id);
@@ -198,20 +181,13 @@ export const supprimerArticle = async (id: string) => {
 
 export const sauvegarderContact = async (contact: Contact, isUpdate: boolean = false) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
-    const contactData = toSnakeCase({
-      ...contact,
-      userEmail: userEmail  // ✅ Ajout automatique de l'email
-    });
+    const contactData = toSnakeCase(contact);
 
     if (isUpdate) {
       const { error } = await supabase
         .from('contacts')
         .update(contactData)
-        .eq('id', contact.id)
-        .eq('user_email', userEmail);
+        .eq('id', contact.id);
       
       if (error) throw error;
       console.log('✅ Contact modifié:', contact.societe);
@@ -233,14 +209,10 @@ export const sauvegarderContact = async (contact: Contact, isUpdate: boolean = f
 
 export const supprimerContact = async (id: string) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const { error } = await supabase
       .from('contacts')
       .delete()
-      .eq('id', id)
-      .eq('user_email', userEmail);
+      .eq('id', id);
     
     if (error) throw error;
     console.log('✅ Contact supprimé:', id);
@@ -257,13 +229,7 @@ export const supprimerContact = async (id: string) => {
 
 export const sauvegarderMouvement = async (mouvement: Mouvement) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
-    const mouvementData = toSnakeCase({
-      ...mouvement,
-      userEmail: userEmail  // ✅ Ajout automatique de l'email
-    });
+    const mouvementData = toSnakeCase(mouvement);
 
     const { error } = await supabase
       .from('mouvements')
@@ -283,14 +249,10 @@ export const enregistrerMouvement = sauvegarderMouvement;
 
 export const supprimerMouvement = async (mouvementId: string) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const { error } = await supabase
       .from('mouvements')
       .delete()
-      .eq('id', mouvementId)
-      .eq('user_email', userEmail);
+      .eq('id', mouvementId);
     
     if (error) throw error;
     console.log('✅ Mouvement supprimé:', mouvementId);
@@ -307,9 +269,6 @@ export const supprimerMouvement = async (mouvementId: string) => {
 
 export const sauvegarderFacture = async (facture: any) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const factureData = toSnakeCase({
       id: facture.id || String(Date.now()),
       reference: facture.reference,
@@ -318,8 +277,7 @@ export const sauvegarderFacture = async (facture: any) => {
       modePaiement: facture.modePaiement,
       montant: facture.montant,
       emplacement: facture.emplacement || '',
-      commentaire: facture.commentaire || '',
-      userEmail: userEmail  // ✅ Ajout automatique de l'email
+      commentaire: facture.commentaire || ''
     });
 
     const { error } = await supabase
@@ -337,14 +295,10 @@ export const sauvegarderFacture = async (facture: any) => {
 
 export const supprimerFacture = async (factureId: string) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const { error } = await supabase
       .from('factures')
       .delete()
-      .eq('id', factureId)
-      .eq('user_email', userEmail);
+      .eq('id', factureId);
     
     if (error) throw error;
     console.log('✅ Facture supprimée:', factureId);
@@ -361,9 +315,6 @@ export const supprimerFacture = async (factureId: string) => {
 
 export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const fournisseur = fournisseurs.find((f: Contact) => f.id === achat.fournisseurId);
     const nomFournisseur = fournisseur?.societe || '';
     
@@ -379,8 +330,7 @@ export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
       montantTtc: achat.montantTTC,
       description: achat.description || '',
       categorie: achat.categorie,
-      nomFournisseur: nomFournisseur,
-      userEmail: userEmail  // ✅ Ajout automatique de l'email
+      nomFournisseur: nomFournisseur
     });
 
     const { error } = await supabase
@@ -398,9 +348,6 @@ export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
 
 export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const fournisseur = fournisseurs.find((f: Contact) => f.id === achat.fournisseurId);
     const nomFournisseur = fournisseur?.societe || '';
     
@@ -421,8 +368,7 @@ export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
     const { error } = await supabase
       .from('achats')
       .update(achatData)
-      .eq('id', achat.id)
-      .eq('user_email', userEmail);
+      .eq('id', achat.id);
     
     if (error) throw error;
     console.log('✅ Achat modifié:', achat.reference);
@@ -435,14 +381,10 @@ export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
 
 export const supprimerAchat = async (id: string) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const { error } = await supabase
       .from('achats')
       .delete()
-      .eq('id', id)
-      .eq('user_email', userEmail);
+      .eq('id', id);
     
     if (error) throw error;
     console.log('✅ Achat supprimé:', id);
@@ -459,18 +401,14 @@ export const supprimerAchat = async (id: string) => {
 
 export const sauvegarderParametres = async (params: Parametres) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const updates = Object.entries(params).map(([cle, valeur]) => ({
       cle,
-      valeur: valeur || '',
-      user_email: userEmail  // ✅ Ajout automatique de l'email
+      valeur: valeur || ''
     }));
 
     const { error } = await supabase
       .from('parametres')
-      .upsert(updates, { onConflict: 'cle,user_email' });
+      .upsert(updates, { onConflict: 'cle' });
     
     if (error) throw error;
     console.log('✅ Paramètres sauvegardés');
@@ -487,13 +425,9 @@ export const sauvegarderParametres = async (params: Parametres) => {
 
 export async function chargerCategories(): Promise<Categorie[]> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const { data, error } = await supabase
       .from('categories')
       .select('*')
-      .eq('user_email', userEmail)
       .order('denomination');
     
     if (error) throw error;
@@ -507,20 +441,13 @@ export async function chargerCategories(): Promise<Categorie[]> {
 
 export async function sauvegarderCategorie(categorie: Categorie, isUpdate: boolean = false): Promise<void> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
-    const categorieData = toSnakeCase({
-      ...categorie,
-      userEmail: userEmail  // ✅ Ajout automatique de l'email
-    });
+    const categorieData = toSnakeCase(categorie);
 
     if (isUpdate) {
       const { error } = await supabase
         .from('categories')
         .update(categorieData)
-        .eq('id', categorie.id)
-        .eq('user_email', userEmail);
+        .eq('id', categorie.id);
       
       if (error) throw error;
       console.log('✅ Catégorie modifiée:', categorie.denomination);
@@ -540,14 +467,10 @@ export async function sauvegarderCategorie(categorie: Categorie, isUpdate: boole
 
 export async function supprimerCategorie(id: string): Promise<void> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const { error } = await supabase
       .from('categories')
       .delete()
-      .eq('id', id)
-      .eq('user_email', userEmail);
+      .eq('id', id);
     
     if (error) throw error;
     console.log('✅ Catégorie supprimée:', id);

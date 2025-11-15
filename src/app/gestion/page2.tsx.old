@@ -68,25 +68,16 @@ export default function GestionApp() {
     return calculerStats(articles, articlesAvecPrix, mouvements, clients);
   }, [articles, articlesAvecPrix, mouvements, clients]);
 
-  // Wrappers pour adapter les signatures de l'API
-  const handleSaveArticle = async (article: any, action: 'create' | 'update') => {
-    await sauvegarderArticle(article, action === 'update');
-  };
-
-  const handleSaveContact = async (contact: any, action: 'create' | 'update') => {
-    await sauvegarderContact(contact, action === 'update');
-  };
-
   const renderPage = () => {
     switch(currentPage) {
       case 'dashboard':
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
       case 'articles':
-        return <Articles articles={articlesAvecPrix} categories={categories} setArticles={setArticles} onSave={handleSaveArticle} onDelete={supprimerArticle} onRefresh={rechargerDonnees} />;
+        return <Articles articles={articlesAvecPrix} categories={categories} setArticles={setArticles} onSave={sauvegarderArticle} onDelete={supprimerArticle} onRefresh={rechargerDonnees} />;
       case 'clients':
-        return <Clients contacts={clients} setClients={setClients} onSave={handleSaveContact} onDelete={supprimerContact} />;
+        return <Clients contacts={clients} setClients={setClients} onSave={sauvegarderContact} onDelete={supprimerContact} />;
       case 'fournisseurs':
-        return <Fournisseurs contacts={fournisseurs} setFournisseurs={setFournisseurs} onSave={handleSaveContact} onDelete={supprimerContact} />;
+        return <Fournisseurs contacts={fournisseurs} setFournisseurs={setFournisseurs} onSave={sauvegarderContact} onDelete={supprimerContact} />;
       case 'vente-client':
         return <VenteClient 
           articles={articlesAvecPrix} 

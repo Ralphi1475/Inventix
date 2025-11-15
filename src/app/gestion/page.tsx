@@ -82,23 +82,20 @@ const handleSaveContact = async (contact: any, action: 'create' | 'update') => {
   }
 };
 
-const handleDeleteContact = async (id: string) => {
-  try {
-    await supprimerContact(id);
-    await rechargerDonnees(); // ✅ Recharger après suppression
-  } catch (error) {
-    console.error('❌ Erreur suppression contact:', error);
-    throw error;
-  }
-};
 
   const handleDeleteArticle = async (id: string) => {
     await supprimerArticle(id);
   };
 
-  const handleDeleteContact = async (id: string) => {
-    await supprimerContact(id);
-  };
+		const handleDeleteContact = async (id: string) => {
+		try {
+			await supprimerContact(id);
+			await rechargerDonnees(); // ✅ Recharger les données
+		} catch (error) {
+			console.error('❌ Erreur suppression contact:', error);
+			throw error;
+		}
+		};
 
   const handleSaveFacture = async (facture: any) => {
     await sauvegarderFacture(facture);

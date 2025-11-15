@@ -96,7 +96,15 @@ const handleSaveContact = async (contact: any, action: 'create' | 'update') => {
 			throw error;
 		}
 		};
-
+  const handleEnregistrerMouvement = async (mouvement: any): Promise<boolean> => {
+  try {
+    await enregistrerMouvement(mouvement, articlesAvecPrix);
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur enregistrement mouvement:', error);
+    return false;
+  }
+};
   const handleSaveFacture = async (facture: any) => {
     await sauvegarderFacture(facture);
   };
@@ -170,32 +178,32 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
 			onRefresh={rechargerDonnees} // ✅ Important !
 		/>;
       case 'vente-client':
-        return <VenteClient 
-          articles={articlesAvecPrix} 
-          clients={clients} 
-          onVente={enregistrerMouvement} 
-          setArticles={setArticles} 
-          onSaveArticle={handleSaveArticle} 
-          sauvegarderFacture={handleSaveFacture}
-          parametres={parametres} 
-        />;
+		return <VenteClient 
+			articles={articlesAvecPrix} 
+			clients={clients} 
+			onVente={handleEnregistrerMouvement}  // ✅ Bon wrapper
+			setArticles={setArticles} 
+			onSaveArticle={handleSaveArticle} 
+			sauvegarderFacture={handleSaveFacture}
+			parametres={parametres} 
+		/>;
       case 'vente-comptoir':
-        return <VenteComptoir 
-          articles={articlesAvecPrix} 
-          clients={clients} 
-          onVente={enregistrerMouvement} 
-          setArticles={setArticles} 
-          onSaveArticle={handleSaveArticle} 
-          sauvegarderFacture={handleSaveFacture}
-        />;
+		return <VenteComptoir 
+			articles={articlesAvecPrix} 
+			clients={clients} 
+			onVente={handleEnregistrerMouvement}  // ✅ Bon wrapper
+			setArticles={setArticles} 
+		onSaveArticle={handleSaveArticle} 
+			sauvegarderFacture={handleSaveFacture}
+		/>;
       case 'entrees':
-        return <EntreesStock 
-          articles={articlesAvecPrix} 
-          fournisseurs={fournisseurs} 
-          onEntree={enregistrerMouvement} 
-          setArticles={setArticles} 
-          onSaveArticle={handleSaveArticle} 
-        />;
+		return <EntreesStock 
+			articles={articlesAvecPrix} 
+			fournisseurs={fournisseurs} 
+			onEntree={handleEnregistrerMouvement}  // ✅ Bon wrapper
+			setArticles={setArticles} 
+			onSaveArticle={handleSaveArticle} 
+		/>;
       case 'factures':
         return (
           <Factures 

@@ -12,7 +12,11 @@ const toSnakeCase = (obj: any): any => {
   }
   if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce((acc, key) => {
-      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      // ✅ Gestion correcte des acronymes comme TVA, IBAN, etc.
+      const snakeKey = key
+        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2') // TVANumero -> TVA_Numero
+        .replace(/([a-z\d])([A-Z])/g, '$1_$2')     // numeroTVA -> numero_TVA
+        .toLowerCase();                             // numero_TVA -> numero_tva
       acc[snakeKey] = toSnakeCase(obj[key]);
       return acc;
     }, {} as any);

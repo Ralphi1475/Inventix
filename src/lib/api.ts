@@ -99,7 +99,7 @@ export const chargerDonnees = async (forceRefresh: boolean = false) => {
     
     // Conversion des paramètres en objet
 const parametres: Parametres = parametresRaw && parametresRaw.length > 0 
-  ? toCamelCase(parametresRaw[0]) 
+  ? parametresRaw[0] as Parametres  // ✅ Directement, sans conversion
   : {
       societe_nom: '',           // ✅ Bon
       societe_adresse: '',       // ✅ Bon

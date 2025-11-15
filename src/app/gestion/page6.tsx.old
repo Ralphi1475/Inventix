@@ -117,9 +117,8 @@ export default function GestionApp() {
     await supprimerCategorie(id);
   };
 
-  const handleSaveParametres = async (params: any): Promise<boolean> => {
+  const handleSaveParametres = async (params: any) => {
     await sauvegarderParametres(params);
-    return true;
   };
 
   const renderPage = () => {

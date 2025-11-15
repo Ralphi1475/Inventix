@@ -85,42 +85,6 @@ export default function GestionApp() {
     await supprimerContact(id);
   };
 
-  const handleSaveFacture = async (facture: any) => {
-    await sauvegarderFacture(facture);
-  };
-
-  const handleSaveAchat = async (achat: any, fournisseurs: any[]) => {
-    await sauvegarderAchat(achat, fournisseurs);
-  };
-
-  const handleModifierAchat = async (achat: any, fournisseurs: any[]) => {
-    await modifierAchat(achat, fournisseurs);
-  };
-
-  const handleDeleteAchat = async (id: string) => {
-    await supprimerAchat(id);
-  };
-
-  const handleDeleteFacture = async (id: string) => {
-    await supprimerFacture(id);
-  };
-
-  const handleDeleteMouvement = async (id: string) => {
-    await supprimerMouvement(id);
-  };
-
-  const handleSaveCategorie = async (categorie: any, isUpdate: boolean) => {
-    await sauvegarderCategorie(categorie, isUpdate);
-  };
-
-  const handleDeleteCategorie = async (id: string) => {
-    await supprimerCategorie(id);
-  };
-
-  const handleSaveParametres = async (params: any) => {
-    await sauvegarderParametres(params);
-  };
-
   const renderPage = () => {
     switch(currentPage) {
       case 'dashboard':
@@ -138,7 +102,7 @@ export default function GestionApp() {
           onVente={enregistrerMouvement} 
           setArticles={setArticles} 
           onSaveArticle={handleSaveArticle} 
-          sauvegarderFacture={handleSaveFacture}
+          sauvegarderFacture={sauvegarderFacture}
           parametres={parametres} 
         />;
       case 'vente-comptoir':
@@ -148,7 +112,7 @@ export default function GestionApp() {
           onVente={enregistrerMouvement} 
           setArticles={setArticles} 
           onSaveArticle={handleSaveArticle} 
-          sauvegarderFacture={handleSaveFacture}
+          sauvegarderFacture={sauvegarderFacture}
         />;
       case 'entrees':
         return <EntreesStock 
@@ -166,8 +130,8 @@ export default function GestionApp() {
             articles={articlesAvecPrix} 
             clients={clients} 
             parametres={parametres}
-            onDeleteFacture={handleDeleteFacture}
-            onDeleteMouvement={handleDeleteMouvement}
+            onDeleteFacture={supprimerFacture}
+            onDeleteMouvement={supprimerMouvement}
             onUpdateArticle={(article) => handleSaveArticle(article, 'update')}
             onRefresh={rechargerDonnees}
           />
@@ -176,19 +140,19 @@ export default function GestionApp() {
         return <Achats 
           achats={achats} 
           fournisseurs={fournisseurs} 
-          sauvegarderAchat={handleSaveAchat} 
-          modifierAchat={handleModifierAchat} 
-          supprimerAchat={handleDeleteAchat} 
+          sauvegarderAchat={sauvegarderAchat} 
+          modifierAchat={modifierAchat} 
+          supprimerAchat={supprimerAchat} 
         />;
       case 'categories':
         return <Categories 
           categories={categories} 
           setCategories={setCategories} 
-          onSave={handleSaveCategorie}
-          onDelete={handleDeleteCategorie} 
+          onSave={(cat, isUpdate) => sauvegarderCategorie(cat, isUpdate)}
+          onDelete={supprimerCategorie} 
         />;
       case 'parametres':
-        return <ParametresSociete parametres={parametres} onSave={handleSaveParametres} />;
+        return <ParametresSociete parametres={parametres} onSave={sauvegarderParametres} />;
       case 'config':
         return <ConfigPage />;
       default:

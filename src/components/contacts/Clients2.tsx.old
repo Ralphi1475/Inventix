@@ -4,15 +4,15 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { Contact } from '@/types';
 import { ContactForm } from './ContactForm';
 
-interface FournisseursProps {
+interface ClientsProps {
   contacts: Contact[];
-  setFournisseurs: React.Dispatch<React.SetStateAction<Contact[]>>;
+  setClients: React.Dispatch<React.SetStateAction<Contact[]>>;
   onSave: (contact: Contact, action: 'create' | 'update') => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onRefresh?: () => Promise<void>; // ✅ Ajout de onRefresh
 }
 
-export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRefresh }: FournisseursProps) {
+export function Clients({ contacts, setClients, onSave, onDelete, onRefresh }: ClientsProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
         await onSave({ ...formData, id: editingContact.id }, 'update');
       } else {
         // Création
-        const newContact = { ...formData, id: String(Date.now()), type: 'fournisseur' };
+        const newContact = { ...formData, id: String(Date.now()), type: 'client' };
         await onSave(newContact, 'create');
       }
       
@@ -38,15 +38,15 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
       setShowForm(false);
       setEditingContact(null);
     } catch (error) {
-      console.error('❌ Erreur sauvegarde fournisseur:', error);
-      alert('Erreur lors de la sauvegarde du fournisseur');
+      console.error('❌ Erreur sauvegarde client:', error);
+      alert('Erreur lors de la sauvegarde du client');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce fournisseur ?')) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
       try {
         setLoading(true);
         await onDelete(id);
@@ -56,8 +56,8 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
           await onRefresh();
         }
       } catch (error) {
-        console.error('❌ Erreur suppression fournisseur:', error);
-        alert('Erreur lors de la suppression du fournisseur');
+        console.error('❌ Erreur suppression client:', error);
+        alert('Erreur lors de la suppression du client');
       } finally {
         setLoading(false);
       }
@@ -66,15 +66,15 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold">Fournisseurs</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-bold">Clients</h2>
         <button 
           onClick={() => { setShowForm(true); setEditingContact(null); }} 
-          className="bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg flex items-center justify-center md:space-x-2 hover:bg-blue-700 transition-colors"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
           disabled={loading}
         >
           <Plus size={20} />
-          <span className="hidden md:inline ml-2">Nouveau Fournisseur</span>
+          <span>Nouveau Client</span>
         </button>
       </div>
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -107,13 +107,15 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
                       >
                         <Edit2 size={18} />
                       </button>
-                      <button 
-                        onClick={() => handleDelete(contact.id)} 
-                        className="text-red-600 hover:text-red-800"
-                        disabled={loading}
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {contact.societe !== 'VENTE COMPTOIR' && (
+                        <button 
+                          onClick={() => handleDelete(contact.id)} 
+                          className="text-red-600 hover:text-red-800"
+                          disabled={loading}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -125,7 +127,7 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
       {showForm && (
         <ContactForm 
           contact={editingContact} 
-          type="fournisseur" 
+          type="client" 
           onSubmit={handleSubmit} 
           onCancel={() => { setShowForm(false); setEditingContact(null); }}
           loading={loading}

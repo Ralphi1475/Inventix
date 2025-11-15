@@ -11,6 +11,7 @@ interface VenteClientProps {
   onSaveArticle: (article: Article, action: 'create' | 'update') => Promise<void>;
   sauvegarderFacture: (facture: any) => Promise<void>;
   parametres: any;
+  onRefresh?: () => Promise<void>;
 }
 
 export function VenteClient({ 
@@ -20,7 +21,8 @@ export function VenteClient({
   setArticles, 
   onSaveArticle, 
   sauvegarderFacture, 
-  parametres 
+  parametres,
+  onRefresh  
 }: VenteClientProps) {
   const [panier, setPanier] = useState<LignePanier[]>([]);
   const [clientSelectionne, setClientSelectionne] = useState<Contact | null>(null);
@@ -147,6 +149,9 @@ export function VenteClient({
         emplacement: '',
 		commentaire
       });
+	  if (onRefresh) {
+		await onRefresh();
+		}
       alert('Vente enregistrée avec succès !');
       setPanier([]);
       setClientSelectionne(null);

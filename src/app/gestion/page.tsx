@@ -96,18 +96,25 @@ const handleSaveContact = async (contact: any, action: 'create' | 'update') => {
 			throw error;
 		}
 		};
-  const handleEnregistrerMouvement = async (mouvement: any): Promise<boolean> => {
+const handleEnregistrerMouvement = async (mouvement: any): Promise<boolean> => {
   try {
     await enregistrerMouvement(mouvement, articlesAvecPrix);
+    await rechargerDonnees(); // ✅ Recharger après chaque mouvement
     return true;
   } catch (error) {
     console.error('❌ Erreur enregistrement mouvement:', error);
     return false;
   }
 };
-  const handleSaveFacture = async (facture: any) => {
+const handleSaveFacture = async (facture: any) => {
+  try {
     await sauvegarderFacture(facture);
-  };
+    await rechargerDonnees(); // ✅ Recharger après sauvegarde facture
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde facture:', error);
+    throw error;
+  }
+};
 
   const handleSaveAchat = async (achat: any, fournisseurs: any[]) => {
     await sauvegarderAchat(achat, fournisseurs);
@@ -186,6 +193,7 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
 			onSaveArticle={handleSaveArticle} 
 			sauvegarderFacture={handleSaveFacture}
 			parametres={parametres} 
+			onRefresh={rechargerDonnees}
 		/>;
       case 'vente-comptoir':
 		return <VenteComptoir 
@@ -193,8 +201,9 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
 			clients={clients} 
 			onVente={handleEnregistrerMouvement}  // ✅ Bon wrapper
 			setArticles={setArticles} 
-		onSaveArticle={handleSaveArticle} 
+		    onSaveArticle={handleSaveArticle} 
 			sauvegarderFacture={handleSaveFacture}
+			onRefresh={rechargerDonnees}
 		/>;
       case 'entrees':
 		return <EntreesStock 

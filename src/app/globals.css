@@ -1,0 +1,189 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-50;
+}
+
+/* Style pour les cartes de statistiques */
+.stat-card {
+  @apply bg-white rounded-lg shadow p-6;
+}
+
+.stat-card .icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center mb-4;
+}
+
+.stat-card .icon.green {
+  @apply bg-green-500 text-white;
+}
+
+.stat-card .icon.red {
+  @apply bg-red-500 text-white;
+}
+
+.stat-card .icon.blue {
+  @apply bg-blue-500 text-white;
+}
+
+.stat-card .icon.purple {
+  @apply bg-purple-500 text-white;
+}
+
+/* Style pour les boutons de navigation */
+.nav-item {
+  @apply w-full flex items-center space-x-3 p-3 rounded-lg transition;
+}
+
+.nav-item.active {
+  @apply bg-blue-800;
+}
+
+.nav-item:hover {
+  @apply bg-blue-800;
+}
+
+/* Style pour les tables */
+.table-container {
+  @apply overflow-x-auto;
+}
+
+.table {
+  @apply w-full;
+}
+
+.table th,
+.table td {
+  @apply border px-3 py-2 text-left;
+}
+
+.table th {
+  @apply bg-gray-50;
+}
+
+.table tr:nth-child(even) {
+  @apply bg-gray-50;
+}
+
+/* Style pour les alertes */
+.alert {
+  @apply p-4 mb-6;
+}
+
+.alert.orange {
+  @apply bg-orange-100 border-l-4 border-orange-500;
+}
+
+/* Style pour les boutons d'action */
+.action-button {
+  @apply p-1 hover:bg-gray-100 rounded;
+}
+
+.action-button.delete {
+  @apply text-red-600 hover:text-red-800;
+}
+
+.action-button.edit {
+  @apply text-blue-600 hover:text-blue-800;
+
+}
+
+.sidebar {
+  @apply w-64 bg-blue-900 text-white p-4 hidden md:block overflow-y-auto;
+}
+
+.sidebar h1 {
+  @apply text-2xl font-bold mb-8;
+}
+
+.sidebar nav {
+  @apply space-y-2;
+}
+
+.sidebar .nav-item {
+  @apply w-full flex items-center space-x-3 p-3 rounded-lg transition;
+}
+
+.sidebar .nav-item.active {
+  @apply bg-blue-800;
+}
+
+.sidebar .nav-item:hover {
+  @apply bg-blue-800;
+}
+
+.main-content {
+  @apply flex-1 p-4 md:p-8 mb-16 md:mb-0 overflow-auto;
+}
+
+.mobile-nav {
+  @apply md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-2 z-50;
+}
+
+.mobile-nav button {
+  @apply p-2;
+}
+
+/* Cartes de statistiques */
+.stat-card {
+  @apply bg-white rounded-lg shadow p-6;
+}
+
+.stat-card .icon {
+  @apply w-12 h-12 rounded-full flex items-center justify-center mb-4;
+}
+
+.stat-card .icon.green {
+  @apply bg-green-500 text-white;
+}
+
+.stat-card .icon.red {
+  @apply bg-red-500 text-white;
+}
+
+.stat-card .icon.blue {
+  @apply bg-blue-500 text-white;
+}
+
+.stat-card .icon.purple {
+  @apply bg-purple-500 text-white;
+}
+
+.stat-card h3 {
+  @apply text-black text-sm;
+}
+
+.stat-card p {
+  @apply text-2xl font-bold mt-2;
+}
+
+/* Tableau des mouvements */
+.mouvements-table {
+  @apply w-full;
+}
+
+.mouvements-table th,
+.mouvements-table td {
+  @apply border px-3 py-2 text-left;
+}
+
+.mouvements-table th {
+  @apply bg-gray-50;
+}
+
+.mouvements-table tr:nth-child(even) {
+  @apply bg-gray-50;
+}
+
+/* Alerte stock */
+.alert {
+  @apply p-4 mb-6;
+}
+
+.alert.orange {
+  @apply bg-orange-100 border-l-4 border-orange-500;
+}
+
+

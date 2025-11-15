@@ -203,7 +203,6 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
 			setArticles={setArticles} 
 		    onSaveArticle={handleSaveArticle} 
 			sauvegarderFacture={handleSaveFacture}
-			onRefresh={rechargerDonnees}
 		/>;
       case 'entrees':
 		return <EntreesStock 

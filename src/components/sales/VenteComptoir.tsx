@@ -88,16 +88,16 @@ export function VenteComptoir({
 
   const totalHT = panier.reduce((sum, p) => {
     const prixTTC = p.prixUnitairePersonnalise ?? p.article.prixVenteTTC!;
-    const tauxTVA = p.article.tauxTVA || 21;
-    const prixHT = prixTTC / (1 + tauxTVA / 100);
+    const tauxTva = p.article.tauxTva || 21;
+    const prixHT = prixTTC / (1 + tauxTva / 100);
     return sum + (prixHT * p.quantite);
   }, 0);
 
   const totalTVA = panier.reduce((sum, p) => {
     const prixTTC = p.prixUnitairePersonnalise ?? p.article.prixVenteTTC!;
-    const tauxTVA = p.article.tauxTVA || 21;
-    const prixHT = prixTTC / (1 + tauxTVA / 100);
-    return sum + ((prixHT * tauxTVA / 100) * p.quantite);
+    const tauxTva = p.article.tauxTva || 21;
+    const prixHT = prixTTC / (1 + tauxTva / 100);
+    return sum + ((prixHT * tauxTva / 100) * p.quantite);
   }, 0);
 
   const totalAvantReduction = totalHT + totalTVA;

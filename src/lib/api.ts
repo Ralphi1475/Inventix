@@ -94,10 +94,19 @@ export const chargerDonnees = async (forceRefresh: boolean = false) => {
     const factures: FactureResume[] = facturesRaw ? toCamelCase(facturesRaw) : [];
     
     // Conversion des paramètres en objet
-    const parametres: Parametres = parametresRaw ? parametresRaw.reduce((acc, param) => {
-      acc[param.cle as keyof Parametres] = param.valeur || '';
-      return acc;
-    }, {} as Parametres) : {} as Parametres;
+const parametres: Parametres = parametresRaw && parametresRaw.length > 0 
+  ? toCamelCase(parametresRaw[0]) 
+  : {
+      societeNom: '',
+      societeAdresse: '',
+      societeCodePostal: '',
+      societeVille: '',
+      societePays: '',
+      societeTelephone: '',
+      societeEmail: '',
+      societeTva: '',
+      societeIban: ''
+    } as Parametres;
 
     const categories: Categorie[] = categoriesRaw ? toCamelCase(categoriesRaw) : [];
 
@@ -462,15 +471,15 @@ export const sauvegarderParametres = async (params: Parametres) => {
     const userEmail = getCurrentUserEmail();
     if (!userEmail) throw new Error('Utilisateur non connecté');
 
-    const updates = Object.entries(params).map(([cle, valeur]) => ({
-      cle,
-      valeur: valeur || '',
-      user_email: userEmail  // ✅ Ajout automatique de l'email
-    }));
+    const parametresData = toSnakeCase({
+      ...params,
+      userEmail: userEmail
+    });
 
+    // Upsert basé sur user_email (une seule ligne par utilisateur)
     const { error } = await supabase
       .from('parametres')
-      .upsert(updates, { onConflict: 'cle,user_email' });
+      .upsert([parametresData], { onConflict: 'user_email' });
     
     if (error) throw error;
     console.log('✅ Paramètres sauvegardés');

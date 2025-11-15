@@ -128,9 +128,9 @@ export function Factures({
       if (article) {
         const quantite = parseFloat(ligne.quantite.toString()) || 0;
         const prixHT = article.prixVenteHT || 0;
-        const tauxTVA = article.tauxTVA || 0;
+        const tauxTva = article.tauxTva || 0;
         totalHT += prixHT * quantite;
-        totalTVA += (prixHT * tauxTVA / 100) * quantite;
+        totalTVA += (prixHT * tauxTva / 100) * quantite;
       }
     });
 
@@ -194,7 +194,7 @@ export function Factures({
             <td>${article.nom}</td>
             <td style="text-align: right;">${quantite % 1 === 0 ? quantite : quantite.toFixed(2)}</td>
             <td style="text-align: right;">${prixHT.toFixed(2)} €</td>
-            <td style="text-align: center;">${article.tauxTVA}%</td>
+            <td style="text-align: center;">${article.tauxTva}%</td>
             <td style="text-align: right;">${totalLigne.toFixed(2)} €</td>
           </tr>
         `;

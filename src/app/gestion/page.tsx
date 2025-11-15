@@ -72,9 +72,25 @@ export default function GestionApp() {
     await sauvegarderArticle(article, action === 'update');
   };
 
-  const handleSaveContact = async (contact: any, action: 'create' | 'update') => {
+const handleSaveContact = async (contact: any, action: 'create' | 'update') => {
+  try {
     await sauvegarderContact(contact, action === 'update');
-  };
+    await rechargerDonnees(); // ✅ Recharger après sauvegarde
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde contact:', error);
+    throw error;
+  }
+};
+
+const handleDeleteContact = async (id: string) => {
+  try {
+    await supprimerContact(id);
+    await rechargerDonnees(); // ✅ Recharger après suppression
+  } catch (error) {
+    console.error('❌ Erreur suppression contact:', error);
+    throw error;
+  }
+};
 
   const handleDeleteArticle = async (id: string) => {
     await supprimerArticle(id);
@@ -117,22 +133,22 @@ export default function GestionApp() {
   };
 
   // ✅ FONCTION CORRIGÉE : Gestion d'erreur + Rechargement des données
-  const handleSaveParametres = async (params: any): Promise<boolean> => {
-    try {
-      console.log('💾 Sauvegarde des paramètres...', params);
-      await sauvegarderParametres(params);
-      console.log('✅ Paramètres sauvegardés avec succès');
-      
-      // ✅ Recharger les données pour mettre à jour l'interface
-      await rechargerDonnees();
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
-      alert('Erreur lors de la sauvegarde des paramètres. Veuillez réessayer.');
-      return false;
-    }
-  };
+const handleSaveParametres = async (params: any): Promise<boolean> => {
+  try {
+    console.log('💾 Sauvegarde des paramètres...', params);
+    await sauvegarderParametres(params);
+    console.log('✅ Paramètres sauvegardés avec succès');
+    
+    // ✅ Recharger les données pour mettre à jour l'interface
+    await rechargerDonnees();
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
+    alert('Erreur lors de la sauvegarde des paramètres. Veuillez réessayer.');
+    return false;
+  }
+};
 
   const renderPage = () => {
     switch(currentPage) {
@@ -140,10 +156,22 @@ export default function GestionApp() {
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
       case 'articles':
         return <Articles articles={articlesAvecPrix} categories={categories} setArticles={setArticles} onSave={handleSaveArticle} onDelete={handleDeleteArticle} onRefresh={rechargerDonnees} />;
-      case 'clients':
-        return <Clients contacts={clients} setClients={setClients} onSave={handleSaveContact} onDelete={handleDeleteContact} />;
-      case 'fournisseurs':
-        return <Fournisseurs contacts={fournisseurs} setFournisseurs={setFournisseurs} onSave={handleSaveContact} onDelete={handleDeleteContact} />;
+	case 'clients':
+		return <Clients 
+			contacts={clients} 
+			setClients={setClients} 
+			onSave={handleSaveContact} 
+			onDelete={handleDeleteContact}
+			onRefresh={rechargerDonnees} // ✅ Important !
+		/>;
+	  case 'fournisseurs':
+		return <Fournisseurs 
+			contacts={fournisseurs} 
+			setFournisseurs={setFournisseurs} 
+			onSave={handleSaveContact} 
+		onDelete={handleDeleteContact}
+			onRefresh={rechargerDonnees} // ✅ Important !
+		/>;
       case 'vente-client':
         return <VenteClient 
           articles={articlesAvecPrix} 

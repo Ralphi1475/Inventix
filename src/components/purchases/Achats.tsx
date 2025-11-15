@@ -240,7 +240,7 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
                       {achat.categorie}
                     </span>
                   </td>
-                  <td className="p-3 font-bold">{achat.montantTTC.toFixed(2)} €</td>
+                  <td className="p-3 font-bold">{(achat.montantTTC || 0).toFixed(2)} €</td>
                   <td className="p-3">
                     <div className="flex space-x-2">
                       <button onClick={() => openForm(achat)} className="text-blue-600 hover:text-blue-800"><Edit2 size={18} /></button>

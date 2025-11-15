@@ -63,6 +63,21 @@ export interface Parametres {
   societe_iban: string;
 }
 
+export interface Achat {
+  id: string;
+  reference: string;
+  dateAchat: string;
+  dateEcheance?: string;
+  datePaiement?: string;
+  fournisseurId: string;
+  modePaiement?: string;
+  montantHtva: number;   // ✅ Pas HTVA
+  montantTtc: number;    // ✅ Pas TTC
+  description?: string;
+  categorie: string;
+  nomFournisseur?: string;
+}
+
 export interface LignePanier {
   article: Article;
   quantite: number;

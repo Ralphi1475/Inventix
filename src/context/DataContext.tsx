@@ -64,6 +64,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     try {
       const data = await chargerDonnees(forceRefresh);
       const cats = await chargerCategories();
+      
       setArticles(data.articles);
       setClients(data.clients);
       setFournisseurs(data.fournisseurs);
@@ -86,14 +87,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const scriptUrl = localStorage.getItem('googleScriptUrl');
-      if (!scriptUrl) {
-        alert('⚠️ URL perdue ! Vérifiez la console (F12)');
-        window.location.href = '/config';
-        return;
-      }
-    }
+    // ✅ Plus besoin de vérifier googleScriptUrl avec Supabase !
+    // Chargement direct des données
     rechargerDonnees();
   }, []);
 

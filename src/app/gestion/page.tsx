@@ -116,9 +116,22 @@ export default function GestionApp() {
     await supprimerCategorie(id);
   };
 
+  // ✅ FONCTION CORRIGÉE : Gestion d'erreur + Rechargement des données
   const handleSaveParametres = async (params: any): Promise<boolean> => {
-    await sauvegarderParametres(params);
-    return true;
+    try {
+      console.log('💾 Sauvegarde des paramètres...', params);
+      await sauvegarderParametres(params);
+      console.log('✅ Paramètres sauvegardés avec succès');
+      
+      // ✅ Recharger les données pour mettre à jour l'interface
+      await rechargerDonnees();
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
+      alert('Erreur lors de la sauvegarde des paramètres. Veuillez réessayer.');
+      return false;
+    }
   };
 
   const renderPage = () => {

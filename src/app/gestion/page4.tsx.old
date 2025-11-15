@@ -101,7 +101,7 @@ export default function GestionApp() {
           clients={clients} 
           onVente={enregistrerMouvement} 
           setArticles={setArticles} 
-          onSaveArticle={handleSaveArticle} 
+          onSaveArticle={sauvegarderArticle} 
           sauvegarderFacture={sauvegarderFacture}
           parametres={parametres} 
         />;
@@ -111,7 +111,7 @@ export default function GestionApp() {
           clients={clients} 
           onVente={enregistrerMouvement} 
           setArticles={setArticles} 
-          onSaveArticle={handleSaveArticle} 
+          onSaveArticle={sauvegarderArticle} 
           sauvegarderFacture={sauvegarderFacture}
         />;
       case 'entrees':
@@ -120,7 +120,7 @@ export default function GestionApp() {
           fournisseurs={fournisseurs} 
           onEntree={enregistrerMouvement} 
           setArticles={setArticles} 
-          onSaveArticle={handleSaveArticle} 
+          onSaveArticle={sauvegarderArticle} 
         />;
       case 'factures':
         return (
@@ -132,7 +132,7 @@ export default function GestionApp() {
             parametres={parametres}
             onDeleteFacture={supprimerFacture}
             onDeleteMouvement={supprimerMouvement}
-            onUpdateArticle={(article) => handleSaveArticle(article, 'update')}
+            onUpdateArticle={(article) => sauvegarderArticle(article, true)}
             onRefresh={rechargerDonnees}
           />
         );

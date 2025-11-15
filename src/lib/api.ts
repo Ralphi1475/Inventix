@@ -244,6 +244,9 @@ export const sauvegarderMouvement = async (mouvement: Mouvement) => {
   }
 };
 
+// Alias pour compatibilité avec l'ancien code
+export const enregistrerMouvement = sauvegarderMouvement;
+
 export const supprimerMouvement = async (mouvementId: string) => {
   try {
     const { error } = await supabase

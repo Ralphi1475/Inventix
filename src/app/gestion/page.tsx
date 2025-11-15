@@ -244,7 +244,7 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
       <div className="w-64 bg-blue-900 text-white p-4 hidden md:block overflow-y-auto">
         <h1 className="text-2xl font-bold mb-8">Inventix</h1>
         <nav className="space-y-2">
@@ -266,15 +266,45 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
           <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'config'} onClick={() => setCurrentPage('config')} />
         </nav>
       </div>
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-2 z-50">
-        <button onClick={() => setCurrentPage('dashboard')} className="p-2"><BarChart3 size={24} /></button>
-        <button onClick={() => setCurrentPage('articles')} className="p-2"><Package size={24} /></button>
-        <button onClick={() => setCurrentPage('vente-comptoir')} className="p-2"><ShoppingCart size={24} /></button>
-        <button onClick={() => setCurrentPage('clients')} className="p-2"><Users size={24} /></button>
-        <button onClick={() => setCurrentPage('factures')} className="p-2"><FileText size={24} /></button>
-        <button onClick={() => setCurrentPage('config')} className="p-2"><Settings size={24} /></button>
-      </div>
-      <div className="flex-1 p-4 md:p-8 mb-16 md:mb-0 overflow-auto">
+<div className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-3 z-50 shadow-lg border-t-2 border-blue-800">
+  <button 
+    onClick={() => setCurrentPage('dashboard')} 
+    className={`p-2 rounded-lg transition-colors ${currentPage === 'dashboard' ? 'bg-blue-700' : ''}`}
+  >
+    <BarChart3 size={24} />
+  </button>
+  <button 
+    onClick={() => setCurrentPage('articles')} 
+    className={`p-2 rounded-lg transition-colors ${currentPage === 'articles' ? 'bg-blue-700' : ''}`}
+  >
+    <Package size={24} />
+  </button>
+  <button 
+    onClick={() => setCurrentPage('vente-comptoir')} 
+    className={`p-2 rounded-lg transition-colors ${currentPage === 'vente-comptoir' ? 'bg-blue-700' : ''}`}
+  >
+    <ShoppingCart size={24} />
+  </button>
+  <button 
+    onClick={() => setCurrentPage('clients')} 
+    className={`p-2 rounded-lg transition-colors ${currentPage === 'clients' ? 'bg-blue-700' : ''}`}
+  >
+    <Users size={24} />
+  </button>
+  <button 
+    onClick={() => setCurrentPage('factures')} 
+    className={`p-2 rounded-lg transition-colors ${currentPage === 'factures' ? 'bg-blue-700' : ''}`}
+  >
+    <FileText size={24} />
+  </button>
+  <button 
+    onClick={() => setCurrentPage('parametres')} 
+    className={`p-2 rounded-lg transition-colors ${currentPage === 'parametres' ? 'bg-blue-700' : ''}`}
+  >
+    <Settings size={24} />
+  </button>
+</div>
+      <div className="flex-1 p-3 md:p-8 pb-20 md:pb-8 overflow-y-auto overflow-x-hidden">
         {renderPage()}
       </div>
     </div>

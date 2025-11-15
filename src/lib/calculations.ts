@@ -6,7 +6,7 @@ import { Article, Mouvement, Contact } from '@/types';
 export const calculerArticlesAvecPrix = (articles: Article[]) => {
   return articles.map(art => {
     const prixVenteHT = art.prixAchat * (1 + art.margePercent / 100);
-    const montantTVA = prixVenteHT * (art.tauxTVA / 100);
+    const montantTVA = prixVenteHT * (art.tauxTva / 100);
     const prixVenteTTC = prixVenteHT + montantTVA;
     return { ...art, prixVenteHT, prixVenteTTC };
   });

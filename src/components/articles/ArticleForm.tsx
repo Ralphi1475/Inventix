@@ -20,7 +20,7 @@ export function ArticleForm({ article, categories, onSubmit, onCancel }: Article
     image: '', 
     prixAchat: 0, 
     margePercent: 30, 
-    tauxTVA: 21, 
+    tauxTva: 21, 
     stock: 0, 
     emplacement: '',
     unite: 'Pièce',
@@ -72,13 +72,13 @@ export function ArticleForm({ article, categories, onSubmit, onCancel }: Article
       ...formData, 
       prixAchat: parseFloat(String(formData.prixAchat)), 
       margePercent: parseFloat(String(formData.margePercent)), 
-      tauxTVA: parseFloat(String(formData.tauxTVA)), 
+      tauxTva: parseFloat(String(formData.tauxTva)), 
       stock: parseInt(String(formData.stock)) 
     }); 
   };
 
   const prixVenteHT = formData.prixAchat * (1 + formData.margePercent / 100);
-  const prixVenteTTC = prixVenteHT * (1 + formData.tauxTVA / 100);
+  const prixVenteTTC = prixVenteHT * (1 + formData.tauxTva / 100);
   const unitesDisponibles = ['Pièce', 'Kilogramme', 'Gramme', 'Pack', 'Point', 'Couleur'];
 
   return (
@@ -159,7 +159,7 @@ export function ArticleForm({ article, categories, onSubmit, onCancel }: Article
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">TVA (%) *</label>
-              <input type="number" step="0.01" value={formData.tauxTVA} onChange={(e) => handleChange('tauxTVA', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+              <input type="number" step="0.01" value={formData.tauxTva} onChange={(e) => handleChange('tauxTva', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
             </div>
           </div>
           <div className="bg-blue-50 p-4 rounded-lg">

@@ -297,15 +297,28 @@ export const enregistrerMouvement = async (mouvement: Mouvement, articles: Artic
     const userEmail = getCurrentUserEmail();
     if (!userEmail) throw new Error('Utilisateur non connecté');
 
-    // ✅ S'assurer que l'ID existe
-    const mouvementAvecId = {
-      ...mouvement,
-      id: mouvement.id || String(Date.now()), // ✅ Générer un ID si manquant
-    };
-
+    // ✅ Générer un ID unique si non fourni
+    const mouvementId = mouvement.id || `mvt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Trouver l'article pour récupérer son nom
+    const article = articles.find(a => a.id === mouvement.articleId);
+    
     const mouvementData = toSnakeCase({
-      ...mouvementAvecId,
-      userEmail: userEmail
+      id: mouvementId,  // ✅ ID explicite
+      date: mouvement.date,
+      type: mouvement.type,
+      articleId: mouvement.articleId,
+      quantite: mouvement.quantite,
+      clientId: mouvement.clientId || null,
+      fournisseurId: mouvement.fournisseurId || null,
+      reference: mouvement.reference,
+      modePaiement: mouvement.modePaiement || null,
+      nomArticle: article?.nom || '',
+      prixUnitaire: mouvement.prixUnitaire || 0,
+      emplacement: mouvement.emplacement || '',
+      nomClient: mouvement.nomClient || '',
+      commentaire: mouvement.commentaire || '',
+      userEmail: userEmail  // ✅ Ajout de l'email utilisateur
     });
 
     const { error } = await supabase
@@ -313,7 +326,8 @@ export const enregistrerMouvement = async (mouvement: Mouvement, articles: Artic
       .insert([mouvementData]);
     
     if (error) throw error;
-    console.log('✅ Mouvement enregistré:', mouvementAvecId.id);
+    
+    console.log('✅ Mouvement enregistré:', mouvementId);
     return { success: true };
   } catch (error) {
     console.error('❌ Erreur sauvegarde mouvement:', error);

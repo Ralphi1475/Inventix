@@ -268,14 +268,37 @@ export const supprimerContact = async (id: string) => {
 // MOUVEMENTS
 // ============================================================================
 
-export const sauvegarderMouvement = async (mouvement: Mouvement) => {
+// ============================================================================
+// MOUVEMENTS
+// ============================================================================
+
+export const enregistrerMouvement = async (mouvement: Mouvement, articles: Article[]) => {
   try {
     const userEmail = getCurrentUserEmail();
     if (!userEmail) throw new Error('Utilisateur non connecté');
 
+    // ✅ Générer un ID unique si non fourni
+    const mouvementId = mouvement.id || `mvt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Trouver l'article pour récupérer son nom
+    const article = articles.find(a => a.id === mouvement.articleId);
+    
     const mouvementData = toSnakeCase({
-      ...mouvement,
-      userEmail: userEmail  // ✅ Ajout automatique de l'email
+      id: mouvementId,
+      date: mouvement.date,
+      type: mouvement.type,
+      articleId: mouvement.articleId,
+      quantite: mouvement.quantite,
+      clientId: mouvement.clientId || null,
+      fournisseurId: mouvement.fournisseurId || null,
+      reference: mouvement.reference,
+      modePaiement: mouvement.modePaiement || null,
+      nomArticle: article?.nom || '',
+      prixUnitaire: mouvement.prixUnitaire || 0,
+      emplacement: mouvement.emplacement || '',
+      nomClient: mouvement.nomClient || '',
+      commentaire: mouvement.commentaire || '',
+      userEmail: userEmail
     });
 
     const { error } = await supabase
@@ -283,15 +306,15 @@ export const sauvegarderMouvement = async (mouvement: Mouvement) => {
       .insert([mouvementData]);
     
     if (error) throw error;
-    console.log('✅ Mouvement enregistré');
-    return true;
+    
+    console.log('✅ Mouvement enregistré:', mouvementId);
+    return { success: true };
   } catch (error) {
     console.error('❌ Erreur sauvegarde mouvement:', error);
     throw error;
   }
 };
 
-// Alias pour compatibilité avec l'ancien code
 export const supprimerMouvement = async (id: string) => {
   try {
     const userEmail = getCurrentUserEmail();

@@ -7,7 +7,7 @@ export interface Article {
   image: string;
   prixAchat: number;
   margePercent: number;
-  tauxTVA: number;
+  tauxTva: number;
   stock: number;
   emplacement: string;
   prixVenteTTC?: number;

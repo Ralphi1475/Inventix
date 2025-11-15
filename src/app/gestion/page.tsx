@@ -115,7 +115,7 @@ export default function GestionApp() {
             parametres={parametres}
             onDeleteFacture={supprimerFacture}
             onDeleteMouvement={supprimerMouvement}
-            onUpdateArticle={(article) => sauvegarderArticle(article, 'update')}
+            onUpdateArticle={(article) => sauvegarderArticle(article, true)}
             onRefresh={rechargerDonnees}
           />
         );

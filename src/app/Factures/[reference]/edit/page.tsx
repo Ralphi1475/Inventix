@@ -177,7 +177,7 @@ export default function EditFacturePage() {
         const article = articles.find(a => a.id === m.articleId);
         if (article && m.type === 'vente') {
           const newStock = article.stock + parseFloat(m.quantite.toString() || '0');
-          await sauvegarderArticle({ ...article, stock: newStock }, 'update');
+          await sauvegarderArticle({ ...article, stock: newStock }, true);
           setArticles(prev => prev.map(a => a.id === article.id ? { ...a, stock: newStock } : a));
         }
         await supprimerMouvement(m.id);
@@ -211,7 +211,7 @@ export default function EditFacturePage() {
 
         // Mettre à jour le stock
         const newStock = ligne.article.stock - ligne.quantite;
-        await sauvegarderArticle({ ...ligne.article, stock: newStock }, 'update');
+        await sauvegarderArticle({ ...ligne.article, stock: newStock }, true);
         setArticles(prev => prev.map(a => a.id === ligne.article.id ? { ...a, stock: newStock } : a));
       }
 

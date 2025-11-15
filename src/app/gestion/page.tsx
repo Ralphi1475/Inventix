@@ -35,7 +35,6 @@ import { Achats } from '@/components/purchases/Achats';
 import { ParametresSociete } from '@/components/settings/ParametresSociete';
 import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
-import ConfigPage from '@/app/Config/Page';
 
 // Icônes
 import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X } from 'lucide-react';

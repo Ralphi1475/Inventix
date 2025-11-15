@@ -195,7 +195,6 @@ export default function EditFacturePage() {
 
       for (const ligne of panier) {
         await enregistrerMouvement({
-          id: String(Date.now() + Math.random()),
           date: newDate,
           type: 'vente',
           articleId: ligne.article.id,

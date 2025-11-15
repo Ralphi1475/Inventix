@@ -152,7 +152,7 @@ export const sauvegarderArticle = async (article: Article, isUpdate: boolean = f
       image: article.image,
       prixAchat: article.prixAchat,
       margePercent: article.margePercent,
-      tauxTva: article.tauxTVA,
+      tauxTva: article.tauxTva,
       stock: article.stock,
       emplacement: article.emplacement,
       unite: article.unite,

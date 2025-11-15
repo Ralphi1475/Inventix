@@ -292,24 +292,31 @@ export const sauvegarderMouvement = async (mouvement: Mouvement) => {
 };
 
 // Alias pour compatibilité avec l'ancien code
-export const enregistrerMouvement = sauvegarderMouvement;
-
-export const supprimerMouvement = async (mouvementId: string) => {
+export const enregistrerMouvement = async (mouvement: Mouvement, articles: Article[]) => {
   try {
     const userEmail = getCurrentUserEmail();
     if (!userEmail) throw new Error('Utilisateur non connecté');
 
+    // ✅ S'assurer que l'ID existe
+    const mouvementAvecId = {
+      ...mouvement,
+      id: mouvement.id || String(Date.now()), // ✅ Générer un ID si manquant
+    };
+
+    const mouvementData = toSnakeCase({
+      ...mouvementAvecId,
+      userEmail: userEmail
+    });
+
     const { error } = await supabase
       .from('mouvements')
-      .delete()
-      .eq('id', mouvementId)
-      .eq('user_email', userEmail);
+      .insert([mouvementData]);
     
     if (error) throw error;
-    console.log('✅ Mouvement supprimé:', mouvementId);
+    console.log('✅ Mouvement enregistré:', mouvementAvecId.id);
     return { success: true };
   } catch (error) {
-    console.error('❌ Erreur suppression mouvement:', error);
+    console.error('❌ Erreur sauvegarde mouvement:', error);
     throw error;
   }
 };

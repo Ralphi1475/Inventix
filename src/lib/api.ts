@@ -49,7 +49,7 @@ const toCamelCase = (obj: any): any => {
 // CHARGEMENT DES DONNÉES (filtré par utilisateur)
 // ============================================================================
 
-export const chargerDonnees = async () => {
+export const chargerDonnees = async (forceRefresh?: boolean) => {
   try {
     const userEmail = getCurrentUserEmail();
     if (!userEmail) throw new Error('Utilisateur non connecté');

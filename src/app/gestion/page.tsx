@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useMemo } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useData } from '@/context/DataContext';
 import { 
   sauvegarderArticle,
@@ -17,10 +18,7 @@ import {
   sauvegarderCategorie,
   supprimerCategorie
 } from '@/lib/api';
-import { 
-  calculerArticlesAvecPrix, 
-  calculerStats 
-} from '@/lib/calculations';
+import { calculerArticlesAvecPrix, calculerStats } from '@/lib/calculations';
 
 // Composants UI
 import { Dashboard } from '@/components/dashboard/Dashboard';
@@ -35,13 +33,14 @@ import { Achats } from '@/components/purchases/Achats';
 import { ParametresSociete } from '@/components/settings/ParametresSociete';
 import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
+import { GestionAcces } from '@/components/settings/GestionAcces';
 
 // Icônes
 import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt } from 'lucide-react';
 
 export default function GestionApp() {
   const [currentPage, setCurrentPage] = useState('dashboard');
-  
+  const [userEmail, setUserEmail] = useState<string>('');
   const {
     loading,
     articles,
@@ -58,6 +57,15 @@ export default function GestionApp() {
     setCategories,
     rechargerDonnees
   } = useData();
+  useEffect(() => {
+  const loadUserEmail = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.email) {
+      setUserEmail(user.email);
+    }
+  };
+  loadUserEmail();
+}, []);
 
   const articlesAvecPrix = useMemo(() => {
     return calculerArticlesAvecPrix(articles);
@@ -245,6 +253,8 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
         return <ParametresSociete parametres={parametres} onSave={handleSaveParametres} />;
       default:
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
+	  case 'gestion-acces':
+         return <GestionAcces userEmail={userEmail} />;
     }
   };
 

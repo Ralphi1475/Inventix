@@ -19,26 +19,25 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   const [formData, setFormData] = useState<any>({
-  id: '',
-  reference: '',
-  dateAchat: '',         // ✅ camelCase
-  dateEcheance: '',      // ✅ camelCase
-  datePaiement: '',      // ✅ camelCase
-  fournisseurId: '',
-  modePaiement: '',
-  montantHtva: 0,        // ✅ Un seul T majuscule
-  montantTtc: 0,         // ✅ Un seul T majuscule
-  description: '',
-  categorie: ''
+    id: '',
+    reference: '',
+    dateAchat: '',
+    dateEcheance: '',
+    datePaiement: '',
+    fournisseurId: '',
+    modePaiement: '',
+    montantHtva: 0,
+    montantTtc: 0,
+    description: '',
+    categorie: ''
   });
 
   const categories = ['Loyers', 'Matiere premiere', 'Administratif'];
-  const modesPaiement = ['Espèces', 'Carte bancaire', 'Virement', 'chèque'];
+  const modesPaiement = ['Espèces', 'Carte bancaire', 'Virement', 'Chèque'];
 
   const filteredAchats = useMemo(() => {
     let filtered = [...achats];
     
-    // Filtre par recherche
     if (searchTerm) {
       filtered = filtered.filter(a => 
         (a.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,25 +45,23 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
       );
     }
     
-    // Filtre par catégorie
     if (filterCategorie) {
       filtered = filtered.filter(a => a.categorie === filterCategorie);
     }
     
-    // Filtre par plage de dates
-		if (dateDebut) {
-		filtered = filtered.filter(a => a.dateAchat >= dateDebut);
-		}
-		if (dateFin) {
-		filtered = filtered.filter(a => a.dateAchat <= dateFin);
-		}
+    if (dateDebut) {
+      filtered = filtered.filter(a => a.dateAchat >= dateDebut);
+    }
+    if (dateFin) {
+      filtered = filtered.filter(a => a.dateAchat <= dateFin);
+    }
     
-		return filtered.sort((a, b) => new Date(b.dateAchat).getTime() - new Date(a.dateAchat).getTime());
+    return filtered.sort((a, b) => new Date(b.dateAchat).getTime() - new Date(a.dateAchat).getTime());
+  }, [achats, searchTerm, filterCategorie, dateDebut, dateFin]);
 
-  // Calcul du total TTC
-	const totalTTC = useMemo(() => {
-	return filteredAchats.reduce((sum, achat) => sum + (achat.montantTtc || 0), 0);
-	}, [filteredAchats]);
+  const totalTTC = useMemo(() => {
+    return filteredAchats.reduce((sum, achat) => sum + (achat.montantTtc || 0), 0);
+  }, [filteredAchats]);
 
   const openForm = (achat: any = null) => {
     if (achat) {
@@ -74,13 +71,13 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
       setFormData({
         id: '',
         reference: 'A' + Date.now(),
-        date_achat: new Date().toISOString().split('T')[0],
-        date_echeance: '',
-        date_paiement: '',
+        dateAchat: new Date().toISOString().split('T')[0],
+        dateEcheance: '',
+        datePaiement: '',
         fournisseurId: '',
         modePaiement: '',
-        montantHTVA: 0,
-        montantTTC: 0,
+        montantHtva: 0,
+        montantTtc: 0,
         description: '',
         categorie: ''
       });
@@ -95,13 +92,13 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
     setFormData({
       id: '',
       reference: '',
-      date_achat: '',
-      date_echeance: '',
-      date_paiement: '',
+      dateAchat: '',
+      dateEcheance: '',
+      datePaiement: '',
       fournisseurId: '',
       modePaiement: '',
-      montantHTVA: 0,
-      montantTTC: 0,
+      montantHtva: 0,
+      montantTtc: 0,
       description: '',
       categorie: ''
     });
@@ -112,20 +109,20 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
   };
 
   const handleSubmit = async () => {
-    if (!formData.reference || !formData.date_achat || !formData.fournisseurId || !formData.categorie) {
+    if (!formData.reference || !formData.dateAchat || !formData.fournisseurId || !formData.categorie) {
       alert('Veuillez remplir tous les champs obligatoires');
       return;
     }
     const achat = {
       id: formData.id || String(Date.now()),
       reference: formData.reference,
-      date_achat: formData.date_achat,
-      date_echeance: formData.date_echeance,
-      date_paiement: formData.date_paiement,
+      dateAchat: formData.dateAchat,
+      dateEcheance: formData.dateEcheance,
+      datePaiement: formData.datePaiement,
       fournisseurId: formData.fournisseurId,
       modePaiement: formData.modePaiement,
-      montantHTVA: parseFloat(formData.montantHTVA) || 0,
-      montantTTC: parseFloat(formData.montantTTC) || 0,
+      montantHtva: parseFloat(formData.montantHtva) || 0,
+      montantTtc: parseFloat(formData.montantTtc) || 0,
       description: formData.description,
       categorie: formData.categorie
     };
@@ -159,7 +156,6 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
         </button>
       </div>
 
-      {/* Filtres */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="relative lg:col-span-2">
@@ -201,7 +197,6 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
         </div>
       </div>
 
-      {/* Total TTC */}
       <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
         <div className="flex justify-between items-center">
           <span className="text-lg font-semibold text-gray-700">Total des achats affichés :</span>
@@ -210,7 +205,6 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
         <p className="text-sm text-gray-600 mt-1">{filteredAchats.length} achat(s) trouvé(s)</p>
       </div>
 
-      {/* Tableau */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -253,7 +247,6 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
         </div>
       </div>
 
-      {/* Formulaire modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
@@ -266,17 +259,17 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Date achat *</label>
-                  <input type="date" value={formData.date_achat} onChange={(e) => handleChange('date_achat', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="date" value={formData.dateAchat} onChange={(e) => handleChange('dateAchat', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Date échéance</label>
-                  <input type="date" value={formData.date_echeance} onChange={(e) => handleChange('date_echeance', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="date" value={formData.dateEcheance} onChange={(e) => handleChange('dateEcheance', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Date paiement</label>
-                  <input type="date" value={formData.date_paiement} onChange={(e) => handleChange('date_paiement', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="date" value={formData.datePaiement} onChange={(e) => handleChange('datePaiement', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
                 </div>
               </div>
               <div>
@@ -298,11 +291,11 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Montant HTVA *</label>
-                  <input type="number" step="0.01" value={formData.montantHTVA} onChange={(e) => handleChange('montantHTVA', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="number" step="0.01" value={formData.montantHtva} onChange={(e) => handleChange('montantHtva', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Montant TTC *</label>
-                  <input type="number" step="0.01" value={formData.montantTTC} onChange={(e) => handleChange('montantTTC', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+                  <input type="number" step="0.01" value={formData.montantTtc} onChange={(e) => handleChange('montantTtc', e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
                 </div>
               </div>
               <div>

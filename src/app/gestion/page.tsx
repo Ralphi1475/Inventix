@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useData } from '@/context/DataContext';
 import { 

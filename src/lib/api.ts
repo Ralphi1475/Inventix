@@ -71,7 +71,7 @@ export const chargerDonnees = async (forceRefresh?: boolean) => {
       supabase.from('factures').select('*').in('user_email', accessibleEmails),
       supabase.from('achats').select('*').in('user_email', accessibleEmails),
       supabase.from('categories').select('*').in('user_email', accessibleEmails),
-      supabase.from('parametres').select('*').in('user_email', accessibleEmails),
+      supabase.from('parametres').select('*').in('user_email', userEmail),
     ]);
 
     if (articlesRaw.error) throw articlesRaw.error;

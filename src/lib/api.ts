@@ -109,7 +109,6 @@ export const chargerDonnees = async (forceRefresh?: boolean) => {
 	userEmail: userEmail
     });
 
-    const endTime = Date.now();
 
     const endTime = Date.now();
     console.log(`✅ Données chargées depuis Supabase en ${endTime - startTime}ms`);

@@ -98,6 +98,10 @@ export interface FactureResume {
 export interface Categorie {
   id: string;
   denomination: string;
+  createdAt?: string;
+  updatedAt?: string;
+  userEmail?: string;
+  type: 'produit' | 'achat'; // ✅ ajout de la propriété 'type'
 }
 
 export interface AuthorizedUser {

@@ -1,7 +1,8 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
 import { Contact } from '@/types';
+import { chargerCategories } from '@/lib/api'; // ✅ Assure-toi que le chemin est correct
 
 interface AchatsProps {
   achats: any[];
@@ -18,6 +19,8 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
   const [filterCategorie, setFilterCategorie] = useState('');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
+  const [categoriesAchat, setCategoriesAchat] = useState<string[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [formData, setFormData] = useState<any>({
     id: '',
     reference: '',
@@ -32,8 +35,24 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
     categorie: ''
   });
 
-  const categories = ['Loyers', 'Matiere premiere', 'Administratif'];
   const modesPaiement = ['Espèces', 'Carte bancaire', 'Virement', 'Chèque'];
+
+  // ✅ Charger les catégories d'achat au montage
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await chargerCategories('achat');
+        setCategoriesAchat(cats.map(c => c.denomination));
+      } catch (error) {
+        console.error('Erreur chargement catégories achat:', error);
+        // En cas d'erreur, on peut initialiser avec des catégories par défaut (optionnel)
+        setCategoriesAchat(['Loyers', 'Matière première', 'Administratif']);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const filteredAchats = useMemo(() => {
     let filtered = [...achats];
@@ -146,6 +165,17 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
     }
   };
 
+  // ✅ Fonction pour déterminer la couleur de la catégorie
+  const getCategoryColorClass = (categorie: string) => {
+    // On ne peut plus se baser sur des noms fixes, donc on utilise une logique générique
+    // Ou tu peux étendre avec plus de règles si besoin
+    const lowerCat = categorie.toLowerCase();
+    if (lowerCat.includes('loyer') || lowerCat.includes('loyers')) return 'bg-green-100 text-green-800';
+    if (lowerCat.includes('matiere') || lowerCat.includes('premiere')) return 'bg-red-100 text-red-800';
+    if (lowerCat.includes('admin')) return 'bg-blue-100 text-blue-800';
+    return 'bg-gray-100 text-gray-800';
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -172,9 +202,12 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
             value={filterCategorie} 
             onChange={(e) => setFilterCategorie(e.target.value)} 
             className="px-4 py-2 border rounded-lg"
+            disabled={loadingCategories}
           >
             <option value="">Toutes les catégories</option>
-            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            {categoriesAchat.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
           </select>
           <div>
             <input 
@@ -225,11 +258,7 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
                   <td className="p-3">{achat.dateAchat}</td>
                   <td className="p-3">{achat.nomFournisseur || 'Non défini'}</td>
                   <td className="p-3">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      achat.categorie === 'Loyers' ? 'bg-green-100 text-green-800' :
-                      achat.categorie === 'Matiere premiere' ? 'bg-red-100 text-red-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span className={`px-2 py-1 rounded text-xs ${getCategoryColorClass(achat.categorie)}`}>
                       {achat.categorie}
                     </span>
                   </td>
@@ -302,7 +331,9 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
                 <label className="block text-sm font-medium mb-1">Catégorie *</label>
                 <select value={formData.categorie} onChange={(e) => handleChange('categorie', e.target.value)} className="w-full px-3 py-2 border rounded-lg">
                   <option value="">Choisir...</option>
-                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  {categoriesAchat.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
               </div>
               <div>

@@ -504,22 +504,25 @@ export const sauvegarderParametres = async (params: Parametres) => {
 // CATÉGORIES
 // ============================================================================
 
-export async function chargerCategories(): Promise<Categorie[]> {
+export async function chargerCategories(type: 'produit' | 'achat' = 'produit'): Promise<Categorie[]> {
   try {
     const userEmail = getCurrentUserEmail();
     if (!userEmail) throw new Error('Utilisateur non connecté');
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('categories')
       .select('*')
       .eq('user_email', userEmail)
+      .eq('type', type) // ✅ filtrer par type
       .order('denomination');
+    
+    const { data, error } = await query;
     
     if (error) throw error;
     
     return data ? toCamelCase(data) : [];
   } catch (error) {
-    console.error('❌ Erreur chargement catégories:', error);
+    console.error(`❌ Erreur chargement catégories (${type}):`, error);
     throw error;
   }
 }

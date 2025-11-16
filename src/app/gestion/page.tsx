@@ -279,7 +279,7 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
           <NavItem icon={<ShoppingCart size={20} />} label="Achats / Frais" active={currentPage === 'achats'} onClick={() => setCurrentPage('achats')} />
           <NavItem icon={<Package size={20} />} label="Catégories" active={currentPage === 'categories'} onClick={() => setCurrentPage('categories')} />
           <NavItem icon={<Settings size={20} />} label="Ma Société" active={currentPage === 'parametres'} onClick={() => setCurrentPage('parametres')} />
-          <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'config'} onClick={() => setCurrentPage('config')} />
+          <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'gestion-acces'} onClick={() => setCurrentPage('gestion-acces')} />
         </nav>
       </div>
 <div className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-3 z-50 shadow-lg border-t-2 border-blue-800 overflow-x-auto">

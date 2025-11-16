@@ -99,3 +99,19 @@ export interface Categorie {
   id: string;
   denomination: string;
 }
+
+export interface AuthorizedUser {
+  id: string;
+  ownerEmail: string;
+  authorizedEmail: string;
+  accessLevel: 'read' | 'write';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserPermissions {
+  isOwner: boolean;
+  hasWriteAccess: boolean;
+  hasReadAccess: boolean;
+  accessLevel: 'read' | 'write' | 'owner';
+}

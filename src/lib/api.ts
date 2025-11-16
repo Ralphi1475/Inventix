@@ -42,94 +42,68 @@ const toCamelCase = (obj: any): any => {
 // CHARGEMENT DES DONNÉES (filtré par utilisateur)
 // ============================================================================
 
-export const chargerDonnees = async (forceRefresh: boolean = false) => {
-  console.log('📡 Chargement des données depuis Supabase...');
-  const startTime = Date.now();
-
-  const userEmail = getCurrentUserEmail();
-  if (!userEmail) {
-    throw new Error('Utilisateur non connecté');
-  }
-
-  console.log('👤 Chargement des données pour:', userEmail);
-
+export const chargerDonnees = async () => {
   try {
-    // Chargement parallèle de toutes les données (filtré par user_email)
-    const [
-      { data: articlesRaw, error: articlesError },
-      { data: contactsRaw, error: contactsError },
-      { data: achatsRaw, error: achatsError },
-      { data: mouvementsRaw, error: mouvementsError },
-      { data: facturesRaw, error: facturesError },
-      { data: parametresRaw, error: parametresError },
-      { data: categoriesRaw, error: categoriesError }
-    ] = await Promise.all([
-      supabase.from('articles').select('*').eq('user_email', userEmail).order('nom'),
-      supabase.from('contacts').select('*').eq('user_email', userEmail).order('societe'),
-      supabase.from('achats').select('*').eq('user_email', userEmail).order('date_achat', { ascending: false }),
-      supabase.from('mouvements').select('*').eq('user_email', userEmail).order('date', { ascending: false }),
-      supabase.from('factures').select('*').eq('user_email', userEmail).order('date', { ascending: false }),
-      supabase.from('parametres').select('*').eq('user_email', userEmail),
-      supabase.from('categories').select('*').eq('user_email', userEmail).order('denomination')
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) throw new Error('Utilisateur non connecté');
+
+    console.log('📡 Chargement des données depuis Supabase...');
+    console.log('👤 Chargement des données pour:', userEmail);
+    
+    const startTime = Date.now();
+
+    // ✅ NOUVEAU : Récupérer tous les emails accessibles (mes données + celles partagées)
+    const accessibleEmails = await getAllAccessibleEmails();
+    console.log('📧 Données accessibles pour:', accessibleEmails);
+
+    // ✅ Modifier toutes les requêtes pour utiliser .in('user_email', accessibleEmails)
+    const [articlesRaw, contactsRaw, mouvementsRaw, facturesRaw, achatsRaw, categoriesRaw, parametresRaw] = await Promise.all([
+      supabase.from('articles').select('*').in('user_email', accessibleEmails),
+      supabase.from('contacts').select('*').in('user_email', accessibleEmails),
+      supabase.from('mouvements').select('*').in('user_email', accessibleEmails),
+      supabase.from('factures').select('*').in('user_email', accessibleEmails),
+      supabase.from('achats').select('*').in('user_email', accessibleEmails),
+      supabase.from('categories').select('*').in('user_email', accessibleEmails),
+      supabase.from('parametres').select('*').in('user_email', accessibleEmails),
     ]);
 
-    // Gestion des erreurs
-    if (articlesError) throw articlesError;
-    if (contactsError) throw contactsError;
-    if (achatsError) throw achatsError;
-    if (mouvementsError) throw mouvementsError;
-    if (facturesError) throw facturesError;
-    if (parametresError) throw parametresError;
-    if (categoriesError) throw categoriesError;
+    if (articlesRaw.error) throw articlesRaw.error;
+    if (contactsRaw.error) throw contactsRaw.error;
+    if (mouvementsRaw.error) throw mouvementsRaw.error;
+    if (facturesRaw.error) throw facturesRaw.error;
+    if (achatsRaw.error) throw achatsRaw.error;
+    if (categoriesRaw.error) throw categoriesRaw.error;
+    if (parametresRaw.error) throw parametresRaw.error;
 
-    // Conversion en camelCase et typage
-    const articles: Article[] = articlesRaw ? articlesRaw.map(article => ({
+    const articles: Article[] = articlesRaw.data ? articlesRaw.data.map(article => ({
       ...toCamelCase(article),
       prixVenteHT: article.prix_achat * (1 + (article.marge_percent || 0) / 100),
       prixVenteTTC: article.prix_achat * (1 + (article.marge_percent || 0) / 100) * (1 + (article.taux_tva || 0) / 100)
     })) : [];
 
-    const contacts: Contact[] = contactsRaw ? toCamelCase(contactsRaw) : [];
-    const clients = contacts.filter(c => c.type === 'client');
-    const fournisseurs = contacts.filter(c => c.type === 'fournisseur');
-
-    const achats = achatsRaw ? toCamelCase(achatsRaw) : [];
-    const mouvements: Mouvement[] = mouvementsRaw ? toCamelCase(mouvementsRaw) : [];
-    const factures: FactureResume[] = facturesRaw ? toCamelCase(facturesRaw) : [];
+    const contacts: Contact[] = contactsRaw.data ? contactsRaw.data.map(toCamelCase) : [];
+    const mouvements: Mouvement[] = mouvementsRaw.data ? mouvementsRaw.data.map(toCamelCase) : [];
+    const factures = facturesRaw.data ? facturesRaw.data.map(toCamelCase) : [];
     
-    // Conversion des paramètres en objet
-const parametres: Parametres = parametresRaw && parametresRaw.length > 0 
-  ? parametresRaw[0] as Parametres  // ✅ Directement, sans conversion
-  : {
-      societe_nom: '',           // ✅ Bon
-      societe_adresse: '',       // ✅ Bon
-      societe_code_postal: '',   // ✅ Bon
-      societe_ville: '',         // ✅ Bon
-      societe_pays: '',          // ✅ Bon
-      societe_telephone: '',     // ✅ Bon
-      societe_email: '',         // ✅ Bon
-      societe_tva: '',           // ✅ Bon
-      societe_iban: ''           // ✅ Bon
-    } as Parametres;
+    const achats = achatsRaw.data ? achatsRaw.data.map(achat => {
+      const achatConverted = toCamelCase(achat);
+      const fournisseur = contacts.find(c => c.id === achatConverted.fournisseurId);
+      return {
+        ...achatConverted,
+        nomFournisseur: fournisseur?.societe || 'Non défini'
+      };
+    }) : [];
+    
+    const categories = categoriesRaw.data ? categoriesRaw.data.map(toCamelCase) : [];
+    const parametres = parametresRaw.data?.[0] ? toCamelCase(parametresRaw.data[0]) : null;
 
-    const categories: Categorie[] = categoriesRaw ? toCamelCase(categoriesRaw) : [];
-
-    const loadTime = Date.now() - startTime;
-    console.log(`✅ Données chargées depuis Supabase en ${loadTime}ms`);
+    const endTime = Date.now();
+    console.log(`✅ Données chargées depuis Supabase en ${endTime - startTime}ms`);
     console.log(`📊 Stats: ${articles.length} articles, ${contacts.length} contacts, ${mouvements.length} mouvements`);
 
-    return {
-      articles,
-      clients,
-      fournisseurs,
-      achats,
-      mouvements,
-      factures,
-      parametres,
-      categories
-    };
+    return { articles, contacts, mouvements, factures, achats, categories, parametres };
   } catch (error) {
-    console.error('❌ Erreur chargement données:', error);
+    console.error('❌ Erreur lors du chargement des données:', error);
     throw error;
   }
 };
@@ -263,10 +237,6 @@ export const supprimerContact = async (id: string) => {
     throw error;
   }
 };
-
-// ============================================================================
-// MOUVEMENTS
-// ============================================================================
 
 // ============================================================================
 // MOUVEMENTS
@@ -637,4 +607,244 @@ export const clearCache = (): void => {
 
 const invalidateCache = (): void => {
   // Non nécessaire avec Supabase
+};
+import { AuthorizedUser, UserPermissions } from '@/types';
+
+// ============================================================================
+// GESTION DES ACCÈS PARTAGÉS
+// ============================================================================
+
+/**
+ * Récupérer tous les emails autorisés (le mien + ceux que j'ai autorisés)
+ */
+export const getAuthorizedEmails = async (): Promise<string[]> => {
+  try {
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) return [];
+
+    // Récupérer les emails que j'ai autorisés
+    const { data: authorized, error } = await supabase
+      .from('authorized_users')
+      .select('authorized_email')
+      .eq('owner_email', userEmail);
+
+    if (error) throw error;
+
+    const authorizedEmails = authorized?.map(a => a.authorized_email) || [];
+    
+    // Inclure mon propre email
+    return [userEmail, ...authorizedEmails];
+  } catch (error) {
+    console.error('❌ Erreur récupération emails autorisés:', error);
+    return [getCurrentUserEmail() || ''];
+  }
+};
+
+/**
+ * Récupérer les propriétaires qui m'ont donné accès
+ */
+export const getOwnersWhoAuthorizedMe = async (): Promise<string[]> => {
+  try {
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) return [];
+
+    const { data: owners, error } = await supabase
+      .from('authorized_users')
+      .select('owner_email')
+      .eq('authorized_email', userEmail);
+
+    if (error) throw error;
+
+    return owners?.map(o => o.owner_email) || [];
+  } catch (error) {
+    console.error('❌ Erreur récupération propriétaires:', error);
+    return [];
+  }
+};
+
+/**
+ * Récupérer tous les emails accessibles (mes données + celles partagées avec moi)
+ */
+export const getAllAccessibleEmails = async (): Promise<string[]> => {
+  try {
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) return [];
+
+    const [myAuthorized, ownersWhoAuthorizedMe] = await Promise.all([
+      getAuthorizedEmails(),
+      getOwnersWhoAuthorizedMe()
+    ]);
+
+    // Combiner et dédupliquer
+    const allEmails = [...new Set([...myAuthorized, ...ownersWhoAuthorizedMe])];
+    
+    console.log('📧 Emails accessibles:', allEmails);
+    return allEmails;
+  } catch (error) {
+    console.error('❌ Erreur récupération emails accessibles:', error);
+    return [getCurrentUserEmail() || ''];
+  }
+};
+
+/**
+ * Récupérer la liste des utilisateurs autorisés
+ */
+export const getAuthorizedUsers = async (): Promise<AuthorizedUser[]> => {
+  try {
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) throw new Error('Utilisateur non connecté');
+
+    const { data, error } = await supabase
+      .from('authorized_users')
+      .select('*')
+      .eq('owner_email', userEmail)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const users: AuthorizedUser[] = (data || []).map(toCamelCase);
+    console.log('✅ Utilisateurs autorisés chargés:', users.length);
+    return users;
+  } catch (error) {
+    console.error('❌ Erreur chargement utilisateurs autorisés:', error);
+    throw error;
+  }
+};
+
+/**
+ * Ajouter un utilisateur autorisé
+ */
+export const addAuthorizedUser = async (
+  authorizedEmail: string, 
+  accessLevel: 'read' | 'write'
+): Promise<void> => {
+  try {
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) throw new Error('Utilisateur non connecté');
+
+    // Vérifier que l'email n'est pas le sien
+    if (authorizedEmail.toLowerCase() === userEmail.toLowerCase()) {
+      throw new Error('Vous ne pouvez pas vous ajouter vous-même');
+    }
+
+    const userData = toSnakeCase({
+      ownerEmail: userEmail,
+      authorizedEmail: authorizedEmail.toLowerCase().trim(),
+      accessLevel
+    });
+
+    const { error } = await supabase
+      .from('authorized_users')
+      .insert([userData]);
+
+    if (error) {
+      if (error.code === '23505') { // Unique violation
+        throw new Error('Cet utilisateur a déjà accès à vos données');
+      }
+      throw error;
+    }
+
+    console.log('✅ Utilisateur autorisé ajouté:', authorizedEmail);
+  } catch (error) {
+    console.error('❌ Erreur ajout utilisateur autorisé:', error);
+    throw error;
+  }
+};
+
+/**
+ * Modifier le niveau d'accès d'un utilisateur
+ */
+export const updateAuthorizedUser = async (
+  id: string, 
+  accessLevel: 'read' | 'write'
+): Promise<void> => {
+  try {
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) throw new Error('Utilisateur non connecté');
+
+    const { error } = await supabase
+      .from('authorized_users')
+      .update({ access_level: accessLevel })
+      .eq('id', id)
+      .eq('owner_email', userEmail);
+
+    if (error) throw error;
+
+    console.log('✅ Niveau d\'accès modifié:', id);
+  } catch (error) {
+    console.error('❌ Erreur modification accès:', error);
+    throw error;
+  }
+};
+
+/**
+ * Supprimer un utilisateur autorisé
+ */
+export const removeAuthorizedUser = async (id: string): Promise<void> => {
+  try {
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) throw new Error('Utilisateur non connecté');
+
+    const { error } = await supabase
+      .from('authorized_users')
+      .delete()
+      .eq('id', id)
+      .eq('owner_email', userEmail);
+
+    if (error) throw error;
+
+    console.log('✅ Utilisateur autorisé supprimé:', id);
+  } catch (error) {
+    console.error('❌ Erreur suppression utilisateur autorisé:', error);
+    throw error;
+  }
+};
+
+/**
+ * Vérifier les permissions de l'utilisateur actuel
+ */
+export const getUserPermissions = async (): Promise<UserPermissions> => {
+  try {
+    const userEmail = getCurrentUserEmail();
+    if (!userEmail) {
+      return {
+        isOwner: false,
+        hasWriteAccess: false,
+        hasReadAccess: false,
+        accessLevel: 'read'
+      };
+    }
+
+    // Vérifier si l'utilisateur a des autorisations reçues
+    const { data, error } = await supabase
+      .from('authorized_users')
+      .select('access_level, owner_email')
+      .eq('authorized_email', userEmail)
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+      console.error('❌ Erreur vérification permissions:', error);
+    }
+
+    const isOwner = !data; // Si pas de données, c'est qu'il consulte ses propres données
+    const hasWriteAccess = isOwner || data?.access_level === 'write';
+    const hasReadAccess = true; // Si on est ici, on a au moins lecture
+    const accessLevel: 'read' | 'write' | 'owner' = isOwner ? 'owner' : (data?.access_level || 'read');
+
+    return {
+      isOwner,
+      hasWriteAccess,
+      hasReadAccess,
+      accessLevel
+    };
+  } catch (error) {
+    console.error('❌ Erreur récupération permissions:', error);
+    return {
+      isOwner: true, // Par défaut, on considère qu'il consulte ses données
+      hasWriteAccess: true,
+      hasReadAccess: true,
+      accessLevel: 'owner'
+    };
+  }
 };

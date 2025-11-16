@@ -504,7 +504,7 @@ export const sauvegarderParametres = async (params: Parametres) => {
 // CATÉGORIES
 // ============================================================================
 
-export async function chargerCategories(type: 'produit' | 'achat' = 'produit'): Promise<Categorie[]> {
+export async function chargerCategories(type?: 'produit' | 'achat'): Promise<Categorie[]> {
   try {
     const userEmail = getCurrentUserEmail();
     if (!userEmail) throw new Error('Utilisateur non connecté');
@@ -512,9 +512,14 @@ export async function chargerCategories(type: 'produit' | 'achat' = 'produit'): 
     let query = supabase
       .from('categories')
       .select('*')
-      .eq('user_email', userEmail)
-      .eq('type', type) // ✅ filtrer par type
-      .order('denomination');
+      .eq('user_email', userEmail);
+
+    // ✅ N'ajoute le filtre que si `type` est spécifié
+    if (type) {
+      query = query.eq('type', type);
+    }
+
+    query = query.order('denomination');
     
     const { data, error } = await query;
     
@@ -522,7 +527,7 @@ export async function chargerCategories(type: 'produit' | 'achat' = 'produit'): 
     
     return data ? toCamelCase(data) : [];
   } catch (error) {
-    console.error(`❌ Erreur chargement catégories (${type}):`, error);
+    console.error(`❌ Erreur chargement catégories${type ? ` (${type})` : ''}:`, error);
     throw error;
   }
 }

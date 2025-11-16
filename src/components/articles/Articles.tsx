@@ -103,8 +103,7 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
             {categoriesProduits.map(cat => (
               <option key={cat.id} value={cat.denomination}>
                 {cat.denomination}
-              </option>
-            {categories.map(cat => <option key={cat.id} value={cat.denomination}>{cat.denomination}</option>)}
+              </option>)}
           </select>
         </div>
       </div>

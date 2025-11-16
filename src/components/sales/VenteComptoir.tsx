@@ -23,6 +23,7 @@ export function VenteComptoir({
   const [panier, setPanier] = useState<LignePanier[]>([]);
   const [modePaiement, setModePaiement] = useState('especes');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategorie, setSelectedCategorie] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [dateVente, setDateVente] = useState(new Date().toISOString().split('T')[0]);
   const [emplacement, setEmplacement] = useState('');
@@ -37,15 +38,26 @@ export function VenteComptoir({
     );
   }
 
+  // Extraire les catégories uniques
+  const categories = useMemo(() => {
+    const cats = articles
+      .map(a => a.categorie)
+      .filter((cat): cat is string => !!cat);
+    return Array.from(new Set(cats)).sort();
+  }, [articles]);
+
+  // Filtrer articles : par recherche ET catégorie
   const articlesFiltr = useMemo(() => {
     if (!Array.isArray(articles)) return [];
     return articles.filter(a => {
       const nom = String(a.nom ?? '').toLowerCase().trim();
       const numero = String(a.numero ?? '').toLowerCase().trim();
       const search = String(searchTerm).toLowerCase().trim();
-      return nom.includes(search) || numero.includes(search);
+      const matchesSearch = nom.includes(search) || numero.includes(search);
+      const matchesCategorie = selectedCategorie ? a.categorie === selectedCategorie : true;
+      return matchesSearch && matchesCategorie;
     });
-  }, [articles, searchTerm]);
+  }, [articles, searchTerm, selectedCategorie]);
 
   const ajouterAuPanier = (article: Article) => {
     setPanier(prevPanier => {
@@ -136,7 +148,7 @@ export function VenteComptoir({
           prixUnitaire: ligne.prixUnitairePersonnalise ?? ligne.article.prixVenteTTC,
           emplacement,
           nomClient: 'VENTE COMPTOIR',
-		  commentaire,
+          commentaire,
         });
         const newStock = ligne.article.stock - ligne.quantite;
         const updatedArticle = { ...ligne.article, stock: newStock };
@@ -151,7 +163,7 @@ export function VenteComptoir({
         modePaiement,
         montant: totalTTC,
         emplacement,
-		commentaire,
+        commentaire,
       });
       alert('Vente comptoir enregistrée avec succès !');
       setPanier([]);
@@ -193,15 +205,15 @@ export function VenteComptoir({
               </div>
             </div>
           </div>
-		  <div>
-					<label className="block text-sm font-medium mb-2">Commentaire (facultatif)</label>
-					<textarea
-					value={commentaire}
-					onChange={(e) => setCommentaire(e.target.value)}
-					className="w-full px-3 py-2 border rounded-lg"
-					rows={2}
-				/>
-		  </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Commentaire (facultatif)</label>
+            <textarea
+              value={commentaire}
+              onChange={(e) => setCommentaire(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg"
+              rows={2}
+            />
+          </div>
           
           <div className="bg-white rounded-lg shadow p-4">
             <div className="relative mb-4">
@@ -214,29 +226,50 @@ export function VenteComptoir({
                 className="w-full pl-10 pr-4 py-2 border rounded-lg" 
               />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+
+            {/* 🔽 NOUVEAU : Sélecteur de catégorie */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Catégorie</label>
+              <select
+                value={selectedCategorie}
+                onChange={(e) => setSelectedCategorie(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value="">Toutes les catégories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 🔽 GRILLE HARMONISÉE avec VenteClient.tsx */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
               {articlesFiltr.map((article: Article) => (
                 <div 
                   key={article.numero} 
-                  className="border rounded-lg p-3 hover:bg-blue-50 cursor-pointer transition"
+                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex gap-3" 
                   onClick={() => ajouterAuPanier(article)}
                 >
                   {article.image && (
-                    <div className="mb-2">
+                    <div className="flex-shrink-0">
                       <img 
                         src={article.image} 
                         alt={article.nom}
-                        className="w-full h-24 object-cover rounded border"
+                        className="w-16 h-16 object-cover rounded border"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
                     </div>
                   )}
-                  <p className="font-medium text-sm">{article.nom}</p>
-                  <p className="text-xs text-gray-600 mb-1">{article.numero}</p>
-                  <p className="text-blue-600 font-bold text-lg">{article.prixVenteTTC?.toFixed(2)} €</p>
-                  <p className="text-xs text-gray-500">Stock: {article.stock}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{article.nom}</p>
+                    <p className="text-sm text-gray-600">{article.numero}</p>
+                    <p className="text-blue-600 font-bold">{article.prixVenteTTC?.toFixed(2)} €</p>
+                    <p className="text-xs text-gray-500">Stock: {article.stock}</p>
+                  </div>
                 </div>
               ))}
             </div>

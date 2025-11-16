@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';  // ✅ Ajouter useEffect
 
 interface ParametresSocieteProps {
   parametres: any;
@@ -7,7 +7,17 @@ interface ParametresSocieteProps {
 }
 
 export function ParametresSociete({ parametres, onSave }: ParametresSocieteProps) {
-  const [formData, setFormData] = useState(parametres);
+  console.log('🏢 ParametresSociete - Props reçues:', { parametres });
+  
+  const [formData, setFormData] = useState(parametres || {});  // ✅ Valeur par défaut {}
+
+  // ✅ AJOUTER CE useEffect
+  useEffect(() => {
+    if (parametres) {
+      console.log('🔄 Mise à jour du formulaire avec:', parametres);
+      setFormData(parametres);
+    }
+  }, [parametres]);
 
   const handleChange = (cle: string, valeur: string) => {
     setFormData({ ...formData, [cle]: valeur });

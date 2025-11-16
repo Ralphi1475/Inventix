@@ -19,7 +19,7 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategorie, setFilterCategorie] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
-    const categoriesProduits = useMemo(() => {
+  const categoriesProduits = useMemo(() => {
     return categories.filter(cat => cat.type === 'produit');
   }, [categories]);
 
@@ -98,12 +98,12 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
             <input type="text" placeholder="Rechercher..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg" />
           </div>
           <select value={filterCategorie} onChange={(e) => setFilterCategorie(e.target.value)} className="px-4 py-2 border rounded-lg">
-           <option value="">Toutes les catégories</option>
-            {/* ✅ Utiliser categoriesProduits ici */}
+            <option value="">Toutes les catégories</option>
             {categoriesProduits.map(cat => (
               <option key={cat.id} value={cat.denomination}>
                 {cat.denomination}
-              </option>)}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -113,7 +113,7 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="p-3 text-left">Image</th> {/* ✅ Nouvelle colonne */}
+                <th className="p-3 text-left">Image</th>
                 <th className="p-3 text-left">N°</th>
                 <th className="p-3 text-left">Catégorie</th>
                 <th className="p-3 text-left">Nom</th>
@@ -127,7 +127,6 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
             <tbody>
               {filteredArticles.map(article => (
                 <tr key={article.id} className="border-b hover:bg-gray-50">
-                  {/* ✅ Cellule image */}
                   <td className="p-3">
                     {article.image ? (
                       <img 

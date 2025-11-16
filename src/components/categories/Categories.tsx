@@ -6,7 +6,7 @@ import { Categorie } from '@/types';
 interface CategoriesProps {
   categories: Categorie[];
   setCategories: (categories: Categorie[]) => void;
-  onSave: (categorie: Categorie, isUpdate: boolean) => Promise<void>; // Ajoutez isUpdate
+  onSave: (categorie: Categorie, isUpdate: boolean) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }
 
@@ -16,8 +16,8 @@ export function Categories({ categories, setCategories, onSave, onDelete }: Cate
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState<Categorie>({
     id: '',
-    denomination: ''
-	type: 'produit' // ✅ ajout du type
+    denomination: '',
+    type: 'produit' // ✅ ajout du type (avec virgule ci-dessus !)
   });
 
   const filteredCategories = categories.filter(cat =>
@@ -31,8 +31,8 @@ export function Categories({ categories, setCategories, onSave, onDelete }: Cate
     } else {
       setFormData({
         id: String(Date.now()),
-        denomination: ''
-		type: 'produit' // ✅ valeur par défaut à la création
+        denomination: '',
+        type: 'produit' // ✅ valeur par défaut (avec virgule !)
       });
       setEditingCategorie(null);
     }
@@ -42,31 +42,31 @@ export function Categories({ categories, setCategories, onSave, onDelete }: Cate
   const closeForm = () => {
     setShowForm(false);
     setEditingCategorie(null);
-    setFormData({ id: '', denomination: '' });
+    setFormData({ id: '', denomination: '', type: 'produit' });
   };
 
-const handleSubmit = async () => {
-  if (!formData.denomination.trim()) {
-    alert('Veuillez saisir une dénomination');
-    return;
-  }
-
-  try {
-    const isUpdate = editingCategorie !== null; // Déterminer si c'est une modification
-    await onSave(formData, isUpdate); // Passer le paramètre
-    
-    if (isUpdate) {
-      setCategories(categories.map(c => c.id === formData.id ? formData : c));
-    } else {
-      setCategories([...categories, formData]);
+  const handleSubmit = async () => {
+    if (!formData.denomination.trim()) {
+      alert('Veuillez saisir une dénomination');
+      return;
     }
-    
-    closeForm();
-  } catch (error) {
-    console.error('Erreur lors de la sauvegarde:', error);
-    alert('Erreur lors de la sauvegarde de la catégorie');
-  }
-};
+
+    try {
+      const isUpdate = editingCategorie !== null;
+      await onSave(formData, isUpdate);
+      
+      if (isUpdate) {
+        setCategories(categories.map(c => c.id === formData.id ? formData : c));
+      } else {
+        setCategories([...categories, formData]);
+      }
+      
+      closeForm();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde de la catégorie');
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
@@ -170,33 +170,17 @@ const handleSubmit = async () => {
                   placeholder="Ex: Pochettes, Sacs, Accessoires..."
                 />
               </div>
-			    <div>
-    <label className="block text-sm font-medium mb-1">Type *</label>
-    <select
-      value={formData.type}
-      onChange={(e) => setFormData({ ...formData, type: e.target.value as 'produit' | 'achat' })}
-      className="w-full px-3 py-2 border rounded-lg"
-    >
-      <option value="produit">Catégorie de produit</option>
-      <option value="achat">Catégorie d'achat</option>
-    </select>
-  </div>
-
-  <div className="flex space-x-4 pt-4">
-    <button
-      onClick={handleSubmit}
-      className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-    >
-      {editingCategorie ? 'Modifier' : 'Créer'}
-    </button>
-    <button
-      onClick={closeForm}
-      className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300"
-    >
-      Annuler
-    </button>
-  </div>
-</div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Type *</label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'produit' | 'achat' })}
+                  className="w-full px-3 py-2 border rounded-lg"
+                >
+                  <option value="produit">Catégorie de produit</option>
+                  <option value="achat">Catégorie d'achat</option>
+                </select>
+              </div>
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={handleSubmit}

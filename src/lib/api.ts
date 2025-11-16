@@ -101,7 +101,7 @@ export const chargerDonnees = async () => {
     console.log(`✅ Données chargées depuis Supabase en ${endTime - startTime}ms`);
     console.log(`📊 Stats: ${articles.length} articles, ${contacts.length} contacts, ${mouvements.length} mouvements`);
 
-    return { articles, contacts, mouvements, factures, achats, categories, parametres };
+    return { articles,client: contacts, contacts, mouvements, factures, achats, categories, parametres };
   } catch (error) {
     console.error('❌ Erreur lors du chargement des données:', error);
     throw error;

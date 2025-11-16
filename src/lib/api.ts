@@ -103,6 +103,13 @@ export const chargerDonnees = async (forceRefresh?: boolean) => {
     
     const categories = categoriesRaw.data ? categoriesRaw.data.map(toCamelCase) : [];
     const parametres = parametresRaw.data?.[0] ? toCamelCase(parametresRaw.data[0]) : null;
+	console.log('🏢 Paramètres chargés:', {
+	raw: parametresRaw.data,
+	parametres: parametres,
+	userEmail: userEmail
+    });
+
+    const endTime = Date.now();
 
     const endTime = Date.now();
     console.log(`✅ Données chargées depuis Supabase en ${endTime - startTime}ms`);

@@ -38,12 +38,29 @@ useEffect(() => {
     setFormData({ ...formData, [cle]: valeur });
   };
 
-  const handleSave = async () => {
-    const success = await onSave(formData);
-    if (success) {
-      alert('Paramètres sauvegardés avec succès !');
-    }
+const handleSave = async () => {
+  // ✅ Reconvertir snake_case → camelCase avant sauvegarde
+  const dataToSave = {
+    id: formData.id,
+    societeNom: formData.societe_nom,
+    societeAdresse: formData.societe_adresse,
+    societeCodePostal: formData.societe_code_postal,
+    societeVille: formData.societe_ville,
+    societePays: formData.societe_pays,
+    societeTelephone: formData.societe_telephone,
+    societeEmail: formData.societe_email,
+    societeTva: formData.societe_tva,
+    societeIban: formData.societe_iban,
+    userEmail: formData.user_email
   };
+  
+  console.log('💾 Données à sauvegarder (camelCase):', dataToSave);
+  
+  const success = await onSave(dataToSave);
+  if (success) {
+    alert('Paramètres sauvegardés avec succès !');
+  }
+};
 
   return (
     <div>

@@ -9,12 +9,14 @@ interface ParametresSocieteProps {
 export function ParametresSociete({ parametres, onSave }: ParametresSocieteProps) {
   console.log('🏢 ParametresSociete - Props reçues:', { parametres });
   
-  const [formData, setFormData] = useState(parametres || {});  // ✅ Valeur par défaut {}
+  const [formData, setFormData] = useState(parametres || {});
+  
+  console.log('📝 FormData actuel:', formData);  // ✅ AJOUTER CE LOG
 
-  // ✅ AJOUTER CE useEffect
   useEffect(() => {
+    console.log('🔄 useEffect déclenché, parametres:', parametres);  // ✅ AJOUTER CE LOG
     if (parametres) {
-      console.log('🔄 Mise à jour du formulaire avec:', parametres);
+      console.log('✅ Mise à jour du formulaire avec:', parametres);
       setFormData(parametres);
     }
   }, [parametres]);

@@ -1,4 +1,11 @@
 // /src/lib/api.ts
+import type {
+  AuthorizedUser,
+  CreateAuthorizedUserRequest,
+  UpdateAuthorizedUserRequest,
+  AuthorizedUserResponse,
+  AuthorizedUsersListResponse,
+} from '@/types/authorized-users';
 import { Article, Contact, Mouvement, Parametres, FactureResume, Categorie } from '@/types';
 import { supabase, getCurrentUserEmail } from './supabase';
 

@@ -88,11 +88,13 @@ export const chargerDonnees = async (forceRefresh?: boolean) => {
       prixVenteTTC: article.prix_achat * (1 + (article.marge_percent || 0) / 100) * (1 + (article.taux_tva || 0) / 100)
     })) : [];
 
-    const contacts: Contact[] = contactsRaw.data ? contactsRaw.data.map(toCamelCase) : [];
-    const mouvements: Mouvement[] = mouvementsRaw.data ? mouvementsRaw.data.map(toCamelCase) : [];
-    const factures = facturesRaw.data ? facturesRaw.data.map(toCamelCase) : [];
+      const contacts: Contact[] = contactsRaw.data ? contactsRaw.data.map(toCamelCase) : [];
+	  const clients = contacts.filter(contact => contact.type === 'client');
+      const fournisseurs = contacts.filter(contact => contact.type === 'fournisseur');
+      const mouvements: Mouvement[] = mouvementsRaw.data ? mouvementsRaw.data.map(toCamelCase) : [];
+      const factures = facturesRaw.data ? facturesRaw.data.map(toCamelCase) : [];
     
-    const achats = achatsRaw.data ? achatsRaw.data.map(achat => {
+      const achats = achatsRaw.data ? achatsRaw.data.map(achat => {
       const achatConverted = toCamelCase(achat);
       const fournisseur = contacts.find(c => c.id === achatConverted.fournisseurId);
       return {
@@ -114,7 +116,7 @@ export const chargerDonnees = async (forceRefresh?: boolean) => {
     console.log(`✅ Données chargées depuis Supabase en ${endTime - startTime}ms`);
     console.log(`📊 Stats: ${articles.length} articles, ${contacts.length} contacts, ${mouvements.length} mouvements`);
 
-    return { articles, clients: contacts, fournisseurs: contacts, contacts, mouvements, factures, achats, categories, parametres };
+    return { articles, clients, fournisseurs, contacts, mouvements, factures, achats, categories, parametres };
   } catch (error) {
     console.error('❌ Erreur lors du chargement des données:', error);
     throw error;

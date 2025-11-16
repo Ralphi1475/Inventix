@@ -1,15 +1,15 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { Contact } from '@/types';
 import { ContactForm } from './ContactForm';
 
 interface FournisseursProps {
-  contacts: Contact[];
+  contacts: Contact[]; // tous les contacts
   setFournisseurs: React.Dispatch<React.SetStateAction<Contact[]>>;
   onSave: (contact: Contact, action: 'create' | 'update') => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onRefresh?: () => Promise<void>; // ✅ Ajout de onRefresh
+  onRefresh?: () => Promise<void>;
 }
 
 export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRefresh }: FournisseursProps) {
@@ -17,23 +17,23 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Filtrer uniquement les fournisseurs
+  const fournisseursFiltres = useMemo(() => {
+    return contacts.filter(contact => contact.type === 'fournisseur');
+  }, [contacts]);
+
   const handleSubmit = async (formData: Contact) => {
     try {
       setLoading(true);
       
       if (editingContact) {
-        // Modification
         await onSave({ ...formData, id: editingContact.id }, 'update');
       } else {
-        // Création
         const newContact = { ...formData, id: String(Date.now()), type: 'fournisseur' };
         await onSave(newContact, 'create');
       }
       
-      // ✅ Recharger les données depuis la base
-      if (onRefresh) {
-        await onRefresh();
-      }
+      if (onRefresh) await onRefresh();
       
       setShowForm(false);
       setEditingContact(null);
@@ -50,11 +50,7 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
       try {
         setLoading(true);
         await onDelete(id);
-        
-        // ✅ Recharger les données depuis la base
-        if (onRefresh) {
-          await onRefresh();
-        }
+        if (onRefresh) await onRefresh();
       } catch (error) {
         console.error('❌ Erreur suppression fournisseur:', error);
         alert('Erreur lors de la suppression du fournisseur');
@@ -91,7 +87,7 @@ export function Fournisseurs({ contacts, setFournisseurs, onSave, onDelete, onRe
               </tr>
             </thead>
             <tbody>
-              {contacts.map(contact => (
+              {fournisseursFiltres.map(contact => (
                 <tr key={contact.id} className="border-b hover:bg-gray-50">
                   <td className="p-3 font-medium">{contact.societe}</td>
                   <td className="p-3">{contact.nom} {contact.prenom}</td>

@@ -1,15 +1,15 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { Contact } from '@/types';
 import { ContactForm } from './ContactForm';
 
 interface ClientsProps {
-  contacts: Contact[];
-  setClients: React.Dispatch<React.SetStateAction<Contact[]>>;
+  contacts: Contact[]; // contient tous les contacts (clients + fournisseurs)
+  setClients: React.Dispatch<React.SetStateAction<Contact[]>>; // tu peux garder ce nom, mais il gère tous les contacts
   onSave: (contact: Contact, action: 'create' | 'update') => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onRefresh?: () => Promise<void>; // ✅ Ajout de onRefresh
+  onRefresh?: () => Promise<void>;
 }
 
 export function Clients({ contacts, setClients, onSave, onDelete, onRefresh }: ClientsProps) {
@@ -17,23 +17,23 @@ export function Clients({ contacts, setClients, onSave, onDelete, onRefresh }: C
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Filtrer uniquement les clients
+  const clientsFiltres = useMemo(() => {
+    return contacts.filter(contact => contact.type === 'client');
+  }, [contacts]);
+
   const handleSubmit = async (formData: Contact) => {
     try {
       setLoading(true);
       
       if (editingContact) {
-        // Modification
         await onSave({ ...formData, id: editingContact.id }, 'update');
       } else {
-        // Création
         const newContact = { ...formData, id: String(Date.now()), type: 'client' };
         await onSave(newContact, 'create');
       }
       
-      // ✅ Recharger les données depuis la base
-      if (onRefresh) {
-        await onRefresh();
-      }
+      if (onRefresh) await onRefresh();
       
       setShowForm(false);
       setEditingContact(null);
@@ -50,11 +50,7 @@ export function Clients({ contacts, setClients, onSave, onDelete, onRefresh }: C
       try {
         setLoading(true);
         await onDelete(id);
-        
-        // ✅ Recharger les données depuis la base
-        if (onRefresh) {
-          await onRefresh();
-        }
+        if (onRefresh) await onRefresh();
       } catch (error) {
         console.error('❌ Erreur suppression client:', error);
         alert('Erreur lors de la suppression du client');
@@ -91,7 +87,7 @@ export function Clients({ contacts, setClients, onSave, onDelete, onRefresh }: C
               </tr>
             </thead>
             <tbody>
-              {contacts.map(contact => (
+              {clientsFiltres.map(contact => (
                 <tr key={contact.id} className="border-b hover:bg-gray-50">
                   <td className="p-3 font-medium">{contact.societe}</td>
                   <td className="p-3">{contact.nom} {contact.prenom}</td>

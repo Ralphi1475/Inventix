@@ -17,6 +17,7 @@ export function Categories({ categories, setCategories, onSave, onDelete }: Cate
   const [formData, setFormData] = useState<Categorie>({
     id: '',
     denomination: ''
+	type: 'produit' // ✅ ajout du type
   });
 
   const filteredCategories = categories.filter(cat =>
@@ -31,6 +32,7 @@ export function Categories({ categories, setCategories, onSave, onDelete }: Cate
       setFormData({
         id: String(Date.now()),
         denomination: ''
+		type: 'produit' // ✅ valeur par défaut à la création
       });
       setEditingCategorie(null);
     }
@@ -168,6 +170,33 @@ const handleSubmit = async () => {
                   placeholder="Ex: Pochettes, Sacs, Accessoires..."
                 />
               </div>
+			    <div>
+    <label className="block text-sm font-medium mb-1">Type *</label>
+    <select
+      value={formData.type}
+      onChange={(e) => setFormData({ ...formData, type: e.target.value as 'produit' | 'achat' })}
+      className="w-full px-3 py-2 border rounded-lg"
+    >
+      <option value="produit">Catégorie de produit</option>
+      <option value="achat">Catégorie d'achat</option>
+    </select>
+  </div>
+
+  <div className="flex space-x-4 pt-4">
+    <button
+      onClick={handleSubmit}
+      className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+    >
+      {editingCategorie ? 'Modifier' : 'Créer'}
+    </button>
+    <button
+      onClick={closeForm}
+      className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300"
+    >
+      Annuler
+    </button>
+  </div>
+</div>
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={handleSubmit}

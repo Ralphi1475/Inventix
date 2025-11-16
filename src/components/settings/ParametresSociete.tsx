@@ -13,13 +13,26 @@ export function ParametresSociete({ parametres, onSave }: ParametresSocieteProps
   
   console.log('📝 FormData actuel:', formData);  // ✅ AJOUTER CE LOG
 
-  useEffect(() => {
-    console.log('🔄 useEffect déclenché, parametres:', parametres);  // ✅ AJOUTER CE LOG
-    if (parametres) {
-      console.log('✅ Mise à jour du formulaire avec:', parametres);
-      setFormData(parametres);
-    }
-  }, [parametres]);
+useEffect(() => {
+  console.log('🔄 useEffect déclenché, parametres:', parametres);
+  if (parametres) {
+    console.log('✅ Mise à jour du formulaire avec:', parametres);
+    // ✅ Convertir camelCase → snake_case
+    setFormData({
+      id: parametres.id || '',
+      societe_nom: parametres.societeNom || '',
+      societe_adresse: parametres.societeAdresse || '',
+      societe_code_postal: parametres.societeCodePostal || '',
+      societe_ville: parametres.societeVille || '',
+      societe_pays: parametres.societePays || '',
+      societe_telephone: parametres.societeTelephone || '',
+      societe_email: parametres.societeEmail || '',
+      societe_tva: parametres.societeTva || '',
+      societe_iban: parametres.societeIban || '',
+      user_email: parametres.userEmail || ''
+    });
+  }
+}, [parametres]);
 
   const handleChange = (cle: string, valeur: string) => {
     setFormData({ ...formData, [cle]: valeur });

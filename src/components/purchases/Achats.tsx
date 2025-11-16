@@ -19,17 +19,17 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   const [formData, setFormData] = useState<any>({
-    id: '',
-    reference: '',
-    date_achat: '',
-    date_echeance: '',
-    date_paiement: '',
-    fournisseurId: '',
-    modePaiement: '',
-    montantHTVA: 0,
-    montantTTC: 0,
-    description: '',
-    categorie: ''
+  id: '',
+  reference: '',
+  dateAchat: '',         // ✅ camelCase
+  dateEcheance: '',      // ✅ camelCase
+  datePaiement: '',      // ✅ camelCase
+  fournisseurId: '',
+  modePaiement: '',
+  montantHtva: 0,        // ✅ Un seul T majuscule
+  montantTtc: 0,         // ✅ Un seul T majuscule
+  description: '',
+  categorie: ''
   });
 
   const categories = ['Loyers', 'Matiere premiere', 'Administratif'];
@@ -52,20 +52,19 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
     }
     
     // Filtre par plage de dates
-    if (dateDebut) {
-      filtered = filtered.filter(a => a.date_achat >= dateDebut);
-    }
-    if (dateFin) {
-      filtered = filtered.filter(a => a.date_achat <= dateFin);
-    }
+		if (dateDebut) {
+		filtered = filtered.filter(a => a.dateAchat >= dateDebut);
+		}
+		if (dateFin) {
+		filtered = filtered.filter(a => a.dateAchat <= dateFin);
+		}
     
-    return filtered.sort((a, b) => new Date(b.date_achat).getTime() - new Date(a.date_achat).getTime());
-  }, [achats, searchTerm, filterCategorie, dateDebut, dateFin]);
+		return filtered.sort((a, b) => new Date(b.dateAchat).getTime() - new Date(a.dateAchat).getTime());
 
   // Calcul du total TTC
-  const totalTTC = useMemo(() => {
-    return filteredAchats.reduce((sum, achat) => sum + (achat.montantTTC || 0), 0);
-  }, [filteredAchats]);
+	const totalTTC = useMemo(() => {
+	return filteredAchats.reduce((sum, achat) => sum + (achat.montantTtc || 0), 0);
+	}, [filteredAchats]);
 
   const openForm = (achat: any = null) => {
     if (achat) {
@@ -229,7 +228,7 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
               {filteredAchats.map((achat: any) => (
                 <tr key={achat.id} className="border-b hover:bg-gray-50">
                   <td className="p-3 font-mono">{achat.reference}</td>
-                  <td className="p-3">{achat.date_achat}</td>
+                  <td className="p-3">{achat.dateAchat}</td>
                   <td className="p-3">{achat.nomFournisseur || 'Non défini'}</td>
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded text-xs ${
@@ -240,7 +239,7 @@ export function Achats({ achats, fournisseurs, sauvegarderAchat, modifierAchat, 
                       {achat.categorie}
                     </span>
                   </td>
-                  <td className="p-3 font-bold">{(achat.montantTTC || 0).toFixed(2)} €</td>
+                  <td className="p-3 font-bold">{(achat.montantTtc || 0).toFixed(2)} €</td>
                   <td className="p-3">
                     <div className="flex space-x-2">
                       <button onClick={() => openForm(achat)} className="text-blue-600 hover:text-blue-800"><Edit2 size={18} /></button>

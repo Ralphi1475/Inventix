@@ -107,11 +107,11 @@ export function Dashboard({ stats, mouvements, articles, clients, fournisseurs, 
     });
 
     // ✅ Filtrer les achats
-    const achatsFiltered = achats.filter(a => {
-      if (!a.date_achat) return false;
-      const correctedDate = correctSheetDate(a.date_achat);
-      return correctedDate >= startDate && correctedDate <= endDate;
-    });
+	const achatsFiltered = achats.filter(a => {
+	if (!a.dateAchat) return false;  // ✅ CHANGÉ
+	const correctedDate = correctSheetDate(a.dateAchat);  // ✅ CHANGÉ
+	return correctedDate >= startDate && correctedDate <= endDate;
+	});
 
     // Calculs financiers
     let totalVentes = 0;
@@ -129,7 +129,7 @@ export function Dashboard({ stats, mouvements, articles, clients, fournisseurs, 
       }
     });
 
-    const totalAchats = achatsFiltered.reduce((sum, a) => sum + (parseFloat(a.montantTTC) || 0), 0);
+    const totalAchats = achatsFiltered.reduce((sum, a) => sum + (parseFloat(a.montantTtc) || 0), 0);  // ✅ CHANGÉ
     const beneficeBrut = totalVentes - coutAchatVentes;
     const beneficeNet = beneficeBrut - totalAchats;
 
@@ -167,16 +167,16 @@ export function Dashboard({ stats, mouvements, articles, clients, fournisseurs, 
         mouvementType: 'vente' as const,
         dateCorrected: correctSheetDate(v.date)
       })),
-      ...achatsFiltered.map(a => ({
-        id: a.id,
-        date: a.date_achat,
-        mouvementType: 'achat' as const,
-        dateCorrected: correctSheetDate(a.date_achat),
-        description: a.description,
-        montantTTC: a.montantTTC,
-        nomFournisseur: a.nomFournisseur,
-        categorie: a.categorie
-      }))
+		...achatsFiltered.map(a => ({
+		id: a.id,
+		date: a.dateAchat,  // ✅ CHANGÉ
+		mouvementType: 'achat' as const,
+		dateCorrected: correctSheetDate(a.dateAchat),  // ✅ CHANGÉ
+		description: a.description,
+		montantTTC: a.montantTtc,  // ✅ CHANGÉ (gardé montantTTC pour le nouveau objet)
+		nomFournisseur: a.nomFournisseur,
+		categorie: a.categorie
+		}))
     ].sort((a, b) => a.dateCorrected.localeCompare(b.dateCorrected));
 
     return {
@@ -370,7 +370,7 @@ export function Dashboard({ stats, mouvements, articles, clients, fournisseurs, 
                       </td>
                       <td className="p-3">{mouv.description || mouv.categorie || '-'}</td>
                       <td className="p-3">-</td>
-                      <td className="p-3 font-semibold text-red-600">{parseFloat(mouv.montantTTC).toFixed(2)} €</td>
+                      <td className="p-3 font-semibold text-red-600">{(parseFloat(mouv.montantTTC) || 0).toFixed(2)} €</td>
                       <td className="p-3">{mouv.nomFournisseur || '-'}</td>
                     </tr>
                   );

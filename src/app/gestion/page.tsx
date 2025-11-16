@@ -37,7 +37,7 @@ import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
 
 // Icônes
-import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X } from 'lucide-react';
+import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt } from 'lucide-react';
 
 export default function GestionApp() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -318,6 +318,13 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
     className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'factures' ? 'bg-blue-700' : ''}`}
   >
     <FileText size={24} />
+  </button>
+  {/* ✅ NOUVEAU BOUTON ACHATS */}
+  <button 
+    onClick={() => setCurrentPage('achats')} 
+    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'achats' ? 'bg-blue-700' : ''}`}
+  >
+    <Receipt size={24} />
   </button>
   <button 
     onClick={() => setCurrentPage('parametres')} 

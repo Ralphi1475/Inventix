@@ -615,243 +615,232 @@ export const clearCache = (): void => {
 const invalidateCache = (): void => {
   // Non nécessaire avec Supabase
 };
-import { AuthorizedUser, UserPermissions } from '@/types';
-
 // ============================================================================
-// GESTION DES ACCÈS PARTAGÉS
+// GESTION DES UTILISATEURS AUTORISÉS - PARTAGE D'ACCÈS
 // ============================================================================
 
 /**
- * Récupérer tous les emails autorisés (le mien + ceux que j'ai autorisés)
+ * Récupère tous les emails qui ont accès aux données de l'utilisateur courant
+ * (l'utilisateur lui-même + tous les utilisateurs qu'il a autorisés)
  */
-export const getAuthorizedEmails = async (): Promise<string[]> => {
+export async function getAllAccessibleEmails(): Promise<string[]> {
   try {
     const userEmail = getCurrentUserEmail();
     if (!userEmail) return [];
 
-    // Récupérer les emails que j'ai autorisés
-    const { data: authorized, error } = await supabase
+    const { data, error } = await supabase
       .from('authorized_users')
       .select('authorized_email')
       .eq('owner_email', userEmail);
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des emails autorisés:', error);
+      return [userEmail];
+    }
 
-    const authorizedEmails = authorized?.map(a => a.authorized_email) || [];
-    
-    // Inclure mon propre email
-    return [userEmail, ...authorizedEmails];
-  } catch (error) {
-    console.error('❌ Erreur récupération emails autorisés:', error);
-    return [getCurrentUserEmail() || ''];
-  }
-};
-
-/**
- * Récupérer les propriétaires qui m'ont donné accès
- */
-export const getOwnersWhoAuthorizedMe = async (): Promise<string[]> => {
-  try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) return [];
-
-    const { data: owners, error } = await supabase
-      .from('authorized_users')
-      .select('owner_email')
-      .eq('authorized_email', userEmail);
-
-    if (error) throw error;
-
-    return owners?.map(o => o.owner_email) || [];
-  } catch (error) {
-    console.error('❌ Erreur récupération propriétaires:', error);
-    return [];
-  }
-};
-
-/**
- * Récupérer tous les emails accessibles (mes données + celles partagées avec moi)
- */
-export const getAllAccessibleEmails = async (): Promise<string[]> => {
-  try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) return [];
-
-    const [myAuthorized, ownersWhoAuthorizedMe] = await Promise.all([
-      getAuthorizedEmails(),
-      getOwnersWhoAuthorizedMe()
-    ]);
-
-    // Combiner et dédupliquer
-    const allEmails = [...new Set([...myAuthorized, ...ownersWhoAuthorizedMe])];
+    const authorizedEmails = data?.map((row) => row.authorized_email) || [];
+    const allEmails = [userEmail, ...authorizedEmails];
     
     console.log('📧 Emails accessibles:', allEmails);
     return allEmails;
   } catch (error) {
-    console.error('❌ Erreur récupération emails accessibles:', error);
-    return [getCurrentUserEmail() || ''];
+    console.error('❌ Erreur inattendue:', error);
+    const userEmail = getCurrentUserEmail();
+    return userEmail ? [userEmail] : [];
   }
-};
+}
 
 /**
- * Récupérer la liste des utilisateurs autorisés
+ * Récupère tous les emails des propriétaires de données auxquels l'utilisateur courant a accès
+ * (l'utilisateur lui-même + tous les propriétaires qui l'ont autorisé)
  */
-export const getAuthorizedUsers = async (): Promise<AuthorizedUser[]> => {
+export async function getAllAccessibleOwnerEmails(userEmail: string): Promise<string[]> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
+    const { data, error } = await supabase
+      .from('authorized_users')
+      .select('owner_email')
+      .eq('authorized_email', userEmail);
 
+    if (error) {
+      console.error('❌ Erreur lors de la récupération des propriétaires:', error);
+      return [userEmail];
+    }
+
+    const ownerEmails = data?.map((row) => row.owner_email) || [];
+    const allEmails = [userEmail, ...ownerEmails];
+    
+    console.log('👥 Propriétaires accessibles:', allEmails);
+    return allEmails;
+  } catch (error) {
+    console.error('❌ Erreur inattendue:', error);
+    return [userEmail];
+  }
+}
+
+/**
+ * Lister les utilisateurs autorisés
+ */
+export async function getAuthorizedUsers(userEmail: string): Promise<{
+  success: boolean;
+  data?: any[];
+  error?: string;
+}> {
+  try {
     const { data, error } = await supabase
       .from('authorized_users')
       .select('*')
       .eq('owner_email', userEmail)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      return { success: false, error: error.message };
+    }
 
-    const users: AuthorizedUser[] = (data || []).map(toCamelCase);
-    console.log('✅ Utilisateurs autorisés chargés:', users.length);
-    return users;
+    return { success: true, data: data || [] };
   } catch (error) {
-    console.error('❌ Erreur chargement utilisateurs autorisés:', error);
-    throw error;
+    return { success: false, error: 'Erreur lors de la récupération des utilisateurs' };
   }
-};
+}
 
 /**
  * Ajouter un utilisateur autorisé
  */
-export const addAuthorizedUser = async (
-  authorizedEmail: string, 
-  accessLevel: 'read' | 'write'
-): Promise<void> => {
+export async function addAuthorizedUser(
+  userEmail: string,
+  request: { authorized_email: string; access_level: 'read' | 'write' }
+): Promise<{
+  success: boolean;
+  data?: any;
+  error?: string;
+}> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
-    // Vérifier que l'email n'est pas le sien
-    if (authorizedEmail.toLowerCase() === userEmail.toLowerCase()) {
-      throw new Error('Vous ne pouvez pas vous ajouter vous-même');
+    // Validation
+    if (!request.authorized_email || !request.authorized_email.includes('@')) {
+      return { success: false, error: 'Email invalide' };
     }
 
-    const userData = toSnakeCase({
-      ownerEmail: userEmail,
-      authorizedEmail: authorizedEmail.toLowerCase().trim(),
-      accessLevel
-    });
+    if (request.authorized_email.toLowerCase() === userEmail.toLowerCase()) {
+      return { success: false, error: 'Vous ne pouvez pas vous autoriser vous-même' };
+    }
 
-    const { error } = await supabase
+    if (!['read', 'write'].includes(request.access_level)) {
+      return { success: false, error: "Niveau d'accès invalide" };
+    }
+
+    // Insertion
+    const { data, error } = await supabase
       .from('authorized_users')
-      .insert([userData]);
+      .insert({
+        owner_email: userEmail,
+        authorized_email: request.authorized_email.toLowerCase(),
+        access_level: request.access_level,
+      })
+      .select()
+      .single();
 
     if (error) {
-      if (error.code === '23505') { // Unique violation
-        throw new Error('Cet utilisateur a déjà accès à vos données');
+      if (error.code === '23505') {
+        return { success: false, error: 'Cet utilisateur est déjà autorisé' };
       }
-      throw error;
+      return { success: false, error: error.message };
     }
 
-    console.log('✅ Utilisateur autorisé ajouté:', authorizedEmail);
+    return { success: true, data };
   } catch (error) {
-    console.error('❌ Erreur ajout utilisateur autorisé:', error);
-    throw error;
+    return { success: false, error: "Erreur lors de l'ajout de l'utilisateur" };
   }
-};
+}
 
 /**
- * Modifier le niveau d'accès d'un utilisateur
+ * Modifier le niveau d'accès
  */
-export const updateAuthorizedUser = async (
-  id: string, 
-  accessLevel: 'read' | 'write'
-): Promise<void> => {
+export async function updateAuthorizedUser(
+  userEmail: string,
+  request: { id: string; access_level: 'read' | 'write' }
+): Promise<{
+  success: boolean;
+  data?: any;
+  error?: string;
+}> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
+    if (!['read', 'write'].includes(request.access_level)) {
+      return { success: false, error: "Niveau d'accès invalide" };
+    }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('authorized_users')
-      .update({ access_level: accessLevel })
-      .eq('id', id)
-      .eq('owner_email', userEmail);
+      .update({
+        access_level: request.access_level,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', request.id)
+      .eq('owner_email', userEmail)
+      .select()
+      .single();
 
-    if (error) throw error;
+    if (error) {
+      return { success: false, error: error.message };
+    }
 
-    console.log('✅ Niveau d\'accès modifié:', id);
+    if (!data) {
+      return { success: false, error: 'Utilisateur non trouvé' };
+    }
+
+    return { success: true, data };
   } catch (error) {
-    console.error('❌ Erreur modification accès:', error);
-    throw error;
+    return { success: false, error: 'Erreur lors de la modification' };
   }
-};
+}
 
 /**
  * Supprimer un utilisateur autorisé
  */
-export const removeAuthorizedUser = async (id: string): Promise<void> => {
+export async function deleteAuthorizedUser(
+  userEmail: string,
+  authorizedUserId: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
-
     const { error } = await supabase
       .from('authorized_users')
       .delete()
-      .eq('id', id)
+      .eq('id', authorizedUserId)
       .eq('owner_email', userEmail);
 
-    if (error) throw error;
+    if (error) {
+      return { success: false, error: error.message };
+    }
 
-    console.log('✅ Utilisateur autorisé supprimé:', id);
+    return { success: true };
   } catch (error) {
-    console.error('❌ Erreur suppression utilisateur autorisé:', error);
-    throw error;
+    return { success: false, error: 'Erreur lors de la suppression' };
   }
-};
+}
 
 /**
- * Vérifier les permissions de l'utilisateur actuel
+ * Vérifier le niveau d'accès d'un utilisateur
  */
-export const getUserPermissions = async (): Promise<UserPermissions> => {
+export async function checkUserAccess(
+  ownerEmail: string,
+  authorizedEmail: string
+): Promise<'none' | 'read' | 'write'> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) {
-      return {
-        isOwner: false,
-        hasWriteAccess: false,
-        hasReadAccess: false,
-        accessLevel: 'read'
-      };
+    if (ownerEmail.toLowerCase() === authorizedEmail.toLowerCase()) {
+      return 'write';
     }
 
-    // Vérifier si l'utilisateur a des autorisations reçues
     const { data, error } = await supabase
       .from('authorized_users')
-      .select('access_level, owner_email')
-      .eq('authorized_email', userEmail)
-      .limit(1)
+      .select('access_level')
+      .eq('owner_email', ownerEmail)
+      .eq('authorized_email', authorizedEmail)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
-      console.error('❌ Erreur vérification permissions:', error);
+    if (error || !data) {
+      return 'none';
     }
 
-    const isOwner = !data; // Si pas de données, c'est qu'il consulte ses propres données
-    const hasWriteAccess = isOwner || data?.access_level === 'write';
-    const hasReadAccess = true; // Si on est ici, on a au moins lecture
-    const accessLevel: 'read' | 'write' | 'owner' = isOwner ? 'owner' : (data?.access_level || 'read');
-
-    return {
-      isOwner,
-      hasWriteAccess,
-      hasReadAccess,
-      accessLevel
-    };
+    return data.access_level;
   } catch (error) {
-    console.error('❌ Erreur récupération permissions:', error);
-    return {
-      isOwner: true, // Par défaut, on considère qu'il consulte ses données
-      hasWriteAccess: true,
-      hasReadAccess: true,
-      accessLevel: 'owner'
-    };
+    return 'none';
   }
-};
+}

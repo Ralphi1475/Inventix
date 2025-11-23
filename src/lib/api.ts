@@ -507,8 +507,9 @@ export const sauvegarderParametres = async (params: Parametres) => {
 
 export async function chargerCategories(type?: 'produit' | 'achat'): Promise<Categorie[]> {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
+	const { data: { session } } = await supabase.auth.getSession();
+	const userEmail = session?.user?.email;
+	if (!userEmail) throw new Error('Utilisateur non connecté');
 
     let query = supabase
       .from('categories')
@@ -642,7 +643,8 @@ const invalidateCache = (): void => {
  */
 export async function getAllAccessibleEmails(): Promise<string[]> {
   try {
-    const userEmail = getCurrentUserEmail();
+    const { data: { session } } = await supabase.auth.getSession();
+    const userEmail = session?.user?.email;
     if (!userEmail) return [];
 
     const { data, error } = await supabase

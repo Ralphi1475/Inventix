@@ -35,59 +35,9 @@ import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
 import GestionAcces from '@/components/settings/GestionAcces';
 import { useRouter } from 'next/navigation';
-import { Building2 } from 'lucide-react';
-import { createOrganization } from '@/lib/api';
 
-const handleCreateOrg = async () => {
-  const response = await createOrganization(userEmail, {
-    name: 'Ma Nouvelle Société',
-    description: 'Description optionnelle',
-  });
-  
-  if (response.success) {
-    console.log('Organisation créée:', response.data);
-  }
-};
-import { addUserToOrganization } from '@/lib/api';
-
-const handleAddUser = async () => {
-  const response = await addUserToOrganization(
-    currentUserEmail,
-    organizationId,
-    'utilisateur@example.com',
-    'write' // 'read', 'write', ou 'admin'
-  );
-  
-  if (response.success) {
-    console.log('Utilisateur ajouté');
-  }
-};
 // Icônes
-import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt } from 'lucide-react';
-function OrganizationSwitcher() {
-  const router = useRouter();
-  const { currentOrganization, setCurrentOrganization } = useOrganization();
-
-  const handleSwitchOrganization = () => {
-    setCurrentOrganization(null);
-    router.push('/select-organization');
-  };
-
-  return (
-    <button
-      onClick={handleSwitchOrganization}
-      className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50"
-    >
-      <Building2 size={20} />
-      <div className="text-left">
-        <div className="text-sm font-medium">
-          {currentOrganization?.organization?.name}
-        </div>
-        <div className="text-xs text-gray-500">Changer d'organisation</div>
-      </div>
-    </button>
-  );
-}
+import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt, Building2 } from 'lucide-react';
 export default function GestionApp() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [userEmail, setUserEmail] = useState<string>('');
@@ -116,6 +66,43 @@ export default function GestionApp() {
   };
   loadUserEmail();
 }, []);
+
+  // Fonctions pour la gestion des organisations (multi-sociétés)
+  const handleCreateOrg = async (orgName: string, orgDescription?: string) => {
+    if (!userEmail) {
+      console.error('Email utilisateur non disponible');
+      return;
+    }
+    
+    // TODO: Importer createOrganization depuis @/lib/api si disponible
+    // const response = await createOrganization(userEmail, {
+    //   name: orgName,
+    //   description: orgDescription,
+    // });
+    
+    // if (response.success) {
+    //   console.log('Organisation créée:', response.data);
+    // }
+  };
+
+  const handleAddUser = async (organizationId: string, newUserEmail: string, role: 'read' | 'write' | 'admin') => {
+    if (!userEmail) {
+      console.error('Email utilisateur non disponible');
+      return;
+    }
+    
+    // TODO: Importer addUserToOrganization depuis @/lib/api si disponible
+    // const response = await addUserToOrganization(
+    //   userEmail,
+    //   organizationId,
+    //   newUserEmail,
+    //   role
+    // );
+    
+    // if (response.success) {
+    //   console.log('Utilisateur ajouté');
+    // }
+  };
 
   const articlesAvecPrix = useMemo(() => {
     return calculerArticlesAvecPrix(articles);

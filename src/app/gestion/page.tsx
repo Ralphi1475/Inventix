@@ -62,20 +62,6 @@ const handleAddUser = async () => {
     console.log('Utilisateur ajouté');
   }
 };
-import { addUserToOrganization } from '@/lib/api';
-
-const handleAddUser = async () => {
-  const response = await addUserToOrganization(
-    currentUserEmail,
-    organizationId,
-    'utilisateur@example.com',
-    'write' // 'read', 'write', ou 'admin'
-  );
-  
-  if (response.success) {
-    console.log('Utilisateur ajouté');
-  }
-};
 // Icônes
 import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt } from 'lucide-react';
 function OrganizationSwitcher() {

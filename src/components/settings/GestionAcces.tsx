@@ -29,13 +29,13 @@ export default function GestionAcces() {
   const [success, setSuccess] = useState<string | null>(null);
 
   // Charger l'email de l'utilisateur connecté
-  useEffect(() => {
-    const fetchUser = async () => {
-      const {  { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
-      setCurrentUserEmail(session?.user.email || null);
-    };
-    fetchUser();
-  }, []);
+useEffect(() => {
+  const fetchUser = async () => {
+    const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+    setCurrentUserEmail(session?.user.email || null);
+  };
+  fetchUser();
+}, []);
 
   // Charger les utilisateurs autorisés
   useEffect(() => {

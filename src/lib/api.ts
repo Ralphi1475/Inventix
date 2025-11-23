@@ -51,8 +51,9 @@ const toCamelCase = (obj: any): any => {
 
 export const chargerDonnees = async (forceRefresh?: boolean) => {
   try {
-    const userEmail = getCurrentUserEmail();
-    if (!userEmail) throw new Error('Utilisateur non connecté');
+const { data: { session } } = await supabase.auth.getSession();
+	const userEmail = session?.user?.email;
+	if (!userEmail) throw new Error('Utilisateur non connecté');
 
     console.log('📡 Chargement des données depuis Supabase...');
     console.log('👤 Chargement des données pour:', userEmail);

@@ -35,7 +35,6 @@ import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
 import GestionAcces from '@/components/settings/GestionAcces';
 import { useRouter } from 'next/navigation';
-import { useOrganization } from '@/context/OrganizationContext';
 import { Building2 } from 'lucide-react';
 import { createOrganization } from '@/lib/api';
 

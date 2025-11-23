@@ -54,6 +54,7 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
       granted_by: userEmail,
       granted_at: org.created_at,
       created_at: org.created_at,
+	  updated_at: org.updated_at,
       organization: org,
     }));
 

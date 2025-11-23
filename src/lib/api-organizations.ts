@@ -18,8 +18,8 @@ import type {
  */
 export async function getUserOrganizations(userEmail: string): Promise<OrganizationsListResponse> {
   try {
-    // Récupérer les accès de l'utilisateur avec les données des organisations
-    const { data, error } = await supabase
+    // 1. Récupérer les accès via user_organization_access (organisations partagées)
+    const { data: sharedAccess, error: sharedError } = await supabase
       .from('user_organization_access')
       .select(`
         *,
@@ -28,12 +28,48 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
       .eq('user_email', userEmail)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Erreur Supabase:', error);
-      return { success: false, error: error.message };
+    if (sharedError) {
+      console.error('Erreur récupération accès partagés:', sharedError);
+      return { success: false, error: sharedError.message };
     }
 
-    return { success: true, data: data || [] };
+    // 2. Récupérer les organisations dont l'utilisateur est propriétaire
+    const { data: ownedOrgs, error: ownedError } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('owner_email', userEmail)
+      .order('created_at', { ascending: false });
+
+    if (ownedError) {
+      console.error('Erreur récupération organisations possédées:', ownedError);
+      return { success: false, error: ownedError.message };
+    }
+
+    // 3. Convertir les organisations possédées au format UserOrganizationAccess
+    const ownedAccess: UserOrganizationAccess[] = (ownedOrgs || []).map(org => ({
+      id: `owner-${org.id}`, // ID unique pour éviter les doublons
+      organization_id: org.id,
+      user_email: userEmail,
+      access_level: 'admin', // Le propriétaire a toujours accès admin
+      granted_by: userEmail,
+      granted_at: org.created_at,
+      created_at: org.created_at,
+      organization: org,
+    }));
+
+    // 4. Fusionner les deux listes en évitant les doublons
+    const allAccess = [...ownedAccess];
+    const ownedOrgIds = new Set(ownedOrgs?.map(o => o.id) || []);
+    
+    // Ajouter les accès partagés qui ne sont pas déjà dans ownedOrgs
+    (sharedAccess || []).forEach(access => {
+      if (!ownedOrgIds.has(access.organization_id)) {
+        allAccess.push(access);
+      }
+    });
+
+    console.log(`✅ ${allAccess.length} organisation(s) trouvée(s) pour ${userEmail}`);
+    return { success: true, data: allAccess };
   } catch (error) {
     console.error('Erreur:', error);
     return { success: false, error: 'Erreur lors de la récupération des organisations' };

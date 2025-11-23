@@ -1,0 +1,344 @@
+// ============================================================================
+// API Functions - Gestion des organisations
+// Fichier: src/lib/api-organizations.ts
+// ============================================================================
+
+import { supabase } from './supabase';
+import type {
+  Organization,
+  UserOrganizationAccess,
+  CreateOrganizationRequest,
+  UpdateOrganizationRequest,
+  OrganizationResponse,
+  OrganizationsListResponse,
+} from '@/types/organizations';
+
+/**
+ * Récupérer toutes les organisations auxquelles un utilisateur a accès
+ */
+export async function getUserOrganizations(userEmail: string): Promise<OrganizationsListResponse> {
+  try {
+    // Récupérer les accès de l'utilisateur avec les données des organisations
+    const { data, error } = await supabase
+      .from('user_organization_access')
+      .select(`
+        *,
+        organization:organizations (*)
+      `)
+      .eq('user_email', userEmail)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erreur Supabase:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('Erreur:', error);
+    return { success: false, error: 'Erreur lors de la récupération des organisations' };
+  }
+}
+
+/**
+ * Créer une nouvelle organisation
+ */
+export async function createOrganization(
+  userEmail: string,
+  request: CreateOrganizationRequest
+): Promise<OrganizationResponse> {
+  try {
+    // Validation
+    if (!request.name || request.name.trim().length === 0) {
+      return { success: false, error: 'Le nom de l\'organisation est requis' };
+    }
+
+    // Créer l'organisation
+    const { data: orgData, error: orgError } = await supabase
+      .from('organizations')
+      .insert({
+        name: request.name.trim(),
+        description: request.description?.trim() || null,
+        logo_url: request.logo_url?.trim() || null,
+        owner_email: userEmail,
+      })
+      .select()
+      .single();
+
+    if (orgError || !orgData) {
+      console.error('Erreur création organisation:', orgError);
+      return { success: false, error: orgError?.message || 'Erreur lors de la création' };
+    }
+
+    // Donner l'accès admin au créateur
+    const { error: accessError } = await supabase
+      .from('user_organization_access')
+      .insert({
+        organization_id: orgData.id,
+        user_email: userEmail,
+        access_level: 'admin',
+        granted_by: userEmail,
+      });
+
+    if (accessError) {
+      console.error('Erreur création accès:', accessError);
+      // L'organisation est créée mais l'accès a échoué
+      // On pourrait supprimer l'organisation, mais on laisse pour l'instant
+      return { success: false, error: 'Organisation créée mais erreur d\'accès' };
+    }
+
+    return { success: true, data: orgData };
+  } catch (error) {
+    console.error('Erreur:', error);
+    return { success: false, error: 'Erreur lors de la création de l\'organisation' };
+  }
+}
+
+/**
+ * Mettre à jour une organisation
+ */
+export async function updateOrganization(
+  userEmail: string,
+  request: UpdateOrganizationRequest
+): Promise<OrganizationResponse> {
+  try {
+    // Vérifier que l'utilisateur est admin de l'organisation
+    const { data: access, error: accessError } = await supabase
+      .from('user_organization_access')
+      .select('access_level')
+      .eq('organization_id', request.id)
+      .eq('user_email', userEmail)
+      .single();
+
+    if (accessError || !access || access.access_level !== 'admin') {
+      return { success: false, error: 'Vous n\'avez pas les droits pour modifier cette organisation' };
+    }
+
+    // Préparer les données à mettre à jour
+    const updateData: any = {};
+    if (request.name !== undefined) updateData.name = request.name.trim();
+    if (request.description !== undefined) updateData.description = request.description.trim() || null;
+    if (request.logo_url !== undefined) updateData.logo_url = request.logo_url.trim() || null;
+
+    // Mettre à jour
+    const { data, error } = await supabase
+      .from('organizations')
+      .update(updateData)
+      .eq('id', request.id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      return { success: false, error: error?.message || 'Erreur lors de la mise à jour' };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Erreur:', error);
+    return { success: false, error: 'Erreur lors de la mise à jour de l\'organisation' };
+  }
+}
+
+/**
+ * Ajouter un utilisateur à une organisation
+ */
+export async function addUserToOrganization(
+  currentUserEmail: string,
+  organizationId: string,
+  userEmail: string,
+  accessLevel: 'read' | 'write' | 'admin'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Vérifier que l'utilisateur courant est admin
+    const { data: access, error: accessError } = await supabase
+      .from('user_organization_access')
+      .select('access_level')
+      .eq('organization_id', organizationId)
+      .eq('user_email', currentUserEmail)
+      .single();
+
+    if (accessError || !access || access.access_level !== 'admin') {
+      return { success: false, error: 'Vous n\'avez pas les droits pour ajouter des utilisateurs' };
+    }
+
+    // Vérifier que l'utilisateur n'a pas déjà accès
+    const { data: existingAccess } = await supabase
+      .from('user_organization_access')
+      .select('id')
+      .eq('organization_id', organizationId)
+      .eq('user_email', userEmail)
+      .single();
+
+    if (existingAccess) {
+      return { success: false, error: 'Cet utilisateur a déjà accès à cette organisation' };
+    }
+
+    // Ajouter l'accès
+    const { error } = await supabase
+      .from('user_organization_access')
+      .insert({
+        organization_id: organizationId,
+        user_email: userEmail,
+        access_level: accessLevel,
+        granted_by: currentUserEmail,
+      });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur:', error);
+    return { success: false, error: 'Erreur lors de l\'ajout de l\'utilisateur' };
+  }
+}
+
+/**
+ * Modifier le niveau d'accès d'un utilisateur
+ */
+export async function updateUserOrganizationAccess(
+  currentUserEmail: string,
+  accessId: string,
+  newAccessLevel: 'read' | 'write' | 'admin'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Récupérer l'accès à modifier
+    const { data: targetAccess, error: fetchError } = await supabase
+      .from('user_organization_access')
+      .select('organization_id, user_email')
+      .eq('id', accessId)
+      .single();
+
+    if (fetchError || !targetAccess) {
+      return { success: false, error: 'Accès non trouvé' };
+    }
+
+    // Vérifier que l'utilisateur courant est admin
+    const { data: currentAccess, error: accessError } = await supabase
+      .from('user_organization_access')
+      .select('access_level')
+      .eq('organization_id', targetAccess.organization_id)
+      .eq('user_email', currentUserEmail)
+      .single();
+
+    if (accessError || !currentAccess || currentAccess.access_level !== 'admin') {
+      return { success: false, error: 'Vous n\'avez pas les droits pour modifier cet accès' };
+    }
+
+    // Empêcher de se retirer ses propres droits admin
+    if (targetAccess.user_email === currentUserEmail && newAccessLevel !== 'admin') {
+      return { success: false, error: 'Vous ne pouvez pas retirer vos propres droits admin' };
+    }
+
+    // Mettre à jour
+    const { error } = await supabase
+      .from('user_organization_access')
+      .update({ access_level: newAccessLevel })
+      .eq('id', accessId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur:', error);
+    return { success: false, error: 'Erreur lors de la modification de l\'accès' };
+  }
+}
+
+/**
+ * Retirer l'accès d'un utilisateur à une organisation
+ */
+export async function removeUserFromOrganization(
+  currentUserEmail: string,
+  accessId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Récupérer l'accès à supprimer
+    const { data: targetAccess, error: fetchError } = await supabase
+      .from('user_organization_access')
+      .select('organization_id, user_email')
+      .eq('id', accessId)
+      .single();
+
+    if (fetchError || !targetAccess) {
+      return { success: false, error: 'Accès non trouvé' };
+    }
+
+    // Vérifier que l'utilisateur courant est admin
+    const { data: currentAccess, error: accessError } = await supabase
+      .from('user_organization_access')
+      .select('access_level')
+      .eq('organization_id', targetAccess.organization_id)
+      .eq('user_email', currentUserEmail)
+      .single();
+
+    if (accessError || !currentAccess || currentAccess.access_level !== 'admin') {
+      return { success: false, error: 'Vous n\'avez pas les droits pour retirer cet accès' };
+    }
+
+    // Empêcher de se retirer soi-même
+    if (targetAccess.user_email === currentUserEmail) {
+      return { success: false, error: 'Vous ne pouvez pas retirer votre propre accès' };
+    }
+
+    // Supprimer l'accès
+    const { error } = await supabase
+      .from('user_organization_access')
+      .delete()
+      .eq('id', accessId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur:', error);
+    return { success: false, error: 'Erreur lors de la suppression de l\'accès' };
+  }
+}
+
+/**
+ * Récupérer les utilisateurs ayant accès à une organisation
+ */
+export async function getOrganizationUsers(
+  currentUserEmail: string,
+  organizationId: string
+): Promise<{
+  success: boolean;
+  data?: UserOrganizationAccess[];
+  error?: string;
+}> {
+  try {
+    // Vérifier que l'utilisateur a accès à l'organisation
+    const { data: access, error: accessError } = await supabase
+      .from('user_organization_access')
+      .select('access_level')
+      .eq('organization_id', organizationId)
+      .eq('user_email', currentUserEmail)
+      .single();
+
+    if (accessError || !access) {
+      return { success: false, error: 'Vous n\'avez pas accès à cette organisation' };
+    }
+
+    // Récupérer tous les utilisateurs
+    const { data, error } = await supabase
+      .from('user_organization_access')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('Erreur:', error);
+    return { success: false, error: 'Erreur lors de la récupération des utilisateurs' };
+  }
+}

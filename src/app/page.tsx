@@ -1,51 +1,92 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 
 export default function Home() {
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<any>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user?.email) {
-        const orgId = localStorage.getItem('current_organization_id');
-        if (orgId) {
-          router.replace('/gestion');
-        } else {
-          router.replace('/select-organization');
+    let hasRedirected = false; // ⚠️ Empêche les doubles redirections
+
+    const initializeAuth = async () => {
+      try {
+        // 1. Vérifie la session existante
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+
+        if (session?.user?.email && !hasRedirected) {
+          hasRedirected = true;
+          redirectBasedOnOrg(session.user.email);
+          return;
         }
+
+        // 2. Écoute les futurs changements (login/logout)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          setSession(session);
+          if (event === 'SIGNED_IN' && session?.user?.email && !hasRedirected) {
+            hasRedirected = true;
+            redirectBasedOnOrg(session.user.email);
+          }
+          if (event === 'SIGNED_OUT') {
+            hasRedirected = false;
+          }
+        });
+
+        setLoading(false);
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Erreur init auth:', error);
+        setLoading(false);
       }
     };
 
-    checkSession();
+    initializeAuth();
   }, [router]);
+
+  const redirectBasedOnOrg = (email: string) => {
+    if (typeof window === 'undefined') return;
+
+    const orgId = localStorage.getItem('current_organization_id');
+    if (orgId) {
+      router.replace('/gestion');
+    } else {
+      // Vérifie rapidement s’il a des orgs → mais redirige toujours vers select-organization
+      router.replace('/select-organization');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div>Chargement...</div>
+      </div>
+    );
+  }
+
+  if (session) {
+    // On ne devrait jamais arriver ici si redirection fonctionne
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Redirection...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Inventix</h1>
-          <p className="text-gray-600">Gestion d'inventaire simplifiée</p>
-        </div>
-        
+        <h1 className="text-3xl font-bold text-center mb-6">Inventix</h1>
         <Auth
           supabaseClient={supabase}
-          appearance={{ 
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#2563eb',
-                  brandAccent: '#1e40af',
-                }
-              }
-            }
-          }}
+          appearance={{ theme: ThemeSupa }}
           providers={['google']}
           redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`}
         />

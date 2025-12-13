@@ -1,0 +1,119 @@
++---src
+    ¦   .env.local
+    ¦   middleware.ts
+    ¦   package.json
+    ¦   tailwind.config.ts
+    ¦   vercel.json
+    ¦   
+    +---app
+    ¦   ¦   globals.css
+    ¦   ¦   layout.tsx
+    ¦   ¦   page.tsx
+    ¦   ¦   page.tsx.old
+    ¦   ¦   page2.tsx.old
+    ¦   ¦   
+    ¦   +---api
+    ¦   ¦   +---upload-image
+    ¦   ¦           route.ts
+    ¦   ¦           
+    ¦   +---auth
+    ¦   ¦   +---callback
+    ¦   ¦           route.ts
+    ¦   ¦           
+    ¦   +---Factures
+    ¦   ¦   +---[reference]
+    ¦   ¦       +---edit
+    ¦   ¦               page.tsx
+    ¦   ¦               page.tsx.old
+    ¦   ¦               page2.tsx.old
+    ¦   ¦               page3.tsx.old
+    ¦   ¦               
+    ¦   +---gestion
+    ¦   ¦       layout.tsx
+    ¦   ¦       layout.tsx.old
+    ¦   ¦       page.tsx
+    ¦   ¦       page.tsx.old
+    ¦   ¦       page2.tsx.old
+    ¦   ¦       page3.tsx.old
+    ¦   ¦       page4.tsx.old
+    ¦   ¦       page5.tsx.old
+    ¦   ¦       page6.tsx.old
+    ¦   ¦       page7.tsx.old
+    ¦   ¦       
+    ¦   +---gestion-acces
+    ¦   ¦       page.tsx
+    ¦   ¦       
+    ¦   +---select-organization
+    ¦           page.tsx
+    ¦           
+    +---components
+    ¦   +---articles
+    ¦   ¦       ArticleForm.tsx
+    ¦   ¦       Articles.tsx
+    ¦   ¦       
+    ¦   +---categories
+    ¦   ¦       Categories.tsx
+    ¦   ¦       
+    ¦   +---contacts
+    ¦   ¦       Clients.tsx
+    ¦   ¦       Clients.tsx.old
+    ¦   ¦       Clients2.tsx.old
+    ¦   ¦       ContactForm.tsx
+    ¦   ¦       ContactForm.tsx.old
+    ¦   ¦       Fournisseurs.tsx
+    ¦   ¦       Fournisseurs.tsx.old
+    ¦   ¦       Fournisseurs2.tsx.old
+    ¦   ¦       
+    ¦   +---dashboard
+    ¦   ¦       Dashboard.tsx
+    ¦   ¦       Dashboard.tsx.backup
+    ¦   ¦       Dashboard.txt
+    ¦   ¦       StatCard.tsx
+    ¦   ¦       StatCard.tsx.backup
+    ¦   ¦       
+    ¦   +---invoices
+    ¦   ¦       Factures.tsx
+    ¦   ¦       
+    ¦   +---layout
+    ¦   ¦       AppHeader.tsx
+    ¦   ¦       NavItem.tsx
+    ¦   ¦       OrganizationInfo.tsx
+    ¦   ¦       
+    ¦   +---organizations
+    ¦   ¦       OrganizationSelector.tsx
+    ¦   ¦       
+    ¦   +---purchases
+    ¦   ¦       Achats.tsx
+    ¦   ¦       Achats.tsx.backup
+    ¦   ¦       
+    ¦   +---sales
+    ¦   ¦       VenteClient.tsx
+    ¦   ¦       VenteComptoir.tsx
+    ¦   ¦       
+    ¦   +---settings
+    ¦   ¦       GestionAcces.tsx
+    ¦   ¦       ParametresSociete.tsx
+    ¦   ¦       
+    ¦   +---stock
+    ¦           EntreesStock.tsx
+    ¦           
+    +---context
+    ¦       DataContext.tsx
+    ¦       OrganizationContext.tsx
+    ¦       
+    +---lib
+    ¦   ¦   api-organizations.ts
+    ¦   ¦   api.ts
+    ¦   ¦   api.ts.google-sheets-backup
+    ¦   ¦   api.ts.old
+    ¦   ¦   calculations.ts
+    ¦   ¦   supabase.ts
+    ¦   ¦   
+    ¦   +---supabase
+    ¦           server.ts
+    ¦           
+    +---types
+            authorized-users.ts
+            index.ts
+            Index_Old.ts
+            organizations.ts

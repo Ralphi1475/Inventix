@@ -12,12 +12,17 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // FORCE la redirection vers le bon domaine
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://inventix-khaki.vercel.app';
+  // Force la redirection vers inventix-khaki.vercel.app
+  const baseUrl = 'https://inventix-khaki.vercel.app';
   return NextResponse.redirect(`${baseUrl}/gestion`);
 }
 ```
 
-Puis ajoutez cette variable d'environnement sur Vercel (projet `inventix-khaki`) :
+### **Étape 3 : Vérifier Google Cloud Console**
+
+Allez sur : https://console.cloud.google.com/apis/credentials
+
+1. Trouvez votre OAuth 2.0 Client ID pour l'application
+2. Dans **Authorized redirect URIs**, vérifiez que vous avez :
 ```
-NEXT_PUBLIC_SITE_URL=https://inventix-khaki.vercel.app
+https://stozilugsxakkpnriafm.supabase.co/auth/v1/callback

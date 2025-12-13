@@ -567,13 +567,32 @@ export const sauvegarderParametres = async (params: Parametres) => {
     const parametresData = toSnakeCase({
       ...params,
       userEmail: userEmail,
-      organizationId: organizationId  // ✅ AJOUT
+      organizationId: organizationId
     });
 
-    // Upsert basé sur organization_id
-    const { error } = await supabase
+    // ✅ Vérifier si un enregistrement existe déjà
+    const { data: existing } = await supabase
       .from('parametres')
-      .upsert([parametresData], { onConflict: 'user_email,organization_id' });
+      .select('id')
+      .eq('organization_id', organizationId)
+      .single();
+
+    let error;
+    
+    if (existing) {
+      // Mise à jour
+      const result = await supabase
+        .from('parametres')
+        .update(parametresData)
+        .eq('organization_id', organizationId);
+      error = result.error;
+    } else {
+      // Insertion
+      const result = await supabase
+        .from('parametres')
+        .insert([parametresData]);
+      error = result.error;
+    }
     
     if (error) throw error;
     console.log('✅ Paramètres sauvegardés');

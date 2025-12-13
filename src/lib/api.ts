@@ -49,81 +49,163 @@ const toCamelCase = (obj: any): any => {
 // CHARGEMENT DES DONNÉES (filtré par utilisateur)
 // ============================================================================
 
-export const chargerDonnees = async (forceRefresh?: boolean) => {
+function getCurrentOrganizationId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('current_organization_id');
+}
+
+export const chargerDonnees = async () => {
+  console.log('🔄 Chargement des données depuis Supabase...');
+  const startTime = performance.now();
+
   try {
-const { data: { session } } = await supabase.auth.getSession();
-	const userEmail = session?.user?.email;
-	if (!userEmail) throw new Error('Utilisateur non connecté');
+    const organizationId = getCurrentOrganizationId();
 
-    console.log('📡 Chargement des données depuis Supabase...');
-    console.log('👤 Chargement des données pour:', userEmail);
-    
-    const startTime = Date.now();
+    if (!organizationId) {
+      console.warn('⚠️ Aucune organisation sélectionnée');
+      return {
+        articles: [],
+        clients: [],
+        fournisseurs: [],
+        mouvements: [],
+        factures: [],
+        achats: [],
+        categories: [],
+        parametres: {
+          societeNom: '',
+          societeAdresse: '',
+          societeCodePostal: '',
+          societeVille: '',
+          societePays: 'Belgique',
+          societeTelephone: '',
+          societeEmail: '',
+          societeTva: '',
+          societeIban: ''
+        }
+      };
+    }
 
-    // ✅ NOUVEAU : Récupérer tous les emails accessibles (mes données + celles partagées)
-    const accessibleEmails = await getAllAccessibleEmails();
-    console.log('📧 Données accessibles pour:', accessibleEmails);
+    console.log('📊 Organization ID:', organizationId);
 
-    // ✅ Modifier toutes les requêtes pour utiliser .in('user_email', accessibleEmails)
-    const [articlesRaw, contactsRaw, mouvementsRaw, facturesRaw, achatsRaw, categoriesRaw, parametresRaw] = await Promise.all([
-      supabase.from('articles').select('*').in('user_email', accessibleEmails),
-      supabase.from('contacts').select('*').in('user_email', accessibleEmails),
-      supabase.from('mouvements').select('*').in('user_email', accessibleEmails),
-      supabase.from('factures').select('*').in('user_email', accessibleEmails),
-      supabase.from('achats').select('*').in('user_email', accessibleEmails),
-      supabase.from('categories').select('*').in('user_email', accessibleEmails),
-      supabase.from('parametres').select('*').eq('user_email', userEmail),
+    // Charger toutes les données en parallèle
+    const [
+      articlesResult,
+      contactsResult,
+      mouvementsResult,
+      facturesResult,
+      achatsResult,
+      categoriesResult,
+      parametresResult
+    ] = await Promise.all([
+      supabase.from('articles').select('*').eq('organization_id', organizationId),
+      supabase.from('contacts').select('*').eq('organization_id', organizationId),
+      supabase.from('mouvements').select('*').eq('organization_id', organizationId),
+      supabase.from('factures').select('*').eq('organization_id', organizationId),
+      supabase.from('achats').select('*').eq('organization_id', organizationId),
+      supabase.from('categories').select('*').eq('organization_id', organizationId),
+      supabase.from('parametres').select('*').eq('organization_id', organizationId).limit(1)
     ]);
 
-    if (articlesRaw.error) throw articlesRaw.error;
-    if (contactsRaw.error) throw contactsRaw.error;
-    if (mouvementsRaw.error) throw mouvementsRaw.error;
-    if (facturesRaw.error) throw facturesRaw.error;
-    if (achatsRaw.error) throw achatsRaw.error;
-    if (categoriesRaw.error) throw categoriesRaw.error;
-    if (parametresRaw.error) throw parametresRaw.error;
+    // Vérifier les erreurs
+    if (articlesResult.error) console.error('❌ Erreur articles:', articlesResult.error);
+    if (contactsResult.error) console.error('❌ Erreur contacts:', contactsResult.error);
+    if (mouvementsResult.error) console.error('❌ Erreur mouvements:', mouvementsResult.error);
+    if (facturesResult.error) console.error('❌ Erreur factures:', facturesResult.error);
+    if (achatsResult.error) console.error('❌ Erreur achats:', achatsResult.error);
+    if (categoriesResult.error) console.error('❌ Erreur catégories:', categoriesResult.error);
+    if (parametresResult.error) console.error('❌ Erreur paramètres:', parametresResult.error);
 
-    const articles: Article[] = articlesRaw.data ? articlesRaw.data.map(article => ({
+    // Convertir les données
+    const articles: Article[] = (articlesResult.data || []).map(article => ({
       ...toCamelCase(article),
       prixVenteHT: article.prix_achat * (1 + (article.marge_percent || 0) / 100),
       prixVenteTTC: article.prix_achat * (1 + (article.marge_percent || 0) / 100) * (1 + (article.taux_tva || 0) / 100)
-    })) : [];
+    }));
 
-      const contacts: Contact[] = contactsRaw.data ? contactsRaw.data.map(toCamelCase) : [];
-	  const clients = contacts.filter(contact => contact.type === 'client');
-      const fournisseurs = contacts.filter(contact => contact.type === 'fournisseur');
-      const mouvements: Mouvement[] = mouvementsRaw.data ? mouvementsRaw.data.map(toCamelCase) : [];
-      const factures = facturesRaw.data ? facturesRaw.data.map(toCamelCase) : [];
+    const contacts: Contact[] = (contactsResult.data || []).map(toCamelCase);
+    const clients = contacts.filter(contact => contact.type === 'client');
+    const fournisseurs = contacts.filter(contact => contact.type === 'fournisseur');
+    const mouvements: Mouvement[] = (mouvementsResult.data || []).map(toCamelCase);
+    const factures = (facturesResult.data || []).map(toCamelCase);
     
-      const achats = achatsRaw.data ? achatsRaw.data.map(achat => {
+    const achats = (achatsResult.data || []).map(achat => {
       const achatConverted = toCamelCase(achat);
       const fournisseur = contacts.find(c => c.id === achatConverted.fournisseurId);
       return {
         ...achatConverted,
         nomFournisseur: fournisseur?.societe || 'Non défini'
       };
-    }) : [];
-    
-    const categories = categoriesRaw.data ? categoriesRaw.data.map(toCamelCase) : [];
-    const parametres = parametresRaw.data?.[0] ? toCamelCase(parametresRaw.data[0]) : null;
-	console.log('🏢 Paramètres chargés:', {
-	raw: parametresRaw.data,
-	parametres: parametres,
-	userEmail: userEmail
     });
 
+    const categories = (categoriesResult.data || []).map(toCamelCase);
+    
+    const parametresData = parametresResult.data?.[0];
+    const parametres = parametresData ? toCamelCase(parametresData) : {
+      societeNom: '',
+      societeAdresse: '',
+      societeCodePostal: '',
+      societeVille: '',
+      societePays: 'Belgique',
+      societeTelephone: '',
+      societeEmail: '',
+      societeTva: '',
+      societeIban: ''
+    };
 
-    const endTime = Date.now();
-    console.log(`✅ Données chargées depuis Supabase en ${endTime - startTime}ms`);
-    console.log(`📊 Stats: ${articles.length} articles, ${contacts.length} contacts, ${mouvements.length} mouvements`);
+    const endTime = performance.now();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
 
-    return { articles, clients, fournisseurs, contacts, mouvements, factures, achats, categories, parametres };
+    console.log(`✅ Données Supabase chargées en ${duration}s:`);
+    console.log(`   - ${articles.length} articles`);
+    console.log(`   - ${clients.length} clients`);
+    console.log(`   - ${fournisseurs.length} fournisseurs`);
+    console.log(`   - ${mouvements.length} mouvements`);
+    console.log(`   - ${factures.length} factures`);
+    console.log(`   - ${achats.length} achats`);
+
+    return {
+      articles,
+      clients,
+      fournisseurs,
+      mouvements,
+      factures,
+      achats,
+      categories,
+      parametres
+    };
+
   } catch (error) {
-    console.error('❌ Erreur lors du chargement des données:', error);
+    console.error('❌ Erreur chargement Supabase:', error);
     throw error;
   }
 };
 
+export const chargerCategories = async (): Promise<Categorie[]> => {
+  try {
+    const organizationId = getCurrentOrganizationId();
+    
+    if (!organizationId) {
+      console.warn('⚠️ Aucune organisation sélectionnée pour les catégories');
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('organization_id', organizationId);
+
+    if (error) {
+      console.error('❌ Erreur chargement catégories:', error);
+      return [];
+    }
+
+    return (data || []).map(cat => toCamelCase(cat));
+
+  } catch (error) {
+    console.error('❌ Erreur:', error);
+    return [];
+  }
+};
 // ============================================================================
 // ARTICLES
 // ============================================================================

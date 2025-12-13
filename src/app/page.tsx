@@ -125,7 +125,7 @@ export default function Home() {
               }
             }}
             providers={['google']}
-            redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/` : undefined}
+            redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`}
             localization={{
               variables: {
                 sign_in: {

@@ -24,15 +24,15 @@ export default function Home() {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Changement de session:', _event, session?.user?.email);
-      setSession(session);
-      
-      // ✅ IMPORTANT : Ne rediriger que lors d'une vraie connexion
-      if (session && _event === 'SIGNED_IN') {
-        handleSession(session);
-      }
-    });
+const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+  console.log('Changement de session:', _event, session?.user?.email);
+  setSession(session);
+  
+  // ✅ APRÈS : Ne redirige QUE si on est sur la page d'accueil
+  if (session && _event === 'SIGNED_IN' && window.location.pathname === '/') {
+    handleSession(session);
+  }
+});
 
     return () => subscription.unsubscribe();
   }, []);

@@ -28,6 +28,7 @@ export default function Home() {
       console.log('Changement de session:', _event, session?.user?.email);
       setSession(session);
       
+      // ✅ IMPORTANT : Ne rediriger que lors d'une vraie connexion
       if (session && _event === 'SIGNED_IN') {
         handleSession(session);
       }
@@ -47,10 +48,19 @@ export default function Home() {
     
     if (typeof window !== 'undefined') {
       localStorage.setItem('user_email', email);
+      
+      // ✅ NOUVEAU : Vérifier si une organisation est déjà sélectionnée
+      const currentOrgId = localStorage.getItem('current_organization_id');
+      
+      if (currentOrgId) {
+        console.log('Organisation déjà sélectionnée, redirection vers /gestion');
+        router.push('/gestion');
+        return;
+      }
     }
     
     try {
-      // ✅ REQUÊTE CORRIGÉE : Vérifier les organisations possédées
+      // Vérifier les organisations possédées
       const { data: ownedOrgs, error: ownedError } = await supabase
         .from('organizations')
         .select('*')
@@ -61,7 +71,7 @@ export default function Home() {
         console.error('Erreur verification organisations:', ownedError);
       }
 
-      // ✅ REQUÊTE CORRIGÉE : Vérifier les organisations partagées
+      // Vérifier les organisations partagées
       const { data: sharedOrgs, error: sharedError } = await supabase
         .from('user_organization_access')
         .select('organization_id')

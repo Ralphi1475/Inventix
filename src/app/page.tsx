@@ -11,7 +11,6 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Vérifier la session au chargement
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Session detectee:', session?.user?.email || 'Aucune');
       setSession(session);
@@ -20,9 +19,11 @@ export default function Home() {
       if (session) {
         handleSession(session);
       }
+    }).catch((error) => {
+      console.error('Erreur getSession:', error);
+      setLoading(false);
     });
 
-    // Écouter les changements de session
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Changement de session:', _event, session?.user?.email);
       setSession(session);
@@ -44,26 +45,39 @@ export default function Home() {
     const email = session.user.email;
     console.log('Utilisateur connecte:', email);
     
-    // Stockage de l'email
-    localStorage.setItem('user_email', email);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user_email', email);
+    }
     
-    // Vérifier si l'utilisateur a des organisations
     try {
-      const { data: orgs, error } = await supabase
+      // ✅ REQUÊTE CORRIGÉE : Vérifier les organisations possédées
+      const { data: ownedOrgs, error: ownedError } = await supabase
         .from('organizations')
         .select('*')
-        .or(`owner_email.eq.${email},id.in.(select organization_id from user_organization_access where user_email='${email}')`)
+        .eq('owner_email', email)
         .limit(1);
 
-      if (error) {
-        console.error('Erreur verification organisations:', error);
+      if (ownedError) {
+        console.error('Erreur verification organisations:', ownedError);
       }
 
-      console.log('Organisations trouvees:', orgs?.length || 0);
+      // ✅ REQUÊTE CORRIGÉE : Vérifier les organisations partagées
+      const { data: sharedOrgs, error: sharedError } = await supabase
+        .from('user_organization_access')
+        .select('organization_id')
+        .eq('user_email', email)
+        .limit(1);
 
-      // Petit délai pour s'assurer que tout est prêt
+      if (sharedError) {
+        console.error('Erreur verification acces partages:', sharedError);
+      }
+
+      const hasOrgs = (ownedOrgs && ownedOrgs.length > 0) || (sharedOrgs && sharedOrgs.length > 0);
+      
+      console.log('Organisations trouvees:', hasOrgs ? 'Oui' : 'Non');
+
       setTimeout(() => {
-        if (orgs && orgs.length > 0) {
+        if (hasOrgs) {
           console.log('Redirection vers /select-organization');
           router.push('/select-organization');
         } else {
@@ -73,7 +87,6 @@ export default function Home() {
       }, 100);
     } catch (err) {
       console.error('Erreur:', err);
-      // En cas d'erreur, rediriger quand même
       router.push('/gestion');
     }
   };
@@ -95,7 +108,7 @@ export default function Home() {
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Inventix</h1>
-            <p className="text-gray-600">Gestion d&apos;inventaire simplifiee</p>
+            <p className="text-gray-600">Gestion d'inventaire simplifiee</p>
           </div>
           
           <Auth
@@ -112,7 +125,7 @@ export default function Home() {
               }
             }}
             providers={['google']}
-            redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/gestion` : undefined}
+            redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/` : undefined}
             localization={{
               variables: {
                 sign_in: {
@@ -126,14 +139,13 @@ export default function Home() {
           />
           
           <p className="text-xs text-gray-500 text-center mt-4">
-            En vous connectant, vous acceptez nos conditions d&apos;utilisation
+            En vous connectant, vous acceptez nos conditions d'utilisation
           </p>
         </div>
       </div>
     );
   }
 
-  // Pendant la redirection
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">

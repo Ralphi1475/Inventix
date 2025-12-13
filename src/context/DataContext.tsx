@@ -1,11 +1,10 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import { 
-  chargerDonnees,
-  chargerCategories,
-  clearCache
-} from '@/lib/api';
+import {
+  chargerDonneesSupabase as chargerDonnees,
+  chargerCategoriesSupabase as chargerCategories
+} from '@/lib/api-supabase';
 import { 
   Article, 
   Contact, 
@@ -95,10 +94,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const viderCache = () => {
-    clearCache();
-    console.log('Cache vide');
-  };
 
   useEffect(() => {
     let mounted = true;
@@ -161,8 +156,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setAchats,
     setCategories,
     setParametres,
-    rechargerDonnees,
-    viderCache
+    rechargerDonnees
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

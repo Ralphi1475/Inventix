@@ -719,6 +719,147 @@ const invalidateCache = (): void => {
 };
 
 // ============================================================================
+// GESTION DES UTILISATEURS AUTORISÉS - PARTAGE D'ACCÈS
+// ============================================================================
+
+/**
+ * Lister les utilisateurs autorisés
+ */
+export async function getAuthorizedUsers(userEmail: string): Promise<{
+  success: boolean;
+  data?: any[];
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('authorized_users')
+      .select('*')
+      .eq('owner_email', userEmail)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error) {
+    return { success: false, error: 'Erreur lors de la récupération des utilisateurs' };
+  }
+}
+
+/**
+ * Ajouter un utilisateur autorisé
+ */
+export async function addAuthorizedUser(
+  userEmail: string,
+  request: { authorized_email: string; access_level: 'read' | 'write' }
+): Promise<{
+  success: boolean;
+  data?: any;
+  error?: string;
+}> {
+  try {
+    if (!request.authorized_email || !request.authorized_email.includes('@')) {
+      return { success: false, error: 'Email invalide' };
+    }
+
+    if (request.authorized_email.toLowerCase() === userEmail.toLowerCase()) {
+      return { success: false, error: 'Vous ne pouvez pas vous autoriser vous-même' };
+    }
+
+    if (!['read', 'write'].includes(request.access_level)) {
+      return { success: false, error: "Niveau d'accès invalide" };
+    }
+
+    const { data, error } = await supabase
+      .from('authorized_users')
+      .insert({
+        owner_email: userEmail,
+        authorized_email: request.authorized_email.toLowerCase(),
+        access_level: request.access_level,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return { success: false, error: 'Cet utilisateur est déjà autorisé' };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: "Erreur lors de l'ajout de l'utilisateur" };
+  }
+}
+
+/**
+ * Modifier le niveau d'accès
+ */
+export async function updateAuthorizedUser(
+  userEmail: string,
+  request: { id: string; access_level: 'read' | 'write' }
+): Promise<{
+  success: boolean;
+  data?: any;
+  error?: string;
+}> {
+  try {
+    if (!['read', 'write'].includes(request.access_level)) {
+      return { success: false, error: "Niveau d'accès invalide" };
+    }
+
+    const { data, error } = await supabase
+      .from('authorized_users')
+      .update({
+        access_level: request.access_level,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', request.id)
+      .eq('owner_email', userEmail)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (!data) {
+      return { success: false, error: 'Utilisateur non trouvé' };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: 'Erreur lors de la modification' };
+  }
+}
+
+/**
+ * Supprimer un utilisateur autorisé
+ */
+export async function deleteAuthorizedUser(
+  userEmail: string,
+  authorizedUserId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('authorized_users')
+      .delete()
+      .eq('id', authorizedUserId)
+      .eq('owner_email', userEmail);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Erreur lors de la suppression' };
+  }
+}
+
+// ============================================================================
 // EXPORTS DES FONCTIONS D'ORGANISATIONS
 // ============================================================================
 

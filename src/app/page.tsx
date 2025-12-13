@@ -15,7 +15,7 @@ export default function Home() {
     const checkAndRedirect = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) {
+      if (!session || !session.user?.email) {
         setSession(null);
         setLoading(false);
         setShouldRender(true);

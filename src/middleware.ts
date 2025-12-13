@@ -1,28 +1,17 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
-  const { data: { session } } = await supabase.auth.getSession();
-
-  // Pages publiques
-  if (req.nextUrl.pathname === '/' || req.nextUrl.pathname.startsWith('/auth')) {
-    if (session) {
-      return NextResponse.redirect(new URL('/gestion', req.url));
-    }
-    return res;
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Laisser passer les routes publiques
+  if (pathname === '/' || pathname.startsWith('/auth/') || pathname.startsWith('/_next')) {
+    return NextResponse.next();
   }
 
-  // Pages protégées
-  if (!session) {
-    return NextResponse.redirect(new URL('/', req.url));
-  }
-
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/', '/gestion/:path*', '/select-organization', '/auth/:path*']
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
 };

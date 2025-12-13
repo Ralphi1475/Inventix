@@ -2,9 +2,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
-  chargerDonneesSupabase as chargerDonnees,
-  chargerCategoriesSupabase as chargerCategories
-} from '@/lib/api-supabase';
+  chargerDonnees,
+  chargerCategories
+} from '@/lib/api';
 import { 
   Article, 
   Contact, 

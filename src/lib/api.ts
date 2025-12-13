@@ -180,32 +180,6 @@ export const chargerDonnees = async () => {
   }
 };
 
-export const chargerCategories = async (): Promise<Categorie[]> => {
-  try {
-    const organizationId = getCurrentOrganizationId();
-    
-    if (!organizationId) {
-      console.warn('⚠️ Aucune organisation sélectionnée pour les catégories');
-      return [];
-    }
-
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('organization_id', organizationId);
-
-    if (error) {
-      console.error('❌ Erreur chargement catégories:', error);
-      return [];
-    }
-
-    return (data || []).map(cat => toCamelCase(cat));
-
-  } catch (error) {
-    console.error('❌ Erreur:', error);
-    return [];
-  }
-};
 // ============================================================================
 // ARTICLES
 // ============================================================================

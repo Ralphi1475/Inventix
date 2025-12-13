@@ -1,4 +1,5 @@
 'use client';
+import { OrganizationInfo } from '@/components/layout/OrganizationInfo';
 import { AppHeader } from '@/components/layout/AppHeader';
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -309,11 +310,9 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
-	    <AppHeader />
-    
-    <div className="flex flex-1 overflow-hidden">
       <div className="w-64 bg-blue-900 text-white p-4 hidden md:block overflow-y-auto">
         <h1 className="text-2xl font-bold mb-8">Inventix</h1>
+		<OrganizationInfo />
         <nav className="space-y-2">
           <NavItem icon={<BarChart3 size={20} />} label="Dashboard" active={currentPage === 'dashboard'} onClick={() => setCurrentPage('dashboard')} />
           <div className="pt-4 pb-2 px-3 text-xs font-semibold text-blue-300">CATALOGUE</div>
@@ -388,6 +387,5 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
         {renderPage()}
       </div>
     </div>
- </div>
   );
 }

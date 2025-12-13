@@ -1,4 +1,5 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+// src/app/auth/callback/route.ts
+import { createRouteHandlerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { type NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -13,6 +14,6 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // Redirige vers la gestion après connexion
+  // Redirige vers la page de gestion
   return NextResponse.redirect(new URL('/gestion', request.url));
 }

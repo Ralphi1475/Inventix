@@ -33,7 +33,6 @@ interface DataContextType {
   setCategories: React.Dispatch<React.SetStateAction<Categorie[]>>;
   setParametres: React.Dispatch<React.SetStateAction<Parametres>>;
   rechargerDonnees: (forceRefresh?: boolean) => Promise<void>;
-  viderCache: () => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -73,7 +72,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       console.log('Chargement des donnees pour:', session.user.email);
       
-      const data = await chargerDonnees(forceRefresh);
+      const data = await chargerDonnees();
       const cats = await chargerCategories();
       
       setArticles(data.articles);

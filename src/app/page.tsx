@@ -11,94 +11,55 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
+    let redirecting = false;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Session detectee:', session?.user?.email || 'Aucune');
       setSession(session);
       setLoading(false);
       
-      if (session) {
-        handleSession(session);
+      if (session && !redirecting) {
+        redirecting = true;
+        handleRedirect(session);
       }
-    }).catch((error) => {
-      console.error('Erreur getSession:', error);
-      setLoading(false);
     });
 
-const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-  console.log('Changement de session:', _event, session?.user?.email);
-  setSession(session);
-  
-  // ✅ APRÈS : Ne redirige QUE si on est sur la page d'accueil
-  if (session && _event === 'SIGNED_IN' && window.location.pathname === '/') {
-    handleSession(session);
-  }
-});
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [router]);
 
-  const handleSession = async (session: any) => {
-    if (!session?.user?.email) {
-      console.log('Pas d\'email dans la session');
+  const handleRedirect = async (session: any) => {
+    if (!session?.user?.email) return;
+
+    const email = session.user.email;
+    localStorage.setItem('user_email', email);
+    
+    // Vérifier si organisation déjà sélectionnée
+    const currentOrgId = localStorage.getItem('current_organization_id');
+    
+    if (currentOrgId) {
+      router.replace('/gestion');
       return;
     }
 
-    const email = session.user.email;
-    console.log('Utilisateur connecte:', email);
+    // Vérifier si l'utilisateur a des organisations
+    const { data: ownedOrgs } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('owner_email', email)
+      .limit(1);
+
+    const { data: sharedOrgs } = await supabase
+      .from('user_organization_access')
+      .select('organization_id')
+      .eq('user_email', email)
+      .limit(1);
+
+    const hasOrgs = (ownedOrgs && ownedOrgs.length > 0) || (sharedOrgs && sharedOrgs.length > 0);
     
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('user_email', email);
-      
-      // ✅ NOUVEAU : Vérifier si une organisation est déjà sélectionnée
-      const currentOrgId = localStorage.getItem('current_organization_id');
-      
-      if (currentOrgId) {
-        console.log('Organisation déjà sélectionnée, redirection vers /gestion');
-        router.push('/gestion');
-        return;
-      }
-    }
-    
-    try {
-      // Vérifier les organisations possédées
-      const { data: ownedOrgs, error: ownedError } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('owner_email', email)
-        .limit(1);
-
-      if (ownedError) {
-        console.error('Erreur verification organisations:', ownedError);
-      }
-
-      // Vérifier les organisations partagées
-      const { data: sharedOrgs, error: sharedError } = await supabase
-        .from('user_organization_access')
-        .select('organization_id')
-        .eq('user_email', email)
-        .limit(1);
-
-      if (sharedError) {
-        console.error('Erreur verification acces partages:', sharedError);
-      }
-
-      const hasOrgs = (ownedOrgs && ownedOrgs.length > 0) || (sharedOrgs && sharedOrgs.length > 0);
-      
-      console.log('Organisations trouvees:', hasOrgs ? 'Oui' : 'Non');
-
-      setTimeout(() => {
-        if (hasOrgs) {
-          console.log('Redirection vers /select-organization');
-          router.push('/select-organization');
-        } else {
-          console.log('Redirection vers /gestion (pas d\'org)');
-          router.push('/gestion');
-        }
-      }, 100);
-    } catch (err) {
-      console.error('Erreur:', err);
-      router.push('/gestion');
-    }
+    router.replace(hasOrgs ? '/select-organization' : '/gestion');
   };
 
   if (loading) {
@@ -106,7 +67,7 @@ const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Verification de la connexion...</p>
+          <p className="text-gray-600">Vérification...</p>
         </div>
       </div>
     );
@@ -118,7 +79,7 @@ const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Inventix</h1>
-            <p className="text-gray-600">Gestion d'inventaire simplifiee</p>
+            <p className="text-gray-600">Gestion d'inventaire simplifiée</p>
           </div>
           
           <Auth
@@ -147,21 +108,11 @@ const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess
               },
             }}
           />
-          
-          <p className="text-xs text-gray-500 text-center mt-4">
-            En vous connectant, vous acceptez nos conditions d'utilisation
-          </p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Connexion en cours...</p>
-      </div>
-    </div>
-  );
+  // Ne rien afficher si connecté (redirection en cours)
+  return null;
 }

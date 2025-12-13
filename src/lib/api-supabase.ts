@@ -200,7 +200,7 @@ function mapContact(row: any): Contact {
     ville: row.ville || '',
     pays: row.pays || 'Belgique',
     mobile: row.mobile || '',
-    numeroTva: row.numero_tva || '',
+    numeroTVA: row.numero_tva || '',
     numeroCompte: row.numero_compte || '',
     email: row.email || ''
   };

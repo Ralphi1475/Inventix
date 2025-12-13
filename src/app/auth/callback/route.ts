@@ -12,5 +12,12 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  return NextResponse.redirect(new URL('/gestion', request.url));
+  // FORCE la redirection vers le bon domaine
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://inventix-khaki.vercel.app';
+  return NextResponse.redirect(`${baseUrl}/gestion`);
 }
+```
+
+Puis ajoutez cette variable d'environnement sur Vercel (projet `inventix-khaki`) :
+```
+NEXT_PUBLIC_SITE_URL=https://inventix-khaki.vercel.app

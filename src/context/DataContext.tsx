@@ -70,6 +70,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // ✅ NOUVEAU : Vérifier qu'une organisation est sélectionnée
+      const organizationId = typeof window !== 'undefined' 
+        ? localStorage.getItem('current_organization_id') 
+        : null;
+
+      if (!organizationId) {
+        console.log('⚠️ Aucune organisation sélectionnée, arrêt du chargement');
+        setLoading(false);
+        return;
+      }
+
       console.log('Chargement des donnees pour:', session.user.email);
       
       const data = await chargerDonnees();
@@ -106,6 +117,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         return;
       }
+
+      // ✅ NOUVEAU : Vérifier qu'une organisation est sélectionnée avant de charger
+      const organizationId = typeof window !== 'undefined' 
+        ? localStorage.getItem('current_organization_id') 
+        : null;
+
+      if (!organizationId) {
+        console.log('⚠️ Aucune organisation sélectionnée au démarrage');
+        setLoading(false);
+        return;
+      }
       
       if (mounted) {
         await rechargerDonnees();
@@ -123,7 +145,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
       
       if (event === 'SIGNED_IN' && session && mounted) {
         console.log('Utilisateur connecte, chargement des donnees...');
-        await rechargerDonnees();
+        // ✅ Vérifier l'organisation avant de charger
+        const organizationId = typeof window !== 'undefined' 
+          ? localStorage.getItem('current_organization_id') 
+          : null;
+        
+        if (organizationId) {
+          await rechargerDonnees();
+        } else {
+          console.log('⚠️ Pas d\'organisation, en attente de sélection');
+          setLoading(false);
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('Utilisateur deconnecte');
         setLoading(false);

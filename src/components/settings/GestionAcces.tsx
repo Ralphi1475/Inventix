@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Trash2, Shield, ShieldCheck, ShieldStar, Mail, Calendar } from 'lucide-react';
+import { UserPlus, Trash2, Shield, ShieldCheck, ShieldAlert, Mail, Calendar } from 'lucide-react';
 import {
   addUserToOrganization,
   updateUserOrganizationAccess,

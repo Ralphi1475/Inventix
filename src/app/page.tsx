@@ -6,36 +6,25 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const [checked, setChecked] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    let mounted = true;
-
-    const checkAuth = async () => {
+    const check = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!mounted) return;
-
       if (session?.user?.email) {
         const orgId = localStorage.getItem('current_organization_id');
-        router.replace(orgId ? '/gestion' : '/select-organization');
+        window.location.href = orgId ? '/gestion' : '/select-organization';
       } else {
-        setChecked(true);
+        setShowLogin(true);
       }
     };
 
-    checkAuth();
-    return () => { mounted = false; };
+    check();
   }, [router]);
 
-  if (!checked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  if (!showLogin) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">

@@ -40,10 +40,7 @@ import GestionAcces from '@/components/settings/GestionAcces';
 import Administration from '@/components/admin/Administration';
 
 // Icônes
-import { 
-  Package, Users, TrendingUp, ShoppingCart, FileText, 
-  BarChart3, Settings, Receipt, Building, LogOut, ArrowRight 
-} from 'lucide-react';
+import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt, Shield } from 'lucide-react';
 
 export default function GestionApp() {
   const router = useRouter();

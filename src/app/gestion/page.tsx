@@ -40,8 +40,9 @@ import GestionAcces from '@/components/settings/GestionAcces';
 // Icônes
 import { 
   Package, Users, TrendingUp, ShoppingCart, FileText, 
-  BarChart3, Settings, Receipt, Building, LogOut 
+  BarChart3, Settings, Receipt, Building, LogOut, ArrowRight 
 } from 'lucide-react';
+import { signOut } from '@/lib/supabase';
 
 export default function GestionApp() {
   const router = useRouter();
@@ -315,18 +316,16 @@ export default function GestionApp() {
         </nav>
 
         {/* Bouton déconnexion fixé en bas */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <button
-            onClick={async () => {
-              await signOut();
-              router.push('/');
-            }}
-            className="w-full py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition flex items-center justify-center gap-2"
-          >
-            <LogOut size={16} />
-            Déconnexion
-          </button>
-        </div>
+			<button
+			onClick={async () => {
+				await signOut();
+				router.push('/');
+			}}
+			className="mt-4 w-full flex items-center space-x-3 p-3 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+			>
+			<ArrowRight size={20} />
+			<span>Déconnexion</span>
+			</button>
       </div>
 
       {/* Navigation mobile */}

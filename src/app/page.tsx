@@ -1,29 +1,41 @@
 'use client';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const [checked, setChecked] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const checkSession = async () => {
+    let mounted = true;
+
+    const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
+      if (!mounted) return;
+
       if (session?.user?.email) {
         const orgId = localStorage.getItem('current_organization_id');
-        if (orgId) {
-          router.replace('/gestion');
-        } else {
-          router.replace('/select-organization');
-        }
+        router.replace(orgId ? '/gestion' : '/select-organization');
+      } else {
+        setChecked(true);
       }
     };
 
-    checkSession();
+    checkAuth();
+    return () => { mounted = false; };
   }, [router]);
+
+  if (!checked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">

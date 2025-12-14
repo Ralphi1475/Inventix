@@ -269,8 +269,8 @@ export default function GestionApp() {
         </div>
       </div>
     );
-  }
-
+  } 
+  
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
       {/* Sidebar */}
@@ -282,7 +282,7 @@ export default function GestionApp() {
           <div className="mb-6 p-3 bg-blue-800 rounded-lg text-sm">
             <div className="font-semibold flex items-center gap-2">
               <Building size={16} />
-              <span className="truncate">{currentOrganization.organization.name}</span>
+              <span className="truncate">{parametres.societeNom}</span>
             </div>
             <button
               onClick={() => router.push('/select-organization')}

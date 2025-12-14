@@ -1,4 +1,5 @@
 'use client';
+import { SUPER_ROOT_EMAIL } from '@/lib/constants';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, signOut } from '@/lib/supabase';
@@ -36,6 +37,7 @@ import { ParametresSociete } from '@/components/settings/ParametresSociete';
 import { NavItem } from '@/components/layout/NavItem';
 import { Categories } from '@/components/categories/Categories';
 import GestionAcces from '@/components/settings/GestionAcces';
+import Administration from '@/components/admin/Administration';
 
 // Icônes
 import { 
@@ -267,6 +269,8 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
         return <GestionAcces userEmail={userEmail} />;
       default:
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
+		case 'administration':
+        return <Administration userEmail={userEmail} />;
     }
   };
 
@@ -320,6 +324,14 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
           <NavItem icon={<Package size={20} />} label="Catégories" active={currentPage === 'categories'} onClick={() => setCurrentPage('categories')} />
           <NavItem icon={<Settings size={20} />} label="Ma Société" active={currentPage === 'parametres'} onClick={() => setCurrentPage('parametres')} />
           <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'gestion-acces'} onClick={() => setCurrentPage('gestion-acces')} />
+		  {userEmail === SUPER_ROOT_EMAIL && (
+  <NavItem
+    icon={<Shield size={20} />}
+    label="Administration"
+    active={currentPage === 'administration'}
+    onClick={() => setCurrentPage('administration')}
+  />
+)}
         </nav>
 
         {/* Bouton déconnexion fixé en bas */}

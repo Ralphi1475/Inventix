@@ -552,10 +552,9 @@ export const supprimerAchat = async (id: string) => {
   }
 };
 
-// ============================================================================
-// PARAMÈTRES - ✅ CORRIGÉ AVEC organization_id
-// ============================================================================
-
+// ========================================================================
+// PARAMÈTRES - ✅ VERSION CORRIGÉE (upsert)
+// ========================================================================
 export const sauvegarderParametres = async (params: Parametres) => {
   try {
     const userEmail = getCurrentUserEmail();
@@ -564,52 +563,24 @@ export const sauvegarderParametres = async (params: Parametres) => {
     if (!userEmail) throw new Error('Utilisateur non connecté');
     if (!organizationId) throw new Error('Aucune organisation sélectionnée');
 
-    // ✅ Convertir en snake_case et enlever l'id s'il est vide
-    const parametresData: any = toSnakeCase({
+    const parametresData = toSnakeCase({
       ...params,
-      userEmail: userEmail,
-      organizationId: organizationId
+      user_email: userEmail,
+      organization_id: organizationId
     });
 
-    // ✅ IMPORTANT : Supprimer l'id s'il est vide ou null
-    if (!parametresData.id || parametresData.id === '') {
-      delete parametresData.id;
-    }
+    // Supprime l'id pour forcer l'upsert basé sur organization_id
+    delete parametresData.id;
 
-    // ✅ Vérifier si un enregistrement existe déjà
-    const { data: existing, error: selectError } = await supabase
+    const { error } = await supabase
       .from('parametres')
-      .select('id')
-      .eq('organization_id', organizationId)
-      .maybeSingle(); // ✅ Utiliser maybeSingle au lieu de single pour éviter erreur si pas de résultat
+      .upsert([parametresData], {
+        onConflict: 'organization_id', // ← clé unique
+        ignoreDuplicates: false
+      });
 
-    // Si erreur de permissions, ignorer et tenter l'insertion
-    if (selectError && selectError.code !== 'PGRST116') {
-      console.warn('⚠️ Erreur lors de la vérification:', selectError);
-    }
-
-    let error;
-    
-    if (existing?.id) {
-      // Mise à jour - garder l'id existant
-      parametresData.id = existing.id;
-      const result = await supabase
-        .from('parametres')
-        .update(parametresData)
-        .eq('id', existing.id);
-      error = result.error;
-      console.log('📝 Mise à jour des paramètres');
-    } else {
-      // Insertion - supprimer l'id pour laisser la BDD générer
-      delete parametresData.id;
-      const result = await supabase
-        .from('parametres')
-        .insert([parametresData]);
-      error = result.error;
-      console.log('➕ Insertion de nouveaux paramètres');
-    }
-    
     if (error) throw error;
+    
     console.log('✅ Paramètres sauvegardés');
     return { success: true };
   } catch (error) {

@@ -17,11 +17,11 @@ export default function CreerSocietePage() {
   // ✅ Vérification d'accès Super Root au montage du composant
 useEffect(() => {
   const checkAccess = async () => {
-    const {   } = await supabase.auth.getUser();
-    if (user?.email !== SUPER_ROOT_EMAIL) {
-      alert('Accès réservé au Super Root');
-      router.push('/gestion');
-    }
+	const {   } = await supabase.auth.getUser();
+	if (!user || user.email !== SUPER_ROOT_EMAIL) {
+	alert('Accès réservé au Super Root');
+	router.push('/gestion');
+	}
   };
   checkAccess();
 }, [router]); // ✅ router dans les dépendances pour éviter les warnings

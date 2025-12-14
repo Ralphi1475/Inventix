@@ -19,7 +19,7 @@ import type {
 export async function getUserOrganizations(userEmail: string): Promise<OrganizationsListResponse> {
   try {
     // 1. Récupérer les accès via user_organization_access (organisations partagées)
-    const { data: sharedAccess, error: sharedError } = await supabase
+    const {  sharedAccess, error: sharedError } = await supabase
       .from('user_organization_access')
       .select(`
         *,
@@ -30,10 +30,7 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
           logo_url,
           owner_email,
           created_at,
-          updated_at,
-          parametres: parametres (
-            societe_nom
-          )
+          updated_at
         )
       `)
       .eq('user_email', userEmail)
@@ -45,14 +42,9 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
     }
 
     // 2. Récupérer les organisations dont l'utilisateur est propriétaire
-    const { data: ownedOrgs, error: ownedError } = await supabase
+    const {  ownedOrgs, error: ownedError } = await supabase
       .from('organizations')
-      .select(`
-        *,
-        parametres: parametres (
-          societe_nom
-        )
-      `)
+      .select('*')
       .eq('owner_email', userEmail)
       .order('created_at', { ascending: false });
 
@@ -61,41 +53,69 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
       return { success: false, error: ownedError.message };
     }
 
-    // 3. Convertir les organisations possédées au format UserOrganizationAccess
-    const ownedAccess: UserOrganizationAccess[] = (ownedOrgs || []).map(org => ({
-      id: `owner-${org.id}`,
-      organization_id: org.id,
-      user_email: userEmail,
-      access_level: 'admin',
-      granted_by: userEmail,
-      granted_at: org.created_at,
-      created_at: org.created_at,
-      updated_at: org.updated_at,
-      organization: {
+    // 3. Charger les parametres pour TOUTES les organizations
+    const allOrgIds = [
+      ...new Set([
+        ...ownedOrgs.map(o => o.id),
+        ...sharedAccess.map(a => a.organization_id)
+      ])
+    ];
+
+    const {  parametresData, error: paramError } = await supabase
+      .from('parametres')
+      .select('organization_id, societe_nom')
+      .in('organization_id', allOrgIds);
+
+    if (paramError) {
+      console.warn('Erreur chargement paramètres:', paramError);
+    }
+
+    const paramMap = new Map(
+      (parametresData || []).map(p => [p.organization_id, p.societe_nom])
+    );
+
+    // 4. Fusionner les données
+    const ownedAccess: UserOrganizationAccess[] = (ownedOrgs || []).map(org => {
+      const enrichedOrg = {
         ...org,
-        parametres: org.parametres?.[0] || null
-      },
-    }));
+        parametres: { societe_nom: paramMap.get(org.id) || null }
+      };
+      return {
+        id: `owner-${org.id}`,
+        organization_id: org.id,
+        user_email: userEmail,
+        access_level: 'admin',
+        granted_by: userEmail,
+        granted_at: org.created_at,
+        created_at: org.created_at,
+        updated_at: org.updated_at,
+        organization: enrichedOrg,
+      };
+    });
 
-    // 4. Fusionner les deux listes en évitant les doublons
+    const sharedAccessEnriched = (sharedAccess || []).map(access => {
+      const org = access.organization;
+      const enrichedOrg = {
+        ...org,
+        parametres: { societe_nom: paramMap.get(org.id) || null }
+      };
+      return {
+        ...access,
+        organization: enrichedOrg
+      };
+    });
+
+    // 5. Éviter les doublons
     const allAccess = [...ownedAccess];
-    const ownedOrgIds = new Set(ownedOrgs?.map(o => o.id) || []);
-
-    (sharedAccess || []).forEach(access => {
-      if (!ownedOrgIds.has(access.organization_id)) {
-        const enrichedAccess = {
-          ...access,
-          organization: {
-            ...access.organization,
-            parametres: access.organization.parametres?.[0] || null
-          }
-        };
-        allAccess.push(enrichedAccess);
+    const ownedIds = new Set(ownedOrgs.map(o => o.id));
+    sharedAccessEnriched.forEach(acc => {
+      if (!ownedIds.has(acc.organization_id)) {
+        allAccess.push(acc);
       }
     });
 
     console.log(`✅ ${allAccess.length} organisation(s) trouvée(s) pour ${userEmail}`);
-    return { success: true, data: allAccess };
+    return { success: true,  allAccess };
   } catch (error) {
     console.error('Erreur:', error);
     return { success: false, error: 'Erreur lors de la récupération des organisations' };

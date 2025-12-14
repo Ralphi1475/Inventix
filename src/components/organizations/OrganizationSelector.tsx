@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Building, Users, ChevronRight, Building2, Send } from 'lucide-react';
 import { getUserOrganizations } from '@/lib/api-organizations';
 import { useOrganization } from '@/context/OrganizationContext';
+import { supabase } from '@/lib/supabase';
 
 interface OrganizationSelectorProps {
   userEmail: string;
@@ -15,7 +16,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
   const [error, setError] = useState<string | null>(null);
   const { setCurrentOrganization } = useOrganization();
   
-  // États pour demande de société
   const [showDemande, setShowDemande] = useState(false);
   const [nomSociete, setNomSociete] = useState('');
   const [description, setDescription] = useState('');
@@ -35,7 +35,25 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
 
     if (result.success && result.data) {
       console.log(`✅ ${result.data.length} organisation(s) trouvée(s) pour ${userEmail}`);
-      setOrganizations(result.data);
+      
+      // Charger les paramètres pour chaque organisation
+      const orgsWithParams = await Promise.all(
+        result.data.map(async (org) => {
+          const { data: params } = await supabase
+            .from('parametres')
+            .select('societe_nom, societe_ville')
+            .eq('organization_id', org.organization_id)
+            .single();
+
+          return {
+            ...org,
+            societeNom: params?.societe_nom || null,
+            societeVille: params?.societe_ville || null
+          };
+        })
+      );
+
+      setOrganizations(orgsWithParams);
     } else {
       setError(result.error || 'Erreur de chargement');
     }
@@ -213,9 +231,14 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
               <div className="flex items-center gap-4">
                 <Building className="w-10 h-10 text-blue-600" />
                 <div>
-                  <h3 className="font-semibold text-lg">{org.organization?.name || 'Organisation'}</h3>
+                  <h3 className="font-semibold text-lg">
+                    {org.societeNom || org.organization?.name || 'Organisation'}
+                  </h3>
                   {org.organization?.description && (
                     <p className="text-sm text-gray-600 mt-1">{org.organization.description}</p>
+                  )}
+                  {org.societeVille && (
+                    <p className="text-xs text-gray-500 mt-1">📍 {org.societeVille}</p>
                   )}
                   <div className="flex items-center gap-2 mt-2">
                     <span className={`text-xs px-2 py-1 rounded-full ${

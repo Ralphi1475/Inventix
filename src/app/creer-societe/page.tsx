@@ -17,7 +17,7 @@ export default function CreerSocietePage() {
   // ✅ Vérification d'accès Super Root au montage du composant
 useEffect(() => {
   const checkAccess = async () => {
-    const {   } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user || user.email !== SUPER_ROOT_EMAIL) {
       alert('Accès réservé au Super Root');
       router.push('/gestion');
@@ -31,7 +31,7 @@ useEffect(() => {
     setLoading(true);
     setError(null);
 
-    const {   user } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email || user.email !== SUPER_ROOT_EMAIL) {
       setError('Accès refusé');
       setLoading(false);

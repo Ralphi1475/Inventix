@@ -52,15 +52,20 @@ export interface Mouvement {
 }
 
 export interface Parametres {
-  societe_nom: string;
-  societe_adresse: string;
-  societe_code_postal: string;
-  societe_ville: string;
-  societe_pays: string;
-  societe_telephone: string;
-  societe_email: string;
-  societe_tva: string;
-  societe_iban: string;
+  societeNom: string;
+  societeAdresse: string;
+  societeCodePostal: string;
+  societeVille: string;
+  societePays: string;
+  societeTelephone: string;
+  societeEmail: string;
+  societeTva: string;
+  societeIban: string;
+  id?: string;
+  userEmail?: string;
+  organizationId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Achat {

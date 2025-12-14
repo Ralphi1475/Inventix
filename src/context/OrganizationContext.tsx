@@ -1,81 +1,78 @@
-// ============================================================================
-// Context React - Gestion de l'organisation active
-// Fichier: src/context/OrganizationContext.tsx
-// ============================================================================
-
 'use client';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { UserOrganizationAccess } from '@/types/organizations';
+interface Organization {
+  organization_id: string;
+  organization?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
+  access_level: string;
+}
 
 interface OrganizationContextType {
-  currentOrganization: UserOrganizationAccess | null;
-  setCurrentOrganization: (org: UserOrganizationAccess | null) => void;
-  userOrganizations: UserOrganizationAccess[];
-  setUserOrganizations: (orgs: UserOrganizationAccess[]) => void;
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
+  currentOrganization: Organization | null;
+  setCurrentOrganization: (org: Organization | null) => void;
 }
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
-export function OrganizationProvider({ children }: { children: ReactNode }) {
-  const [currentOrganization, setCurrentOrganizationState] = useState<UserOrganizationAccess | null>(null);
-  const [userOrganizations, setUserOrganizations] = useState<UserOrganizationAccess[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function OrganizationProvider({ children }: { children: React.ReactNode }) {
+  const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
 
-  // Charger l'organisation depuis le localStorage au démarrage
   useEffect(() => {
-    const savedOrgId = localStorage.getItem('current_organization_id');
-    const savedOrgs = localStorage.getItem('user_organizations');
-    
-    if (savedOrgs) {
-      try {
-        const orgs = JSON.parse(savedOrgs) as UserOrganizationAccess[];
-        setUserOrganizations(orgs);
-        
-        if (savedOrgId) {
-          const found = orgs.find(org => org.organization_id === savedOrgId);
-          if (found) {
-            setCurrentOrganizationState(found);
-          }
+    const loadCurrentOrganization = async () => {
+      if (typeof window === 'undefined') return;
+
+      const orgId = localStorage.getItem('current_organization_id');
+      const userEmail = localStorage.getItem('user_email');
+
+      if (!orgId) return;
+
+      // Charger l'organisation depuis Supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) return;
+
+      // Récupérer l'accès de l'utilisateur à cette organisation
+      const { data: access } = await supabase
+        .from('user_organization_access')
+        .select('*, organization:organizations(*)')
+        .eq('organization_id', orgId)
+        .eq('user_email', user.email)
+        .single();
+
+      if (access) {
+        setCurrentOrganization({
+          organization_id: access.organization_id,
+          organization: access.organization,
+          access_level: access.access_level
+        });
+      } else {
+        // Vérifier si l'utilisateur est propriétaire
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('*')
+          .eq('id', orgId)
+          .eq('owner_email', user.email)
+          .single();
+
+        if (org) {
+          setCurrentOrganization({
+            organization_id: org.id,
+            organization: org,
+            access_level: 'admin'
+          });
         }
-      } catch (error) {
-        console.error('Erreur lors du chargement des organisations:', error);
       }
-    }
-    
-    setIsLoading(false);
+    };
+
+    loadCurrentOrganization();
   }, []);
 
-  // Fonction pour définir l'organisation courante et la sauvegarder
-  const setCurrentOrganization = (org: UserOrganizationAccess | null) => {
-    setCurrentOrganizationState(org);
-    if (org) {
-      localStorage.setItem('current_organization_id', org.organization_id);
-    } else {
-      localStorage.removeItem('current_organization_id');
-    }
-  };
-
-  // Sauvegarder les organisations de l'utilisateur
-  useEffect(() => {
-    if (userOrganizations.length > 0) {
-      localStorage.setItem('user_organizations', JSON.stringify(userOrganizations));
-    }
-  }, [userOrganizations]);
-
   return (
-    <OrganizationContext.Provider
-      value={{
-        currentOrganization,
-        setCurrentOrganization,
-        userOrganizations,
-        setUserOrganizations,
-        isLoading,
-        setIsLoading,
-      }}
-    >
+    <OrganizationContext.Provider value={{ currentOrganization, setCurrentOrganization }}>
       {children}
     </OrganizationContext.Provider>
   );
@@ -84,7 +81,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 export function useOrganization() {
   const context = useContext(OrganizationContext);
   if (context === undefined) {
-    throw new Error('useOrganization doit être utilisé dans un OrganizationProvider');
+    throw new Error('useOrganization must be used within OrganizationProvider');
   }
   return context;
 }

@@ -1,30 +1,18 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const [showLogin, setShowLogin] = useState(false);
-  const router = useRouter();
-
   useEffect(() => {
-    const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user?.email) {
         const orgId = localStorage.getItem('current_organization_id');
-        window.location.href = orgId ? '/gestion' : '/select-organization';
-      } else {
-        setShowLogin(true);
+        window.location.replace(orgId ? '/gestion' : '/select-organization');
       }
-    };
-
-    check();
-  }, [router]);
-
-  if (!showLogin) return null;
+    });
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">

@@ -1,9 +1,8 @@
-// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { OrganizationProvider } from '@/context/OrganizationContext';
-import { DataProvider } from '@/context/DataContext';
+import { ClientLayout } from './ClientLayout';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,11 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body>
+      <body className={inter.className}>
         <OrganizationProvider>
-          <DataProvider>
+          <ClientLayout>
             {children}
-          </DataProvider>
+          </ClientLayout>
         </OrganizationProvider>
       </body>
     </html>

@@ -334,9 +334,9 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
                     >
                       {member.access_level === 'admin' ? (
                         <>
-                          <ShieldStar size={16} />
-                          <span>Administrateur</span>
-                        </>
+							<ShieldAlert size={16} className="text-purple-600" />
+							<span>Administrateur</span>
+						</>
                       ) : member.access_level === 'write' ? (
                         <>
                           <ShieldCheck size={16} />

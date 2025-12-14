@@ -15,23 +15,23 @@ export default function CreerSocietePage() {
   const router = useRouter();
 
   // ✅ Vérification d'accès Super Root au montage du composant
-  useEffect(() => {
-    const checkAccess = async () => {
-      const {  { user } } = await supabase.auth.getUser();
-      if (user?.email !== SUPER_ROOT_EMAIL) {
-        alert('Accès réservé au Super Root');
-        router.push('/gestion');
-      }
-    };
-    checkAccess();
-  }, [router]); // ✅ router dans les dépendances pour éviter les warnings
+useEffect(() => {
+  const checkAccess = async () => {
+    const {   } = await supabase.auth.getUser();
+    if (user?.email !== SUPER_ROOT_EMAIL) {
+      alert('Accès réservé au Super Root');
+      router.push('/gestion');
+    }
+  };
+  checkAccess();
+}, [router]); // ✅ router dans les dépendances pour éviter les warnings
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const {  { user } } = await supabase.auth.getUser();
+    const {   user } = await supabase.auth.getUser();
     if (!user?.email || user.email !== SUPER_ROOT_EMAIL) {
       setError('Accès refusé');
       setLoading(false);

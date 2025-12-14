@@ -3,6 +3,8 @@
 // Fichier: src/types/organizations.ts
 // ============================================================================
 
+import type { Parametres } from './index';
+
 export interface Organization {
   id: string;
   name: string;
@@ -11,6 +13,9 @@ export interface Organization {
   logo_url?: string;
   created_at: string;
   updated_at: string;
+  parametres?: {
+    societe_nom: string;
+  } | null;
 }
 
 export interface UserOrganizationAccess {

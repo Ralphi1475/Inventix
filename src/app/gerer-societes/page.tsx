@@ -31,22 +31,18 @@ export default function GererSocietesPage() {
   const loadOrganizations = async () => {
     setLoading(true);
 
-    // Charger toutes les organisations
     const { data: orgs } = await supabase
       .from('organizations')
       .select('*')
       .order('created_at', { ascending: false });
 
-    // Pour chaque org, compter les membres ET charger les paramètres
     const orgsWithDetails = await Promise.all(
       (orgs || []).map(async (org) => {
-        // Compter les membres
         const { count } = await supabase
           .from('user_organization_access')
           .select('*', { count: 'exact', head: true })
           .eq('organization_id', org.id);
 
-        // Charger les paramètres (nom exact de la société)
         const { data: params } = await supabase
           .from('parametres')
           .select('societe_nom, societe_adresse, societe_ville')
@@ -69,7 +65,7 @@ export default function GererSocietesPage() {
 
   const handleDelete = async (orgId: string, orgName: string) => {
     const confirmation = prompt(
-      `⚠️ ATTENTION : Supprimer "${orgName}" supprimera TOUTES ses données (articles, ventes, achats, etc.).\n\nTapez le nom de la société pour confirmer :`
+      `⚠️ ATTENTION : Supprimer "${orgName}" supprimera TOUTES ses données.\n\nTapez le nom de la société pour confirmer :`
     );
 
     if (confirmation !== orgName) {
@@ -121,4 +117,79 @@ export default function GererSocietesPage() {
         </div>
 
         {organizations.length === 0 ? (
-          <div className="bg-white rounded-lg shad
+          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+            Aucune société créée
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {organizations.map((org) => (
+              <div
+                key={org.id}
+                className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Building2 size={24} className="text-blue-600" />
+                      <div>
+                        <h3 className="text-xl font-bold">{org.name}</h3>
+                        {org.societeNom && org.societeNom !== org.name && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <Briefcase size={16} className="text-gray-400" />
+                            <span className="text-sm text-gray-600">
+                              {org.societeNom}
+                              {org.societeVille && ` • ${org.societeVille}`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {org.description && (
+                      <p className="text-gray-600 mb-3 ml-9">{org.description}</p>
+                    )}
+
+                    <div className="flex gap-4 text-sm text-gray-500 ml-9">
+                      <div className="flex items-center gap-1">
+                        <Users size={16} />
+                        <span>{org.memberCount + 1} membre(s)</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar size={16} />
+                        <span>Créée le {new Date(org.created_at).toLocaleDateString('fr-FR')}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 text-sm ml-9">
+                      <span className="text-gray-500">Propriétaire :</span>{' '}
+                      <span className="font-medium">{org.owner_email}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleDelete(org.id, org.name)}
+                    disabled={deleting === org.id}
+                    className="ml-4 p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    title="Supprimer la société"
+                  >
+                    {deleting === org.id ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
+                    ) : (
+                      <Trash2 size={20} />
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            <strong>⚠️ Attention :</strong> La suppression d'une société est irréversible et supprime toutes les données associées.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

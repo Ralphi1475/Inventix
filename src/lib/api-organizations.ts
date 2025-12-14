@@ -115,7 +115,7 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
     });
 
     console.log(`✅ ${allAccess.length} organisation(s) trouvée(s) pour ${userEmail}`);
-    return { success: true,  allAccess };
+    return { success: true,data: allAccess };
   } catch (error) {
     console.error('Erreur:', error);
     return { success: false, error: 'Erreur lors de la récupération des organisations' };

@@ -42,7 +42,6 @@ import {
   Package, Users, TrendingUp, ShoppingCart, FileText, 
   BarChart3, Settings, Receipt, Building, LogOut, ArrowRight 
 } from 'lucide-react';
-import { signOut } from '@/lib/supabase';
 
 export default function GestionApp() {
   const router = useRouter();

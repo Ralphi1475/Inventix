@@ -160,19 +160,27 @@ export default function GestionApp() {
     await supprimerCategorie(id);
   };
 
-  const handleSaveParametres = async (params: any): Promise<boolean> => {
-    try {
-      console.log('💾 Sauvegarde des paramètres...', params);
-      await sauvegarderParametres(params);
-      console.log('✅ Paramètres sauvegardés avec succès');
-      await rechargerDonnees();
-      return true;
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
-      alert('Erreur lors de la sauvegarde des paramètres. Veuillez réessayer.');
-      return false;
+const handleSaveParametres = async (params: any): Promise<boolean> => {
+  try {
+    // ✅ Récupérer l'email directement depuis la session Supabase (fiable)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) {
+      throw new Error('Utilisateur non connecté');
     }
-  };
+
+    console.log('💾 Sauvegarde des paramètres...', params);
+    await sauvegarderParametres(params, user.email); // 👈 on passe l'email
+    console.log('✅ Paramètres sauvegardés avec succès');
+    
+    await rechargerDonnees();
+    alert('Paramètres sauvegardés avec succès !');
+    return true;
+  } catch (error: any) {
+    console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
+    alert('Erreur : ' + (error.message || 'Impossible de sauvegarder les paramètres.'));
+    return false;
+  }
+};
 
   const renderPage = () => {
     switch(currentPage) {

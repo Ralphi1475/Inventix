@@ -552,36 +552,41 @@ export const supprimerAchat = async (id: string) => {
   }
 };
 
-// ========================================================================
-// PARAMÈTRES - ✅ VERSION CORRIGÉE (upsert)
-// ========================================================================
-export const sauvegarderParametres = async (params: Parametres) => {
+// ============================================================================
+// PARAMÈTRES - ✅ VERSION CORRIGÉE (upsert fiable)
+// ============================================================================
+
+export const sauvegarderParametres = async (params: Parametres, userEmail: string) => {
   try {
-    const userEmail = getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
     if (!organizationId) throw new Error('Aucune organisation sélectionnée');
 
-    const parametresData = toSnakeCase({
+    // Convertir en snake_case
+    const parametresData: any = toSnakeCase({
       ...params,
-      user_email: userEmail,
-      organization_id: organizationId
+      userEmail: userEmail,
+      organizationId: organizationId
     });
 
-    // Supprime l'id pour forcer l'upsert basé sur organization_id
+    // Supprimer l'id pour forcer l'upsert sur organization_id
     delete parametresData.id;
 
+    // Upsert = update si existe, insert sinon
     const { error } = await supabase
       .from('parametres')
       .upsert([parametresData], {
-        onConflict: 'organization_id', // ← clé unique
+        onConflict: 'organization_id', // clé unique
         ignoreDuplicates: false
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erreur upsert paramètres:', error);
+      throw error;
+    }
     
-    console.log('✅ Paramètres sauvegardés');
+    console.log('✅ Paramètres sauvegardés via upsert');
     return { success: true };
   } catch (error) {
     console.error('❌ Erreur sauvegarde paramètres:', error);

@@ -2,6 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useData } from '@/context/DataContext';
+import { useOrganization } from '@/context/OrganizationContext';
+import { useRouter } from 'next/navigation';
 import { 
   sauvegarderArticle,
   supprimerArticle,
@@ -36,9 +38,11 @@ import { Categories } from '@/components/categories/Categories';
 import GestionAcces from '@/components/settings/GestionAcces';
 
 // Icônes
-import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt } from 'lucide-react';
+import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt, Building } from 'lucide-react';
 
 export default function GestionApp() {
+  const router = useRouter();
+  const { currentOrganization } = useOrganization();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [userEmail, setUserEmail] = useState<string>('');
   const {
@@ -57,15 +61,16 @@ export default function GestionApp() {
     setCategories,
     rechargerDonnees
   } = useData();
+
   useEffect(() => {
-  const loadUserEmail = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.email) {
-      setUserEmail(user.email);
-    }
-  };
-  loadUserEmail();
-}, []);
+    const loadUserEmail = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setUserEmail(user.email);
+      }
+    };
+    loadUserEmail();
+  }, []);
 
   const articlesAvecPrix = useMemo(() => {
     return calculerArticlesAvecPrix(articles);
@@ -80,49 +85,50 @@ export default function GestionApp() {
     await sauvegarderArticle(article, action === 'update');
   };
 
-const handleSaveContact = async (contact: any, action: 'create' | 'update') => {
-  try {
-    await sauvegarderContact(contact, action === 'update');
-    await rechargerDonnees(); // ✅ Recharger après sauvegarde
-  } catch (error) {
-    console.error('❌ Erreur sauvegarde contact:', error);
-    throw error;
-  }
-};
-
+  const handleSaveContact = async (contact: any, action: 'create' | 'update') => {
+    try {
+      await sauvegarderContact(contact, action === 'update');
+      await rechargerDonnees();
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde contact:', error);
+      throw error;
+    }
+  };
 
   const handleDeleteArticle = async (id: string) => {
     await supprimerArticle(id);
   };
 
-		const handleDeleteContact = async (id: string) => {
-		try {
-			await supprimerContact(id);
-			await rechargerDonnees(); // ✅ Recharger les données
-		} catch (error) {
-			console.error('❌ Erreur suppression contact:', error);
-			throw error;
-		}
-		};
-const handleEnregistrerMouvement = async (mouvement: any): Promise<boolean> => {
-  try {
-    await enregistrerMouvement(mouvement, articlesAvecPrix);
-    await rechargerDonnees(); // ✅ Recharger après chaque mouvement
-    return true;
-  } catch (error) {
-    console.error('❌ Erreur enregistrement mouvement:', error);
-    return false;
-  }
-};
-const handleSaveFacture = async (facture: any) => {
-  try {
-    await sauvegarderFacture(facture);
-    await rechargerDonnees(); // ✅ Recharger après sauvegarde facture
-  } catch (error) {
-    console.error('❌ Erreur sauvegarde facture:', error);
-    throw error;
-  }
-};
+  const handleDeleteContact = async (id: string) => {
+    try {
+      await supprimerContact(id);
+      await rechargerDonnees();
+    } catch (error) {
+      console.error('❌ Erreur suppression contact:', error);
+      throw error;
+    }
+  };
+
+  const handleEnregistrerMouvement = async (mouvement: any): Promise<boolean> => {
+    try {
+      await enregistrerMouvement(mouvement, articlesAvecPrix);
+      await rechargerDonnees();
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur enregistrement mouvement:', error);
+      return false;
+    }
+  };
+
+  const handleSaveFacture = async (facture: any) => {
+    try {
+      await sauvegarderFacture(facture);
+      await rechargerDonnees();
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde facture:', error);
+      throw error;
+    }
+  };
 
   const handleSaveAchat = async (achat: any, fournisseurs: any[]) => {
     await sauvegarderAchat(achat, fournisseurs);
@@ -152,23 +158,19 @@ const handleSaveFacture = async (facture: any) => {
     await supprimerCategorie(id);
   };
 
-  // ✅ FONCTION CORRIGÉE : Gestion d'erreur + Rechargement des données
-const handleSaveParametres = async (params: any): Promise<boolean> => {
-  try {
-    console.log('💾 Sauvegarde des paramètres...', params);
-    await sauvegarderParametres(params);
-    console.log('✅ Paramètres sauvegardés avec succès');
-    
-    // ✅ Recharger les données pour mettre à jour l'interface
-    await rechargerDonnees();
-    
-    return true;
-  } catch (error) {
-    console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
-    alert('Erreur lors de la sauvegarde des paramètres. Veuillez réessayer.');
-    return false;
-  }
-};
+  const handleSaveParametres = async (params: any): Promise<boolean> => {
+    try {
+      console.log('💾 Sauvegarde des paramètres...', params);
+      await sauvegarderParametres(params);
+      console.log('✅ Paramètres sauvegardés avec succès');
+      await rechargerDonnees();
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
+      alert('Erreur lors de la sauvegarde des paramètres. Veuillez réessayer.');
+      return false;
+    }
+  };
 
   const renderPage = () => {
     switch(currentPage) {
@@ -176,50 +178,50 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
       case 'articles':
         return <Articles articles={articlesAvecPrix} categories={categories} setArticles={setArticles} onSave={handleSaveArticle} onDelete={handleDeleteArticle} onRefresh={rechargerDonnees} />;
-	case 'clients':
-		return <Clients 
-			contacts={clients} 
-			setClients={setClients} 
-			onSave={handleSaveContact} 
-			onDelete={handleDeleteContact}
-			onRefresh={rechargerDonnees} // ✅ Important !
-		/>;
-	  case 'fournisseurs':
-		return <Fournisseurs 
-			contacts={fournisseurs} 
-			setFournisseurs={setFournisseurs} 
-			onSave={handleSaveContact} 
-		onDelete={handleDeleteContact}
-			onRefresh={rechargerDonnees} // ✅ Important !
-		/>;
+      case 'clients':
+        return <Clients 
+          contacts={clients} 
+          setClients={setClients} 
+          onSave={handleSaveContact} 
+          onDelete={handleDeleteContact}
+          onRefresh={rechargerDonnees}
+        />;
+      case 'fournisseurs':
+        return <Fournisseurs 
+          contacts={fournisseurs} 
+          setFournisseurs={setFournisseurs} 
+          onSave={handleSaveContact} 
+          onDelete={handleDeleteContact}
+          onRefresh={rechargerDonnees}
+        />;
       case 'vente-client':
-		return <VenteClient 
-			articles={articlesAvecPrix} 
-			clients={clients} 
-			onVente={handleEnregistrerMouvement}  // ✅ Bon wrapper
-			setArticles={setArticles} 
-			onSaveArticle={handleSaveArticle} 
-			sauvegarderFacture={handleSaveFacture}
-			parametres={parametres} 
-			onRefresh={rechargerDonnees}
-		/>;
+        return <VenteClient 
+          articles={articlesAvecPrix} 
+          clients={clients} 
+          onVente={handleEnregistrerMouvement}
+          setArticles={setArticles} 
+          onSaveArticle={handleSaveArticle} 
+          sauvegarderFacture={handleSaveFacture}
+          parametres={parametres} 
+          onRefresh={rechargerDonnees}
+        />;
       case 'vente-comptoir':
-		return <VenteComptoir 
-			articles={articlesAvecPrix} 
-			clients={clients} 
-			onVente={handleEnregistrerMouvement}  // ✅ Bon wrapper
-			setArticles={setArticles} 
-		    onSaveArticle={handleSaveArticle} 
-			sauvegarderFacture={handleSaveFacture}
-		/>;
+        return <VenteComptoir 
+          articles={articlesAvecPrix} 
+          clients={clients} 
+          onVente={handleEnregistrerMouvement}
+          setArticles={setArticles} 
+          onSaveArticle={handleSaveArticle} 
+          sauvegarderFacture={handleSaveFacture}
+        />;
       case 'entrees':
-		return <EntreesStock 
-			articles={articlesAvecPrix} 
-			fournisseurs={fournisseurs} 
-			onEntree={handleEnregistrerMouvement}  // ✅ Bon wrapper
-			setArticles={setArticles} 
-			onSaveArticle={handleSaveArticle} 
-		/>;
+        return <EntreesStock 
+          articles={articlesAvecPrix} 
+          fournisseurs={fournisseurs} 
+          onEntree={handleEnregistrerMouvement}
+          setArticles={setArticles} 
+          onSaveArticle={handleSaveArticle} 
+        />;
       case 'factures':
         return (
           <Factures 
@@ -251,10 +253,10 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
         />;
       case 'parametres':
         return <ParametresSociete parametres={parametres} onSave={handleSaveParametres} />;
+      case 'gestion-acces':
+        return <GestionAcces userEmail={userEmail} />;
       default:
         return <Dashboard stats={stats} mouvements={mouvements} articles={articlesAvecPrix} clients={clients} fournisseurs={fournisseurs} achats={achats} />;
-	  case 'gestion-acces':
-         return <GestionAcces userEmail={userEmail} />;
     }
   };
 
@@ -271,8 +273,26 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
+      {/* Sidebar */}
       <div className="w-64 bg-blue-900 text-white p-4 hidden md:block overflow-y-auto">
-        <h1 className="text-2xl font-bold mb-8">Inventix</h1>
+        <h1 className="text-2xl font-bold mb-6">Inventix</h1>
+
+        {/* Affichage de la société active */}
+        {currentOrganization?.organization?.name && (
+          <div className="mb-6 p-3 bg-blue-800 rounded-lg text-sm">
+            <div className="font-semibold flex items-center gap-2">
+              <Building size={16} />
+              <span className="truncate">{currentOrganization.organization.name}</span>
+            </div>
+            <button
+              onClick={() => router.push('/select-organization')}
+              className="mt-2 w-full text-xs text-blue-200 hover:text-white underline"
+            >
+              Changer de société
+            </button>
+          </div>
+        )}
+
         <nav className="space-y-2">
           <NavItem icon={<BarChart3 size={20} />} label="Dashboard" active={currentPage === 'dashboard'} onClick={() => setCurrentPage('dashboard')} />
           <div className="pt-4 pb-2 px-3 text-xs font-semibold text-blue-300">CATALOGUE</div>
@@ -292,57 +312,61 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
           <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'gestion-acces'} onClick={() => setCurrentPage('gestion-acces')} />
         </nav>
       </div>
-<div className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-3 z-50 shadow-lg border-t-2 border-blue-800 overflow-x-auto">
-  <button 
-    onClick={() => setCurrentPage('dashboard')} 
-    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'dashboard' ? 'bg-blue-700' : ''}`}
-  >
-    <BarChart3 size={24} />
-  </button>
-  <button 
-    onClick={() => setCurrentPage('articles')} 
-    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'articles' ? 'bg-blue-700' : ''}`}
-  >
-    <Package size={24} />
-  </button>
-  <button 
-    onClick={() => setCurrentPage('vente-client')} 
-    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'vente-client' ? 'bg-blue-700' : ''}`}
-  >
-    <TrendingUp size={24} />
-  </button>
-  <button 
-    onClick={() => setCurrentPage('vente-comptoir')} 
-    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'vente-comptoir' ? 'bg-blue-700' : ''}`}
-  >
-    <ShoppingCart size={24} />
-  </button>
-  <button 
-    onClick={() => setCurrentPage('clients')} 
-    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'clients' ? 'bg-blue-700' : ''}`}
-  >
-    <Users size={24} />
-  </button>
-  <button 
-    onClick={() => setCurrentPage('factures')} 
-    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'factures' ? 'bg-blue-700' : ''}`}
-  >
-    <FileText size={24} />
-  </button>
-  {/* ✅ NOUVEAU BOUTON ACHATS */}
-  <button 
-    onClick={() => setCurrentPage('achats')} 
-    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'achats' ? 'bg-blue-700' : ''}`}
-  >
-    <Receipt size={24} />
-  </button>
-  <button 
-    onClick={() => setCurrentPage('parametres')} 
-    className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'parametres' ? 'bg-blue-700' : ''}`}
-  >
-    <Settings size={24} />
-  </button>
-</div>
+
+      {/* Navigation mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-blue-900 text-white flex justify-around p-3 z-50 shadow-lg border-t-2 border-blue-800 overflow-x-auto">
+        <button 
+          onClick={() => setCurrentPage('dashboard')} 
+          className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'dashboard' ? 'bg-blue-700' : ''}`}
+        >
+          <BarChart3 size={24} />
+        </button>
+        <button 
+          onClick={() => setCurrentPage('articles')} 
+          className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'articles' ? 'bg-blue-700' : ''}`}
+        >
+          <Package size={24} />
+        </button>
+        <button 
+          onClick={() => setCurrentPage('vente-client')} 
+          className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'vente-client' ? 'bg-blue-700' : ''}`}
+        >
+          <TrendingUp size={24} />
+        </button>
+        <button 
+          onClick={() => setCurrentPage('vente-comptoir')} 
+          className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'vente-comptoir' ? 'bg-blue-700' : ''}`}
+        >
+          <ShoppingCart size={24} />
+        </button>
+        <button 
+          onClick={() => setCurrentPage('clients')} 
+          className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'clients' ? 'bg-blue-700' : ''}`}
+        >
+          <Users size={24} />
+        </button>
+        <button 
+          onClick={() => setCurrentPage('factures')} 
+          className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'factures' ? 'bg-blue-700' : ''}`}
+        >
+          <FileText size={24} />
+        </button>
+        <button 
+          onClick={() => setCurrentPage('achats')} 
+          className={`p-2 rounded-lg transition-colors flex-shrink-0 ${currentPage === 'achats' ? 'bg-blue-700' : ''}`}
+        >
+          <Receipt size={24} />
+        </button>
+        <button 
+          onClick={() => router.push('/select-organization')} 
+          className="p-2 rounded-lg transition-colors flex-shrink-0"
+          title="Changer de société"
+        >
+          <Building size={24} />
+        </button>
+      </div>
+
+      {/* Contenu principal */}
       <div className="flex-1 p-3 md:p-8 pb-20 md:pb-8 overflow-y-auto overflow-x-hidden">
         {renderPage()}
       </div>

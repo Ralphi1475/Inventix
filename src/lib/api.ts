@@ -7,7 +7,16 @@ import type {
   AuthorizedUsersListResponse,
 } from '@/types/authorized-users';
 import { Article, Contact, Mouvement, Parametres, FactureResume, Categorie } from '@/types';
-import { supabase, getCurrentUserEmail } from './supabase';
+import { supabase } from './supabase';
+
+// ============================================================================
+// RÉCUPÉRATION DE L'EMAIL UTILISATEUR
+// ============================================================================
+
+const getCurrentUserEmail = async (): Promise<string | null> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.email || null;
+};
 
 // ============================================================================
 // FONCTIONS DE CONVERSION ENTRE camelCase ET snake_case
@@ -90,7 +99,6 @@ export const chargerDonnees = async () => {
 
     console.log('📊 Organization ID:', organizationId);
 
-    // Charger toutes les données en parallèle
     const [
       articlesResult,
       contactsResult,
@@ -109,16 +117,6 @@ export const chargerDonnees = async () => {
       supabase.from('parametres').select('*').eq('organization_id', organizationId).limit(1)
     ]);
 
-    // Vérifier les erreurs
-    if (articlesResult.error) console.error('❌ Erreur articles:', articlesResult.error);
-    if (contactsResult.error) console.error('❌ Erreur contacts:', contactsResult.error);
-    if (mouvementsResult.error) console.error('❌ Erreur mouvements:', mouvementsResult.error);
-    if (facturesResult.error) console.error('❌ Erreur factures:', facturesResult.error);
-    if (achatsResult.error) console.error('❌ Erreur achats:', achatsResult.error);
-    if (categoriesResult.error) console.error('❌ Erreur catégories:', categoriesResult.error);
-    if (parametresResult.error) console.error('❌ Erreur paramètres:', parametresResult.error);
-
-    // Convertir les données
     const articles: Article[] = (articlesResult.data || []).map(article => ({
       ...toCamelCase(article),
       prixVenteHT: article.prix_achat * (1 + (article.marge_percent || 0) / 100),
@@ -184,12 +182,12 @@ export const chargerDonnees = async () => {
 };
 
 // ============================================================================
-// ARTICLES - ✅ CORRIGÉ AVEC organization_id
+// ARTICLES
 // ============================================================================
 
 export const sauvegarderArticle = async (article: Article, isUpdate: boolean = false) => {
   try {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = await getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
@@ -210,7 +208,7 @@ export const sauvegarderArticle = async (article: Article, isUpdate: boolean = f
       unite: article.unite,
       conditionnement: article.conditionnement,
       userEmail: userEmail,
-      organizationId: organizationId  // ✅ AJOUT
+      organizationId: organizationId
     });
 
     if (isUpdate) {
@@ -218,7 +216,7 @@ export const sauvegarderArticle = async (article: Article, isUpdate: boolean = f
         .from('articles')
         .update(articleData)
         .eq('id', article.id)
-        .eq('organization_id', organizationId);  // ✅ CHANGÉ
+        .eq('organization_id', organizationId);
       
       if (error) throw error;
       console.log('✅ Article modifié:', article.nom);
@@ -247,7 +245,7 @@ export const supprimerArticle = async (id: string) => {
       .from('articles')
       .delete()
       .eq('id', id)
-      .eq('organization_id', organizationId);  // ✅ CHANGÉ
+      .eq('organization_id', organizationId);
     
     if (error) throw error;
     console.log('✅ Article supprimé:', id);
@@ -259,12 +257,12 @@ export const supprimerArticle = async (id: string) => {
 };
 
 // ============================================================================
-// CONTACTS - ✅ CORRIGÉ AVEC organization_id
+// CONTACTS
 // ============================================================================
 
 export const sauvegarderContact = async (contact: Contact, isUpdate: boolean = false) => {
   try {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = await getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
@@ -273,7 +271,7 @@ export const sauvegarderContact = async (contact: Contact, isUpdate: boolean = f
     const contactData = toSnakeCase({
       ...contact,
       userEmail: userEmail,
-      organizationId: organizationId  // ✅ AJOUT
+      organizationId: organizationId
     });
 
     if (isUpdate) {
@@ -281,7 +279,7 @@ export const sauvegarderContact = async (contact: Contact, isUpdate: boolean = f
         .from('contacts')
         .update(contactData)
         .eq('id', contact.id)
-        .eq('organization_id', organizationId);  // ✅ CHANGÉ
+        .eq('organization_id', organizationId);
       
       if (error) throw error;
       console.log('✅ Contact modifié:', contact.societe);
@@ -310,7 +308,7 @@ export const supprimerContact = async (id: string) => {
       .from('contacts')
       .delete()
       .eq('id', id)
-      .eq('organization_id', organizationId);  // ✅ CHANGÉ
+      .eq('organization_id', organizationId);
     
     if (error) throw error;
     console.log('✅ Contact supprimé:', id);
@@ -322,12 +320,12 @@ export const supprimerContact = async (id: string) => {
 };
 
 // ============================================================================
-// MOUVEMENTS - ✅ CORRIGÉ AVEC organization_id
+// MOUVEMENTS
 // ============================================================================
 
 export const enregistrerMouvement = async (mouvement: Mouvement, articles: Article[]) => {
   try {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = await getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
@@ -352,7 +350,7 @@ export const enregistrerMouvement = async (mouvement: Mouvement, articles: Artic
       nomClient: mouvement.nomClient || '',
       commentaire: mouvement.commentaire || '',
       userEmail: userEmail,
-      organizationId: organizationId  // ✅ AJOUT
+      organizationId: organizationId
     });
 
     const { error } = await supabase
@@ -378,7 +376,7 @@ export const supprimerMouvement = async (id: string) => {
       .from('mouvements')
       .delete()
       .eq('id', id)
-      .eq('organization_id', organizationId);  // ✅ CHANGÉ
+      .eq('organization_id', organizationId);
     
     if (error) throw error;
     console.log('✅ Mouvement supprimé:', id);
@@ -390,12 +388,12 @@ export const supprimerMouvement = async (id: string) => {
 };
 
 // ============================================================================
-// FACTURES - ✅ CORRIGÉ AVEC organization_id
+// FACTURES
 // ============================================================================
 
 export const sauvegarderFacture = async (facture: any) => {
   try {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = await getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
@@ -411,7 +409,7 @@ export const sauvegarderFacture = async (facture: any) => {
       emplacement: facture.emplacement || '',
       commentaire: facture.commentaire || '',
       userEmail: userEmail,
-      organizationId: organizationId  // ✅ AJOUT
+      organizationId: organizationId
     });
 
     const { error } = await supabase
@@ -436,7 +434,7 @@ export const supprimerFacture = async (factureId: string) => {
       .from('factures')
       .delete()
       .eq('id', factureId)
-      .eq('organization_id', organizationId);  // ✅ CHANGÉ
+      .eq('organization_id', organizationId);
     
     if (error) throw error;
     console.log('✅ Facture supprimée:', factureId);
@@ -448,12 +446,12 @@ export const supprimerFacture = async (factureId: string) => {
 };
 
 // ============================================================================
-// ACHATS - ✅ CORRIGÉ AVEC organization_id
+// ACHATS
 // ============================================================================
 
 export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
   try {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = await getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
@@ -476,7 +474,7 @@ export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
       categorie: achat.categorie,
       nomFournisseur: nomFournisseur,
       userEmail: userEmail,
-      organizationId: organizationId  // ✅ AJOUT
+      organizationId: organizationId
     });
 
     const { error } = await supabase
@@ -494,7 +492,7 @@ export const sauvegarderAchat = async (achat: any, fournisseurs: Contact[]) => {
 
 export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
   try {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = await getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
@@ -521,7 +519,7 @@ export const modifierAchat = async (achat: any, fournisseurs: Contact[]) => {
       .from('achats')
       .update(achatData)
       .eq('id', achat.id)
-      .eq('organization_id', organizationId);  // ✅ CHANGÉ
+      .eq('organization_id', organizationId);
     
     if (error) throw error;
     console.log('✅ Achat modifié:', achat.reference);
@@ -541,7 +539,7 @@ export const supprimerAchat = async (id: string) => {
       .from('achats')
       .delete()
       .eq('id', id)
-      .eq('organization_id', organizationId);  // ✅ CHANGÉ
+      .eq('organization_id', organizationId);
     
     if (error) throw error;
     console.log('✅ Achat supprimé:', id);
@@ -553,40 +551,35 @@ export const supprimerAchat = async (id: string) => {
 };
 
 // ============================================================================
-// PARAMÈTRES - ✅ VERSION CORRIGÉE (upsert fiable)
+// PARAMÈTRES
 // ============================================================================
 
-export const sauvegarderParametres = async (params: Parametres, userEmail: string) => {
+export const sauvegarderParametres = async (params: Parametres) => {
   try {
+    const userEmail = await getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
     if (!organizationId) throw new Error('Aucune organisation sélectionnée');
 
-    // Convertir en snake_case
     const parametresData: any = toSnakeCase({
       ...params,
       userEmail: userEmail,
       organizationId: organizationId
     });
 
-    // Supprimer l'id pour forcer l'upsert sur organization_id
     delete parametresData.id;
 
-    // Upsert = update si existe, insert sinon
     const { error } = await supabase
       .from('parametres')
       .upsert([parametresData], {
-        onConflict: 'organization_id', // clé unique
+        onConflict: 'organization_id',
         ignoreDuplicates: false
       });
 
-    if (error) {
-      console.error('❌ Erreur upsert paramètres:', error);
-      throw error;
-    }
+    if (error) throw error;
     
-    console.log('✅ Paramètres sauvegardés via upsert');
+    console.log('✅ Paramètres sauvegardés');
     return { success: true };
   } catch (error) {
     console.error('❌ Erreur sauvegarde paramètres:', error);
@@ -595,7 +588,7 @@ export const sauvegarderParametres = async (params: Parametres, userEmail: strin
 };
 
 // ============================================================================
-// CATÉGORIES - ✅ CORRIGÉ AVEC organization_id
+// CATÉGORIES
 // ============================================================================
 
 export async function chargerCategories(type?: 'produit' | 'achat'): Promise<Categorie[]> {
@@ -606,7 +599,7 @@ export async function chargerCategories(type?: 'produit' | 'achat'): Promise<Cat
     let query = supabase
       .from('categories')
       .select('*')
-      .eq('organization_id', organizationId);  // ✅ CHANGÉ
+      .eq('organization_id', organizationId);
 
     if (type) {
       query = query.eq('type', type);
@@ -620,14 +613,14 @@ export async function chargerCategories(type?: 'produit' | 'achat'): Promise<Cat
     
     return data ? toCamelCase(data) : [];
   } catch (error) {
-    console.error(`❌ Erreur chargement catégories${type ? ` (${type})` : ''}:`, error);
+    console.error(`❌ Erreur chargement catégories:`, error);
     throw error;
   }
 }
 
 export async function sauvegarderCategorie(categorie: Categorie, isUpdate: boolean = false): Promise<void> {
   try {
-    const userEmail = getCurrentUserEmail();
+    const userEmail = await getCurrentUserEmail();
     const organizationId = getCurrentOrganizationId();
     
     if (!userEmail) throw new Error('Utilisateur non connecté');
@@ -636,7 +629,7 @@ export async function sauvegarderCategorie(categorie: Categorie, isUpdate: boole
     const categorieData = toSnakeCase({
       ...categorie,
       userEmail: userEmail,
-      organizationId: organizationId  // ✅ AJOUT
+      organizationId: organizationId
     });
 
     if (isUpdate) {
@@ -644,7 +637,7 @@ export async function sauvegarderCategorie(categorie: Categorie, isUpdate: boole
         .from('categories')
         .update(categorieData)
         .eq('id', categorie.id)
-        .eq('organization_id', organizationId);  // ✅ CHANGÉ
+        .eq('organization_id', organizationId);
       
       if (error) throw error;
       console.log('✅ Catégorie modifiée:', categorie.denomination);
@@ -671,7 +664,7 @@ export async function supprimerCategorie(id: string): Promise<void> {
       .from('categories')
       .delete()
       .eq('id', id)
-      .eq('organization_id', organizationId);  // ✅ CHANGÉ
+      .eq('organization_id', organizationId);
     
     if (error) throw error;
     console.log('✅ Catégorie supprimée:', id);
@@ -687,8 +680,6 @@ export async function supprimerCategorie(id: string): Promise<void> {
 
 export const uploadImage = async (file: File): Promise<string> => {
   try {
-    console.log('📤 Upload image:', file.name, file.size, 'bytes');
-    
     const formData = new FormData();
     formData.append('file', file);
 
@@ -705,7 +696,6 @@ export const uploadImage = async (file: File): Promise<string> => {
     const result = await response.json();
 
     if (result.success) {
-      console.log('✅ Image uploadée:', result.url);
       return result.url;
     } else {
       throw new Error(result.error || 'Erreur upload');
@@ -715,159 +705,6 @@ export const uploadImage = async (file: File): Promise<string> => {
     throw error;
   }
 };
-
-// ============================================================================
-// FONCTIONS UTILITAIRES (compatibilité)
-// ============================================================================
-
-export const clearCache = (): void => {
-  console.log('ℹ️ Cache non utilisé avec Supabase');
-};
-
-const invalidateCache = (): void => {
-  // Non nécessaire avec Supabase
-};
-
-// ============================================================================
-// GESTION DES UTILISATEURS AUTORISÉS - PARTAGE D'ACCÈS
-// ============================================================================
-
-/**
- * Lister les utilisateurs autorisés
- */
-export async function getAuthorizedUsers(userEmail: string): Promise<{
-  success: boolean;
-  data?: any[];
-  error?: string;
-}> {
-  try {
-    const { data, error } = await supabase
-      .from('authorized_users')
-      .select('*')
-      .eq('owner_email', userEmail)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, data: data || [] };
-  } catch (error) {
-    return { success: false, error: 'Erreur lors de la récupération des utilisateurs' };
-  }
-}
-
-/**
- * Ajouter un utilisateur autorisé
- */
-export async function addAuthorizedUser(
-  userEmail: string,
-  request: { authorized_email: string; access_level: 'read' | 'write' }
-): Promise<{
-  success: boolean;
-  data?: any;
-  error?: string;
-}> {
-  try {
-    if (!request.authorized_email || !request.authorized_email.includes('@')) {
-      return { success: false, error: 'Email invalide' };
-    }
-
-    if (request.authorized_email.toLowerCase() === userEmail.toLowerCase()) {
-      return { success: false, error: 'Vous ne pouvez pas vous autoriser vous-même' };
-    }
-
-    if (!['read', 'write'].includes(request.access_level)) {
-      return { success: false, error: "Niveau d'accès invalide" };
-    }
-
-    const { data, error } = await supabase
-      .from('authorized_users')
-      .insert({
-        owner_email: userEmail,
-        authorized_email: request.authorized_email.toLowerCase(),
-        access_level: request.access_level,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === '23505') {
-        return { success: false, error: 'Cet utilisateur est déjà autorisé' };
-      }
-      return { success: false, error: error.message };
-    }
-
-    return { success: true, data };
-  } catch (error) {
-    return { success: false, error: "Erreur lors de l'ajout de l'utilisateur" };
-  }
-}
-
-/**
- * Modifier le niveau d'accès
- */
-export async function updateAuthorizedUser(
-  userEmail: string,
-  request: { id: string; access_level: 'read' | 'write' }
-): Promise<{
-  success: boolean;
-  data?: any;
-  error?: string;
-}> {
-  try {
-    if (!['read', 'write'].includes(request.access_level)) {
-      return { success: false, error: "Niveau d'accès invalide" };
-    }
-
-    const { data, error } = await supabase
-      .from('authorized_users')
-      .update({
-        access_level: request.access_level,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', request.id)
-      .eq('owner_email', userEmail)
-      .select()
-      .single();
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    if (!data) {
-      return { success: false, error: 'Utilisateur non trouvé' };
-    }
-
-    return { success: true, data };
-  } catch (error) {
-    return { success: false, error: 'Erreur lors de la modification' };
-  }
-}
-
-/**
- * Supprimer un utilisateur autorisé
- */
-export async function deleteAuthorizedUser(
-  userEmail: string,
-  authorizedUserId: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const { error } = await supabase
-      .from('authorized_users')
-      .delete()
-      .eq('id', authorizedUserId)
-      .eq('owner_email', userEmail);
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: 'Erreur lors de la suppression' };
-  }
-}
 
 // ============================================================================
 // EXPORTS DES FONCTIONS D'ORGANISATIONS

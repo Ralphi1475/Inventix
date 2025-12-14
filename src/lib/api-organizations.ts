@@ -30,10 +30,10 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
           logo_url,
           owner_email,
           created_at,
-          updated_at
-        ),
-        parametres: parametres (
-          societe_nom
+          updated_at,
+          parametres: parametres (
+            societe_nom
+          )
         )
       `)
       .eq('user_email', userEmail)
@@ -87,7 +87,7 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
           ...access,
           organization: {
             ...access.organization,
-            parametres: access.parametres?.[0] || null
+            parametres: access.organization.parametres?.[0] || null
           }
         };
         allAccess.push(enrichedAccess);

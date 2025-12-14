@@ -1,7 +1,6 @@
-// src/components/admin/Administration.tsx
 'use client';
 import { useRouter } from 'next/navigation';
-import { Building2, FileText } from 'lucide-react';
+import { Building2, FileText, Trash2 } from 'lucide-react';
 
 export default function Administration({ userEmail }: { userEmail: string }) {
   const router = useRouter();
@@ -33,6 +32,17 @@ export default function Administration({ userEmail }: { userEmail: string }) {
             <div>
               <div className="font-semibold">Demandes de création de sociétés</div>
               <div className="text-sm text-gray-600">Consulter les demandes en attente</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push('/gerer-societes')}
+            className="w-full text-left p-4 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 flex items-center gap-3"
+          >
+            <Trash2 size={24} className="text-red-600" />
+            <div>
+              <div className="font-semibold">Gérer / Supprimer des sociétés</div>
+              <div className="text-sm text-gray-600">Voir toutes les sociétés et les supprimer si nécessaire</div>
             </div>
           </button>
         </div>

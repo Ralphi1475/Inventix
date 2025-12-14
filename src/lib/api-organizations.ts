@@ -403,3 +403,59 @@ export async function getOrganizationUsers(
     return { success: false, error: 'Erreur lors de la récupération des utilisateurs' };
   }
 }
+// Suppression de société
+
+export async function deleteOrganization(
+  userEmail: string,
+  organizationId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Vérifier que c'est le propriétaire
+    const { data: org } = await supabase
+      .from('organizations')
+      .select('owner_email')
+      .eq('id', organizationId)
+      .single();
+
+    if (!org || org.owner_email !== userEmail) {
+      return { success: false, error: 'Non autorisé' };
+    }
+
+    // Supprimer toutes les données liées (CASCADE)
+    const tables = [
+      'mouvements',
+      'factures',
+      'achats',
+      'articles',
+      'contacts',
+      'categories',
+      'parametres',
+      'user_organization_access'
+    ];
+
+    for (const table of tables) {
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('organization_id', organizationId);
+      
+      if (error) {
+        console.error(`Erreur suppression ${table}:`, error);
+      }
+    }
+
+    // Supprimer l'organisation
+    const { error: orgError } = await supabase
+      .from('organizations')
+      .delete()
+      .eq('id', organizationId);
+
+    if (orgError) {
+      return { success: false, error: orgError.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Erreur lors de la suppression' };
+  }
+}

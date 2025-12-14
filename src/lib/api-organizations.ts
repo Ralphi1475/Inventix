@@ -23,7 +23,18 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
       .from('user_organization_access')
       .select(`
         *,
-        organization:organizations (*)
+        organization:organizations (
+          id,
+          name,
+          description,
+          logo_url,
+          owner_email,
+          created_at,
+          updated_at
+        ),
+        parametres: parametres (
+          societe_nom
+        )
       `)
       .eq('user_email', userEmail)
       .order('created_at', { ascending: false });
@@ -36,7 +47,12 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
     // 2. Récupérer les organisations dont l'utilisateur est propriétaire
     const { data: ownedOrgs, error: ownedError } = await supabase
       .from('organizations')
-      .select('*')
+      .select(`
+        *,
+        parametres: parametres (
+          societe_nom
+        )
+      `)
       .eq('owner_email', userEmail)
       .order('created_at', { ascending: false });
 
@@ -47,25 +63,34 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
 
     // 3. Convertir les organisations possédées au format UserOrganizationAccess
     const ownedAccess: UserOrganizationAccess[] = (ownedOrgs || []).map(org => ({
-      id: `owner-${org.id}`, // ID unique pour éviter les doublons
+      id: `owner-${org.id}`,
       organization_id: org.id,
       user_email: userEmail,
-      access_level: 'admin', // Le propriétaire a toujours accès admin
+      access_level: 'admin',
       granted_by: userEmail,
       granted_at: org.created_at,
       created_at: org.created_at,
-	  updated_at: org.updated_at,
-      organization: org,
+      updated_at: org.updated_at,
+      organization: {
+        ...org,
+        parametres: org.parametres?.[0] || null
+      },
     }));
 
     // 4. Fusionner les deux listes en évitant les doublons
     const allAccess = [...ownedAccess];
     const ownedOrgIds = new Set(ownedOrgs?.map(o => o.id) || []);
-    
-    // Ajouter les accès partagés qui ne sont pas déjà dans ownedOrgs
+
     (sharedAccess || []).forEach(access => {
       if (!ownedOrgIds.has(access.organization_id)) {
-        allAccess.push(access);
+        const enrichedAccess = {
+          ...access,
+          organization: {
+            ...access.organization,
+            parametres: access.parametres?.[0] || null
+          }
+        };
+        allAccess.push(enrichedAccess);
       }
     });
 
@@ -85,12 +110,10 @@ export async function createOrganization(
   request: CreateOrganizationRequest
 ): Promise<OrganizationResponse> {
   try {
-    // Validation
     if (!request.name || request.name.trim().length === 0) {
       return { success: false, error: 'Le nom de l\'organisation est requis' };
     }
 
-    // Créer l'organisation
     const { data: orgData, error: orgError } = await supabase
       .from('organizations')
       .insert({
@@ -107,7 +130,6 @@ export async function createOrganization(
       return { success: false, error: orgError?.message || 'Erreur lors de la création' };
     }
 
-    // Donner l'accès admin au créateur
     const { error: accessError } = await supabase
       .from('user_organization_access')
       .insert({
@@ -119,8 +141,6 @@ export async function createOrganization(
 
     if (accessError) {
       console.error('Erreur création accès:', accessError);
-      // L'organisation est créée mais l'accès a échoué
-      // On pourrait supprimer l'organisation, mais on laisse pour l'instant
       return { success: false, error: 'Organisation créée mais erreur d\'accès' };
     }
 
@@ -139,7 +159,6 @@ export async function updateOrganization(
   request: UpdateOrganizationRequest
 ): Promise<OrganizationResponse> {
   try {
-    // Vérifier que l'utilisateur est admin de l'organisation
     const { data: access, error: accessError } = await supabase
       .from('user_organization_access')
       .select('access_level')
@@ -151,13 +170,11 @@ export async function updateOrganization(
       return { success: false, error: 'Vous n\'avez pas les droits pour modifier cette organisation' };
     }
 
-    // Préparer les données à mettre à jour
     const updateData: any = {};
     if (request.name !== undefined) updateData.name = request.name.trim();
     if (request.description !== undefined) updateData.description = request.description.trim() || null;
     if (request.logo_url !== undefined) updateData.logo_url = request.logo_url.trim() || null;
 
-    // Mettre à jour
     const { data, error } = await supabase
       .from('organizations')
       .update(updateData)
@@ -186,7 +203,6 @@ export async function addUserToOrganization(
   accessLevel: 'read' | 'write' | 'admin'
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Vérifier que l'utilisateur courant est admin
     const { data: access, error: accessError } = await supabase
       .from('user_organization_access')
       .select('access_level')
@@ -198,7 +214,6 @@ export async function addUserToOrganization(
       return { success: false, error: 'Vous n\'avez pas les droits pour ajouter des utilisateurs' };
     }
 
-    // Vérifier que l'utilisateur n'a pas déjà accès
     const { data: existingAccess } = await supabase
       .from('user_organization_access')
       .select('id')
@@ -210,7 +225,6 @@ export async function addUserToOrganization(
       return { success: false, error: 'Cet utilisateur a déjà accès à cette organisation' };
     }
 
-    // Ajouter l'accès
     const { error } = await supabase
       .from('user_organization_access')
       .insert({
@@ -240,7 +254,6 @@ export async function updateUserOrganizationAccess(
   newAccessLevel: 'read' | 'write' | 'admin'
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Récupérer l'accès à modifier
     const { data: targetAccess, error: fetchError } = await supabase
       .from('user_organization_access')
       .select('organization_id, user_email')
@@ -251,7 +264,6 @@ export async function updateUserOrganizationAccess(
       return { success: false, error: 'Accès non trouvé' };
     }
 
-    // Vérifier que l'utilisateur courant est admin
     const { data: currentAccess, error: accessError } = await supabase
       .from('user_organization_access')
       .select('access_level')
@@ -263,12 +275,10 @@ export async function updateUserOrganizationAccess(
       return { success: false, error: 'Vous n\'avez pas les droits pour modifier cet accès' };
     }
 
-    // Empêcher de se retirer ses propres droits admin
     if (targetAccess.user_email === currentUserEmail && newAccessLevel !== 'admin') {
       return { success: false, error: 'Vous ne pouvez pas retirer vos propres droits admin' };
     }
 
-    // Mettre à jour
     const { error } = await supabase
       .from('user_organization_access')
       .update({ access_level: newAccessLevel })
@@ -293,7 +303,6 @@ export async function removeUserFromOrganization(
   accessId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Récupérer l'accès à supprimer
     const { data: targetAccess, error: fetchError } = await supabase
       .from('user_organization_access')
       .select('organization_id, user_email')
@@ -304,7 +313,6 @@ export async function removeUserFromOrganization(
       return { success: false, error: 'Accès non trouvé' };
     }
 
-    // Vérifier que l'utilisateur courant est admin
     const { data: currentAccess, error: accessError } = await supabase
       .from('user_organization_access')
       .select('access_level')
@@ -316,12 +324,10 @@ export async function removeUserFromOrganization(
       return { success: false, error: 'Vous n\'avez pas les droits pour retirer cet accès' };
     }
 
-    // Empêcher de se retirer soi-même
     if (targetAccess.user_email === currentUserEmail) {
       return { success: false, error: 'Vous ne pouvez pas retirer votre propre accès' };
     }
 
-    // Supprimer l'accès
     const { error } = await supabase
       .from('user_organization_access')
       .delete()
@@ -350,7 +356,6 @@ export async function getOrganizationUsers(
   error?: string;
 }> {
   try {
-    // Vérifier que l'utilisateur a accès à l'organisation
     const { data: access, error: accessError } = await supabase
       .from('user_organization_access')
       .select('access_level')
@@ -362,7 +367,6 @@ export async function getOrganizationUsers(
       return { success: false, error: 'Vous n\'avez pas accès à cette organisation' };
     }
 
-    // Récupérer tous les utilisateurs
     const { data, error } = await supabase
       .from('user_organization_access')
       .select('*')

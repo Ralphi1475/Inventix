@@ -1,8 +1,3 @@
-// ============================================================================
-// Composant React - Sélection d'organisation
-// Fichier: src/components/organizations/OrganizationSelector.tsx
-// ============================================================================
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -38,7 +33,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
       setOrganizations(response.data);
       setUserOrganizations(response.data);
       
-      // Auto-sélectionner si une seule organisation
       if (response.data.length === 1) {
         handleSelectOrganization(response.data[0]);
       }
@@ -52,7 +46,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
   const handleSelectOrganization = (org: UserOrganizationAccess) => {
     setSelectedOrgId(org.organization_id);
     setCurrentOrganization(org);
-    // Petit délai pour l'animation
     setTimeout(() => {
       onSelect();
     }, 300);
@@ -115,7 +108,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-2xl w-full">
-        {/* En-tête */}
         <div className="text-center mb-8">
           <div className="mb-4">
             <Building2 size={48} className="text-blue-600 mx-auto" />
@@ -128,7 +120,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
           </p>
         </div>
 
-        {/* Liste des organisations */}
         <div className="space-y-3">
           {organizations.map((orgAccess) => {
             const org = orgAccess.organization;
@@ -136,6 +127,7 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
 
             const accessInfo = getAccessLevelInfo(orgAccess.access_level);
             const isSelected = selectedOrgId === orgAccess.organization_id;
+            const displayNom = org.parametres?.societe_nom || org.name;
 
             return (
               <button
@@ -149,14 +141,13 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  {/* Logo ou icône */}
                   <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
                     isSelected ? 'bg-green-100' : 'bg-blue-100'
                   }`}>
                     {org.logo_url ? (
                       <img
                         src={org.logo_url}
-                        alt={org.name}
+                        alt={displayNom}
                         className="w-full h-full rounded-lg object-cover"
                       />
                     ) : (
@@ -164,11 +155,10 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
                     )}
                   </div>
 
-                  {/* Informations */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-semibold text-lg truncate">
-                        {org.name}
+                        {displayNom}
                       </h3>
                       {isSelected && (
                         <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
@@ -182,7 +172,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
                     )}
 
                     <div className="flex items-center gap-3 mt-3 text-sm">
-                      {/* Badge niveau d'accès */}
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium ${
                         orgAccess.access_level === 'admin'
                           ? 'bg-purple-100 text-purple-700'
@@ -194,7 +183,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
                         <span>{accessInfo.label}</span>
                       </span>
 
-                      {/* Indicateur si propriétaire */}
                       {org.owner_email === userEmail && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium bg-amber-100 text-amber-700">
                           <Users size={14} />
@@ -204,7 +192,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
                     </div>
                   </div>
 
-                  {/* Flèche */}
                   {!isSelected && (
                     <ChevronRight size={20} className="text-gray-400 flex-shrink-0" />
                   )}
@@ -214,7 +201,6 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
           })}
         </div>
 
-        {/* Info supplémentaire */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-sm text-blue-800">
             <strong>💡 Astuce :</strong> Vous pourrez changer d'organisation à tout moment depuis les paramètres.

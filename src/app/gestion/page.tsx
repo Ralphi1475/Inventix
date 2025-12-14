@@ -185,7 +185,7 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
     }
 
     console.log('💾 Sauvegarde des paramètres...', params);
-    await sauvegarderParametres(params, user.email); // 👈 on passe l'email
+    await sauvegarderParametres(params); // 👈 on passe l'email
     console.log('✅ Paramètres sauvegardés avec succès');
     
     await rechargerDonnees();

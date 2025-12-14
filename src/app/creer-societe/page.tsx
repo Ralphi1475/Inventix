@@ -40,7 +40,7 @@ useEffect(() => {
 
     const result = await createOrganization(user.email, {
       name: nom.trim(),
-      description: description.trim() || null,
+      description: description.trim() || undefined,
     });
 
     if (result.success) {

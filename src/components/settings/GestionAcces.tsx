@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Trash2, Shield, ShieldCheck, Mail, Calendar } from 'lucide-react';
+import { UserPlus, Trash2, Shield, ShieldCheck, ShieldStar, Mail, Calendar } from 'lucide-react';
 import {
   addUserToOrganization,
   updateUserOrganizationAccess,
@@ -25,7 +25,7 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
-  const [newUserAccessLevel, setNewUserAccessLevel] = useState<'read' | 'write'>('read');
+  const [newUserAccessLevel, setNewUserAccessLevel] = useState<'read' | 'write' | 'admin'>('read');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -43,7 +43,6 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
     const response = await getOrganizationUsers(userEmail, currentOrganization.organization_id);
     
     if (response.success && response.data) {
-      // Filtrer l'utilisateur courant (on ne veut pas se voir soi-même)
       const filtered = response.data.filter((m: any) => m.user_email !== userEmail);
       setMembers(filtered);
     } else {
@@ -70,10 +69,10 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
     }
 
     const response = await addUserToOrganization(
-      userEmail, // granted_by
-      currentOrganization.organization_id, // organization_id
-      newUserEmail.trim(), // user_email
-      newUserAccessLevel // access_level
+      userEmail,
+      currentOrganization.organization_id,
+      newUserEmail.trim(),
+      newUserAccessLevel
     );
 
     if (response.success) {
@@ -87,10 +86,16 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
     }
   };
 
-  // Modifier le niveau d'accès
+  // Modifier le niveau d'accès (bascule entre read/write, admin reste admin)
   const handleToggleAccessLevel = async (member: any) => {
     setError(null);
     setSuccess(null);
+
+    // Si c'est un admin, on ne peut pas le rétrograder (optionnel)
+    if (member.access_level === 'admin') {
+      setError('Impossible de modifier les droits dun administrateur depuis cet écran.');
+      return;
+    }
 
     const newLevel = member.access_level === 'read' ? 'write' : 'read';
 
@@ -127,7 +132,6 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
     }
   };
 
-  // Formater la date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -151,7 +155,6 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
-      {/* En-tête */}
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">Accès partagés</h1>
         <p className="text-gray-600">
@@ -159,7 +162,6 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
         </p>
       </div>
 
-      {/* Messages de succès/erreur */}
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
           {error}
@@ -172,7 +174,6 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
         </div>
       )}
 
-      {/* Bouton Ajouter */}
       <div className="mb-6">
         {!showAddForm ? (
           <button
@@ -214,7 +215,7 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
                     name="access_level"
                     value="read"
                     checked={newUserAccessLevel === 'read'}
-                    onChange={(e) => setNewUserAccessLevel(e.target.value as 'read')}
+                    onChange={(e) => setNewUserAccessLevel(e.target.value as any)}
                     className="text-blue-600"
                   />
                   <div>
@@ -231,13 +232,30 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
                     name="access_level"
                     value="write"
                     checked={newUserAccessLevel === 'write'}
-                    onChange={(e) => setNewUserAccessLevel(e.target.value as 'write')}
+                    onChange={(e) => setNewUserAccessLevel(e.target.value as any)}
                     className="text-blue-600"
                   />
                   <div>
                     <div className="font-medium">Lecture + Écriture</div>
                     <div className="text-sm text-gray-600">
                       Peut consulter et modifier les données
+                    </div>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="access_level"
+                    value="admin"
+                    checked={newUserAccessLevel === 'admin'}
+                    onChange={(e) => setNewUserAccessLevel(e.target.value as any)}
+                    className="text-purple-600"
+                  />
+                  <div>
+                    <div className="font-medium text-purple-700">Administrateur</div>
+                    <div className="text-sm text-gray-600">
+                      Peut gérer les membres et les données
                     </div>
                   </div>
                 </label>
@@ -267,7 +285,6 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
         )}
       </div>
 
-      {/* Liste des membres */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold">
@@ -306,13 +323,21 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
                     <button
                       onClick={() => handleToggleAccessLevel(member)}
                       className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        member.access_level === 'write'
+                        member.access_level === 'admin'
+                          ? 'bg-purple-100 text-purple-700 cursor-not-allowed'
+                          : member.access_level === 'write'
                           ? 'bg-green-100 text-green-700 hover:bg-green-200'
                           : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                       }`}
-                      title="Modifier le niveau d'accès"
+                      title={member.access_level === 'admin' ? 'Administrateur (non modifiable ici)' : 'Modifier le niveau d\'accès'}
+                      disabled={member.access_level === 'admin'}
                     >
-                      {member.access_level === 'write' ? (
+                      {member.access_level === 'admin' ? (
+                        <>
+                          <ShieldStar size={16} />
+                          <span>Administrateur</span>
+                        </>
+                      ) : member.access_level === 'write' ? (
                         <>
                           <ShieldCheck size={16} />
                           <span>Lecture + Écriture</span>
@@ -345,7 +370,8 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Les membres peuvent accéder à cette société uniquement</li>
           <li>• Vous (propriétaire) ne pouvez pas être supprimé</li>
-          <li>• Les modifications sont visibles en temps réel pour tous les membres</li>
+          <li>• Seuls les administrateurs peuvent ajouter d'autres administrateurs</li>
+          <li>• Les administrateurs peuvent gérer les membres et les données</li>
         </ul>
       </div>
     </div>

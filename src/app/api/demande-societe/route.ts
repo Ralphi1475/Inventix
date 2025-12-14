@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: Request) {
   try {
+    const supabase = createClient();
     const body = await request.json();
     const { userEmail, nomSociete, description, telephone } = body;
 
@@ -14,19 +15,25 @@ export async function POST(request: Request) {
         nom_societe: nomSociete,
         description: description || '',
         telephone: telephone || '',
-        statut: 'en_attente',
-        created_at: new Date().toISOString()
+        statut: 'en_attente'
       }]);
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erreur Supabase:', error);
+      return NextResponse.json({ 
+        success: false, 
+        error: error.message 
+      }, { status: 500 });
+    }
 
-    // TODO: Envoyer email (Resend, SendGrid, ou Supabase Edge Function)
-    // Pour l'instant, juste logger
-    console.log('📧 Nouvelle demande de société:', { userEmail, nomSociete });
+    console.log('✅ Nouvelle demande de société:', { userEmail, nomSociete });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Erreur demande société:', error);
-    return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 });
+  } catch (error: any) {
+    console.error('❌ Erreur demande société:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message || 'Erreur serveur' 
+    }, { status: 500 });
   }
 }

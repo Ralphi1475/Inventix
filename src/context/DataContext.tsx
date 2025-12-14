@@ -1,18 +1,8 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import {
-  chargerDonnees,
-  chargerCategories
-} from '@/lib/api';
-import { 
-  Article, 
-  Contact, 
-  Mouvement, 
-  Parametres, 
-  FactureResume,
-  Categorie 
-} from '@/types';
+import { chargerDonnees, chargerCategories } from '@/lib/api';
+import { Article, Contact, Mouvement, Parametres, FactureResume, Categorie } from '@/types';
 
 interface DataContextType {
   loading: boolean;
@@ -61,28 +51,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const rechargerDonnees = async (forceRefresh: boolean = false) => {
     setLoading(true);
     try {
-      // Verifier que l'utilisateur est connecte
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user?.email) {
-        console.log('Attente de la session utilisateur...');
         setLoading(false);
         return;
       }
 
-      // ✅ NOUVEAU : Vérifier qu'une organisation est sélectionnée
-      const organizationId = typeof window !== 'undefined' 
-        ? localStorage.getItem('current_organization_id') 
-        : null;
+      const organizationId = localStorage.getItem('current_organization_id');
 
       if (!organizationId) {
-        console.log('⚠️ Aucune organisation sélectionnée, arrêt du chargement');
         setLoading(false);
         return;
       }
 
-      console.log('Chargement des donnees pour:', session.user.email);
-      
       const data = await chargerDonnees();
       const cats = await chargerCategories();
       
@@ -94,79 +76,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setAchats(data.achats);
       setParametres(data.parametres);
       setCategories(cats);
-      
-      console.log('Donnees chargees avec succes');
     } catch (err) {
       console.error('Erreur chargement:', err);
-      // Ne pas throw l'erreur pour eviter de bloquer l'app
     } finally {
       setLoading(false);
     }
   };
 
-
   useEffect(() => {
-    let mounted = true;
-    
     const initData = async () => {
-      // Attendre que la session soit prete
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        console.log('Pas de session, attente...');
         setLoading(false);
         return;
       }
 
-      // ✅ NOUVEAU : Vérifier qu'une organisation est sélectionnée avant de charger
-      const organizationId = typeof window !== 'undefined' 
-        ? localStorage.getItem('current_organization_id') 
-        : null;
+      const organizationId = localStorage.getItem('current_organization_id');
 
       if (!organizationId) {
-        console.log('⚠️ Aucune organisation sélectionnée au démarrage');
         setLoading(false);
         return;
       }
       
-      if (mounted) {
-        await rechargerDonnees();
-      }
+      await rechargerDonnees();
     };
 
-    // Petit delai pour laisser l'auth se stabiliser
-    const timer = setTimeout(() => {
-      initData();
-    }, 100);
-
-    // Ecouter les changements d'auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event);
-      
-      if (event === 'SIGNED_IN' && session && mounted) {
-        console.log('Utilisateur connecte, chargement des donnees...');
-        // ✅ Vérifier l'organisation avant de charger
-        const organizationId = typeof window !== 'undefined' 
-          ? localStorage.getItem('current_organization_id') 
-          : null;
-        
-        if (organizationId) {
-          await rechargerDonnees();
-        } else {
-          console.log('⚠️ Pas d\'organisation, en attente de sélection');
-          setLoading(false);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        console.log('Utilisateur deconnecte');
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      clearTimeout(timer);
-      subscription.unsubscribe();
-    };
+    initData();
   }, []);
 
   const value = {

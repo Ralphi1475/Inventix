@@ -19,7 +19,7 @@ import type {
 export async function getUserOrganizations(userEmail: string): Promise<OrganizationsListResponse> {
   try {
     // 1. Récupérer les accès via user_organization_access (organisations partagées)
-    const {  sharedAccess, error: sharedError } = await supabase
+    const {  data: sharedAccess, error: sharedError } = await supabase
       .from('user_organization_access')
       .select(`
         *,
@@ -42,7 +42,7 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
     }
 
     // 2. Récupérer les organisations dont l'utilisateur est propriétaire
-    const {  ownedOrgs, error: ownedError } = await supabase
+    const {   data: ownedOrgs, error: ownedError } = await supabase
       .from('organizations')
       .select('*')
       .eq('owner_email', userEmail)
@@ -61,7 +61,7 @@ export async function getUserOrganizations(userEmail: string): Promise<Organizat
       ])
     ];
 
-    const {  parametresData, error: paramError } = await supabase
+    const {  data: parametresData, error: paramError } = await supabase
       .from('parametres')
       .select('organization_id, societe_nom')
       .in('organization_id', allOrgIds);

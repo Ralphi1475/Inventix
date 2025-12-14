@@ -17,7 +17,7 @@ import type {
   AuthorizedUser,
   CreateAuthorizedUserRequest,
 } from '@/types/authorized-users';
-
+import { useOrganization } from '@/context/OrganizationContext';
 interface GestionAccesProps {
   userEmail: string;
 }
@@ -30,7 +30,7 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
   const [newUserAccessLevel, setNewUserAccessLevel] = useState<'read' | 'write'>('read');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
+  const { currentOrganization } = useOrganization();
   // Charger les utilisateurs autorisés
   useEffect(() => {
     loadAuthorizedUsers();
@@ -51,34 +51,47 @@ export default function GestionAcces({ userEmail }: GestionAccesProps) {
     setLoading(false);
   };
 
-  // Ajouter un utilisateur
-  const handleAddUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
+// Ajouter un utilisateur à une organisation spécifique
+const handleAddUser = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError(null);
+  setSuccess(null);
 
-    if (!newUserEmail.trim()) {
-      setError('Veuillez entrer une adresse email');
-      return;
-    }
+  if (!newUserEmail.trim()) {
+    setError('Veuillez entrer une adresse email');
+    return;
+  }
 
-    const request: CreateAuthorizedUserRequest = {
-      authorized_email: newUserEmail.trim(),
-      access_level: newUserAccessLevel,
-    };
+  // ❗️ Ici, on utilise l'organisation active
+  const currentOrgId = currentOrganization?.organization_id; // ← à récupérer via useOrganization
+  if (!currentOrgId) {
+    setError('Aucune organisation sélectionnée');
+    return;
+  }
 
-    const response = await addAuthorizedUser(userEmail, request);
-
-    if (response.success) {
-      setSuccess('Utilisateur ajouté avec succès !');
-      setNewUserEmail('');
-      setNewUserAccessLevel('read');
-      setShowAddForm(false);
-      loadAuthorizedUsers();
-    } else {
-      setError(response.error || 'Erreur lors de l\'ajout');
-    }
+  const request: CreateAuthorizedUserRequest = {
+    authorized_email: newUserEmail.trim(),
+    access_level: newUserAccessLevel,
   };
+
+  // ✅ Utilise la bonne fonction
+  const response = await addUserToOrganization(
+    userEmail, // granted_by
+    currentOrgId, // organization_id
+    newUserEmail.trim(), // user_email
+    newUserAccessLevel // access_level
+  );
+
+  if (response.success) {
+    setSuccess('Utilisateur ajouté avec succès !');
+    setNewUserEmail('');
+    setNewUserAccessLevel('read');
+    setShowAddForm(false);
+    loadAuthorizedUsers(); // ou mieux : recharger les membres de l'org
+  } else {
+    setError(response.error || 'Erreur lors de l\'ajout');
+  }
+};
 
   // Modifier le niveau d'accès
   const handleToggleAccessLevel = async (user: AuthorizedUser) => {

@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import { supabase, signOut } from '@/lib/supabase';
 import { useData } from '@/context/DataContext';
 import { useOrganization } from '@/context/OrganizationContext';
-import { useRouter } from 'next/navigation';
 import { 
   sauvegarderArticle,
   supprimerArticle,
@@ -38,7 +38,10 @@ import { Categories } from '@/components/categories/Categories';
 import GestionAcces from '@/components/settings/GestionAcces';
 
 // Icônes
-import { Plus, Package, Users, TrendingUp, ShoppingCart, FileText, BarChart3, Settings, Search, Edit2, Trash2, Minus, X, Receipt, Building } from 'lucide-react';
+import { 
+  Package, Users, TrendingUp, ShoppingCart, FileText, 
+  BarChart3, Settings, Receipt, Building, LogOut 
+} from 'lucide-react';
 
 export default function GestionApp() {
   const router = useRouter();
@@ -80,7 +83,6 @@ export default function GestionApp() {
     return calculerStats(articles, articlesAvecPrix, mouvements, clients);
   }, [articles, articlesAvecPrix, mouvements, clients]);
 
-  // Wrappers pour adapter les signatures de l'API
   const handleSaveArticle = async (article: any, action: 'create' | 'update') => {
     await sauvegarderArticle(article, action === 'update');
   };
@@ -269,16 +271,16 @@ export default function GestionApp() {
         </div>
       </div>
     );
-  } 
-  
+  }
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-64 bg-blue-900 text-white p-4 hidden md:block overflow-y-auto">
+      {/* Sidebar desktop */}
+      <div className="w-64 bg-blue-900 text-white p-4 hidden md:block overflow-y-auto relative min-h-full">
         <h1 className="text-2xl font-bold mb-6">Inventix</h1>
 
-        {/* Affichage de la société active */}
-        {currentOrganization?.organization?.name && (
+        {/* Affichage du vrai nom de la société */}
+        {parametres.societeNom && (
           <div className="mb-6 p-3 bg-blue-800 rounded-lg text-sm">
             <div className="font-semibold flex items-center gap-2">
               <Building size={16} />
@@ -293,7 +295,7 @@ export default function GestionApp() {
           </div>
         )}
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 pb-20">
           <NavItem icon={<BarChart3 size={20} />} label="Dashboard" active={currentPage === 'dashboard'} onClick={() => setCurrentPage('dashboard')} />
           <div className="pt-4 pb-2 px-3 text-xs font-semibold text-blue-300">CATALOGUE</div>
           <NavItem icon={<Package size={20} />} label="Articles" active={currentPage === 'articles'} onClick={() => setCurrentPage('articles')} />
@@ -311,6 +313,20 @@ export default function GestionApp() {
           <NavItem icon={<Settings size={20} />} label="Ma Société" active={currentPage === 'parametres'} onClick={() => setCurrentPage('parametres')} />
           <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'gestion-acces'} onClick={() => setCurrentPage('gestion-acces')} />
         </nav>
+
+        {/* Bouton déconnexion fixé en bas */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <button
+            onClick={async () => {
+              await signOut();
+              router.push('/');
+            }}
+            className="w-full py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition flex items-center justify-center gap-2"
+          >
+            <LogOut size={16} />
+            Déconnexion
+          </button>
+        </div>
       </div>
 
       {/* Navigation mobile */}
@@ -363,6 +379,17 @@ export default function GestionApp() {
           title="Changer de société"
         >
           <Building size={24} />
+        </button>
+        {/* Bouton déconnexion mobile */}
+        <button 
+          onClick={async () => {
+            await signOut();
+            router.push('/');
+          }}
+          className="p-2 rounded-lg transition-colors flex-shrink-0"
+          title="Déconnexion"
+        >
+          <LogOut size={24} />
         </button>
       </div>
 

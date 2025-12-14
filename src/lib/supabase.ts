@@ -44,3 +44,16 @@ export async function getCurrentUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
+// Déconnexion complète
+export async function signOut() {
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error('Erreur déconnexion:', error);
+  } else {
+    // Nettoyer le localStorage
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('current_organization_id');
+    localStorage.removeItem('user_organizations');
+  }
+  return !error;
+}

@@ -36,17 +36,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [factures, setFactures] = useState<FactureResume[]>([]);
   const [achats, setAchats] = useState<any[]>([]);
   const [categories, setCategories] = useState<Categorie[]>([]);
-  const [parametres, setParametres] = useState<Parametres>({
-    societe_nom: '',
-    societe_adresse: '',
-    societe_code_postal: '',
-    societe_ville: '',
-    societe_pays: 'Belgique',
-    societe_telephone: '',
-    societe_email: '',
-    societe_tva: '',
-    societe_iban: ''
-  });
+const [parametres, setParametres] = useState<Parametres>({
+  societeNom: '',
+  societeAdresse: '',
+  societeCodePostal: '',
+  societeVille: '',
+  societePays: 'Belgique',
+  societeTelephone: '',
+  societeEmail: '',
+  societeTva: '',
+  societeIban: ''
+});
 
   const rechargerDonnees = async (forceRefresh: boolean = false) => {
     setLoading(true);

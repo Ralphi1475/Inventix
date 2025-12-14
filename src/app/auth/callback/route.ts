@@ -12,5 +12,5 @@ export async function GET(request: NextRequest) {
   }
 
   const baseUrl = 'https://inventix-khaki.vercel.app';
-  return NextResponse.redirect(`${baseUrl}/gestion`);
+  return NextResponse.redirect(`${baseUrl}/select-organization`);
 }

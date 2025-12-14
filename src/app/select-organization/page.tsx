@@ -1,16 +1,13 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { useOrganization } from '@/context/OrganizationContext';
 import OrganizationSelector from '@/components/organizations/OrganizationSelector';
 
 export default function SelectOrganizationPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { currentOrganization } = useOrganization();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -21,15 +18,8 @@ export default function SelectOrganizationPage() {
     loadUser();
   }, []);
 
-  // Rediriger vers gestion si une organisation est déjà sélectionnée
-  useEffect(() => {
-    if (currentOrganization) {
-      router.push('/gestion');
-    }
-  }, [currentOrganization, router]);
-
   const handleOrganizationSelected = () => {
-    router.push('/gestion');
+    window.location.href = '/gestion';
   };
 
   if (loading) {

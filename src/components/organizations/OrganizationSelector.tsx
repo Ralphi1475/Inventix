@@ -14,7 +14,7 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { setCurrentOrganization } = useOrganization();
+  const { setCurrentOrganization, setUserOrganizations } = useOrganization();
   
   const [showDemande, setShowDemande] = useState(false);
   const [nomSociete, setNomSociete] = useState('');
@@ -54,6 +54,7 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
       );
 
       setOrganizations(orgsWithParams);
+      setUserOrganizations(orgsWithParams); // ✅ LIGNE À AJOUTER
     } else {
       setError(result.error || 'Erreur de chargement');
     }

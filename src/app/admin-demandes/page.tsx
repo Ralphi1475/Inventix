@@ -23,7 +23,7 @@ const checkAccess = async () => {
     return;
   }
 
-  loadOrganizations();
+  loadDemandes();
 };
 
   const loadDemandes = async () => {

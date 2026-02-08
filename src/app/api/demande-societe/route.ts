@@ -4,6 +4,20 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: Request) {
   try {
     const supabase = createClient();
+    
+    // 🔐 Vérifier que l'utilisateur est authentifié
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('❌ Utilisateur non authentifié - authError:', authError);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Utilisateur non authentifié' 
+      }, { status: 401 });
+    }
+
+    console.log('✅ Utilisateur authentifié:', user.email);
+
     const body = await request.json();
     const { userEmail, nomSociete, description, telephone } = body;
 
@@ -22,11 +36,13 @@ export async function POST(request: Request) {
       console.error('❌ Erreur Supabase:', error);
       return NextResponse.json({ 
         success: false, 
-        error: error.message 
+        error: error.message,
+        details: error.details,
+        hint: error.hint
       }, { status: 500 });
     }
 
-    console.log('✅ Nouvelle demande de société:', { userEmail, nomSociete });
+    console.log('✅ Nouvelle demande de société créée:', { userEmail, nomSociete });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -17,7 +17,7 @@ export default function AdminDemandes() {
   const checkAccessAndLoad = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
-		if (!user) {
+		if (!user || !user.email)  {
 		alert('Vous devez être connecté');
 		router.push('/login');
 		return;

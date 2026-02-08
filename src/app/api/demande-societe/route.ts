@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       console.error('❌ Utilisateur non authentifié - authError:', authError);
       return NextResponse.json({ 
         success: false, 
-        error: 'Utilisateur non authentifié' 
+        error: 'Utilisateur non authentifié. Veuillez vous reconnecter.' 
       }, { status: 401 });
     }
 

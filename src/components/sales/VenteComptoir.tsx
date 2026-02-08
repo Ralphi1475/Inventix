@@ -180,10 +180,14 @@ export function VenteComptoir({
   return (
     <div>
       <h2 className="text-3xl font-bold mb-6">Vente Comptoir</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      
+      {/* ✅ CHANGÉ : grid-cols-2 au lieu de grid-cols-3 pour 50/50 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* ========== SECTION ARTICLES (50%) ========== */}
+        <div className="space-y-4">
           <div className="bg-white rounded-lg shadow p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Date de vente</label>
                 <input 
@@ -194,43 +198,42 @@ export function VenteComptoir({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Emplacement *</label>
+                <label className="block text-sm font-medium mb-2">Emplacement de vente</label>
                 <input 
                   type="text" 
                   value={emplacement}
                   onChange={(e) => setEmplacement(e.target.value)}
-                  placeholder="ex: Marché, Salon, Boutique..."
+                  placeholder="Marché, Boutique..."
                   className="w-full px-3 py-2 border rounded-lg"
                 />
               </div>
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Commentaire (facultatif)</label>
-            <textarea
-              value={commentaire}
-              onChange={(e) => setCommentaire(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
-              rows={2}
-            />
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Commentaire</label>
+              <textarea
+                value={commentaire}
+                onChange={(e) => setCommentaire(e.target.value)}
+                placeholder="Commentaire optionnel..."
+                className="w-full px-3 py-2 border rounded-lg"
+                rows={2}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2 mb-4">
+              <Search className="text-gray-400" size={20} />
               <input 
                 type="text" 
                 placeholder="Rechercher un article..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg" 
+                className="flex-1 px-3 py-2 border rounded-lg"
               />
             </div>
 
-            {/* 🔽 NOUVEAU : Sélecteur de catégorie */}
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Catégorie</label>
-              <select
+              <label className="block text-sm font-medium mb-2">Filtrer par catégorie</label>
+              <select 
                 value={selectedCategorie}
                 onChange={(e) => setSelectedCategorie(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg"
@@ -244,44 +247,47 @@ export function VenteComptoir({
               </select>
             </div>
 
-            {/* 🔽 GRILLE HARMONISÉE avec VenteClient.tsx */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-              {articlesFiltr.map((article: Article) => (
-                <div 
-                  key={article.numero} 
-                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex gap-3" 
-                  onClick={() => ajouterAuPanier(article)}
-                >
-                  {article.image && (
-                    <div className="flex-shrink-0">
+            {/* ✅ CHANGÉ : Articles sur UNE SEULE ligne avec scroll horizontal */}
+            <div className="overflow-x-auto">
+              <div className="flex gap-3 pb-2" style={{ minWidth: 'max-content' }}>
+                {articlesFiltr.map((article: Article) => (
+                  <div 
+                    key={article.numero} 
+                    className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex flex-col items-center w-32 flex-shrink-0" 
+                    onClick={() => ajouterAuPanier(article)}
+                  >
+                    {article.image && (
                       <img 
                         src={article.image} 
                         alt={article.nom}
-                        className="w-16 h-16 object-cover rounded border"
+                        className="w-20 h-20 object-cover rounded border mb-2"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{article.nom}</p>
-                    <p className="text-sm text-gray-600">{article.numero}</p>
-                    <p className="text-blue-600 font-bold">{article.prixVenteTTC?.toFixed(2)} €</p>
+                    )}
+                    <p className="font-medium text-sm text-center line-clamp-2 mb-1">{article.nom}</p>
+                    <p className="text-xs text-gray-600 text-center">{article.numero}</p>
+                    <p className="text-blue-600 font-bold text-sm">{article.prixVenteTTC?.toFixed(2)} €</p>
                     <p className="text-xs text-gray-500">Stock: {article.stock}</p>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+
+        {/* ========== SECTION PANIER (50%) ========== */}
+        {/* ✅ CHANGÉ : flex flex-col h-[calc(100vh-12rem)] pour occuper toute la hauteur */}
+        <div className="bg-white rounded-lg shadow p-4 flex flex-col h-[calc(100vh-12rem)]">
           <h3 className="text-xl font-bold mb-4">Panier</h3>
+          
           {panier.length === 0 ? (
             <p className="text-gray-500 text-center py-8">Panier vide</p>
           ) : (
             <>
-              <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
+              {/* ✅ Liste des articles - prend tout l'espace disponible */}
+              <div className="flex-1 overflow-y-auto space-y-2 mb-4">
                 {panier.map((ligne) => (
                   <div key={ligne.article.numero} className="border-b pb-2">
                     <div className="flex items-center justify-between mb-1">
@@ -368,6 +374,8 @@ export function VenteComptoir({
                   </div>
                 ))}
               </div>
+
+              {/* ✅ FOOTER STICKY - Totaux + Bouton en bas */}
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Total HT</span>
@@ -387,7 +395,7 @@ export function VenteComptoir({
                   <span>Total à payer</span>
                   <span>{totalTTC.toFixed(2)} €</span>
                 </div>
-                <div className="pt-4">
+                <div className="pt-2">
                   <label className="block text-sm font-medium mb-2">Mode de paiement</label>
                   <select value={modePaiement} onChange={(e) => setModePaiement(e.target.value)} className="w-full px-3 py-2 border rounded-lg">
                     <option value="especes">Espèces</option>

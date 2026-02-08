@@ -43,20 +43,33 @@ export function VenteComptoir({
     const cats = articles
       .map(a => a.categorie)
       .filter((cat): cat is string => !!cat);
-    return Array.from(new Set(cats)).sort();
+    const uniqueCats = Array.from(new Set(cats)).sort();
+    console.log('📊 Categories extraites des articles:', uniqueCats);
+    console.log('📦 Nombre total d\'articles:', articles.length);
+    return uniqueCats;
   }, [articles]);
 
   // Filtrer articles : par recherche ET catégorie
   const articlesFiltr = useMemo(() => {
     if (!Array.isArray(articles)) return [];
-    return articles.filter(a => {
+    
+    const filtered = articles.filter(a => {
       const nom = String(a.nom ?? '').toLowerCase().trim();
       const numero = String(a.numero ?? '').toLowerCase().trim();
       const search = String(searchTerm).toLowerCase().trim();
       const matchesSearch = nom.includes(search) || numero.includes(search);
       const matchesCategorie = selectedCategorie ? a.categorie === selectedCategorie : true;
+      
       return matchesSearch && matchesCategorie;
     });
+    
+    console.log('🔍 Filtre actif:');
+    console.log('  - Recherche:', searchTerm);
+    console.log('  - Catégorie sélectionnée:', selectedCategorie);
+    console.log('  - Articles avant filtre:', articles.length);
+    console.log('  - Articles après filtre:', filtered.length);
+    
+    return filtered;
   }, [articles, searchTerm, selectedCategorie]);
 
   const ajouterAuPanier = (article: Article) => {

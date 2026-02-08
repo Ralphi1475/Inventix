@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { deleteOrganization } from '@/lib/api-organizations';
-import { SUPER_ROOT_EMAIL } from '@/lib/constants';
+import { SUPER_ROOT_EMAILS } from '@/lib/constants';
 import { Building2, Trash2, Users, Calendar, Briefcase } from 'lucide-react';
 
 export default function GererSocietesPage() {

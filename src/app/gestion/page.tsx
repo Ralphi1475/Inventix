@@ -1,5 +1,5 @@
 'use client';
-import { SUPER_ROOT_EMAIL } from '@/lib/constants';
+import { SUPER_ROOT_EMAILS } from '@/lib/constants';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, signOut } from '@/lib/supabase';
@@ -333,8 +333,8 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
           <NavItem icon={<FileText size={20} />} label="Factures" active={currentPage === 'factures'} onClick={() => setCurrentPage('factures')} />
           <div className="pt-4 pb-2 px-3 text-xs font-semibold text-blue-300">STOCK</div>
           <NavItem icon={<TrendingUp size={20} />} label="Entrées Stock" active={currentPage === 'entrees'} onClick={() => setCurrentPage('entrees')} />
-          <div className="pt-4 pb-2 px-3 text-xs font-semibold text-blue-300">PARAMÈTRES</div>
           <NavItem icon={<ShoppingCart size={20} />} label="Achats / Frais" active={currentPage === 'achats'} onClick={() => setCurrentPage('achats')} />
+		  <div className="pt-4 pb-2 px-3 text-xs font-semibold text-blue-300">PARAMÈTRES</div>
           <NavItem icon={<Package size={20} />} label="Catégories" active={currentPage === 'categories'} onClick={() => setCurrentPage('categories')} />
           <NavItem icon={<Settings size={20} />} label="Ma Société" active={currentPage === 'parametres'} onClick={() => setCurrentPage('parametres')} />
           <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'gestion-acces'} onClick={() => setCurrentPage('gestion-acces')} />

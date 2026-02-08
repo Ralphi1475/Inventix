@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'; // ✅ useEffect doit être import�
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { createOrganization } from '@/lib/api';
-import { SUPER_ROOT_EMAIL } from '@/lib/constants'; // ✅ Import de la constante
+import { SUPER_ROOT_EMAILS } from '@/lib/constants'; // ✅ Import de la constante
 
 export default function CreerSocietePage() {
   const [nom, setNom] = useState('');

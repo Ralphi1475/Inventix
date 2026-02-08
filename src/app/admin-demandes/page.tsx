@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { SUPER_ROOT_EMAIL } from '@/lib/constants';
+import { SUPER_ROOT_EMAILS } from '@/lib/constants';
 import { Mail, Calendar, Phone, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 export default function AdminDemandes() {

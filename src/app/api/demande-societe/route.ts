@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const supabase = createClient();
     
     // 🔐 Vérifier que l'utilisateur est authentifié
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {  { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       console.error('❌ Utilisateur non authentifié - authError:', authError);
@@ -28,8 +28,8 @@ export async function POST(request: Request) {
         user_email: userEmail,
         nom_societe: nomSociete,
         description: description || '',
-        telephone: telephone || '',
-        statut: 'en_attente'
+        telephone: telephone || ''
+        // statut et created_at sont gérés par les valeurs par défaut de la table
       }]);
 
     if (error) {
@@ -37,8 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ 
         success: false, 
         error: error.message,
-        details: error.details,
-        hint: error.hint
+        details: error.details
       }, { status: 500 });
     }
 

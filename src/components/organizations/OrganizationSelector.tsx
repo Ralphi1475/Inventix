@@ -79,6 +79,7 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
       const response = await fetch('/api/demande-societe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+		credentials: 'include',
         body: JSON.stringify({
           userEmail,
           nomSociete,

@@ -249,8 +249,13 @@ export function VenteClient({
               </select>
             </div>
 
+            {/* ✅ Affichage du nombre d'articles */}
+            <div className="mb-2 text-sm text-gray-600">
+              {articlesFiltr.length} article{articlesFiltr.length > 1 ? 's' : ''} trouvé{articlesFiltr.length > 1 ? 's' : ''}
+            </div>
+
             {/* ✅ Articles en UNE COLONNE avec scroll vertical */}
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div key={`articles-${selectedCategorie}-${searchTerm}`} className="space-y-3 max-h-96 overflow-y-auto">
               {articlesFiltr.map((article: Article) => (
                 <div 
                   key={article.numero} 

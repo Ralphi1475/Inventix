@@ -154,10 +154,10 @@ export function Factures({
       </style></head><body>
         <div class="header">
           <div>
-            <h2>${parametres.societe_nom || 'Votre Société'}</h2>
-            <p>${parametres.societe_adresse || ''}</p>
-            <p>${parametres.societe_code_postal || ''} ${parametres.societe_ville || ''}</p>
-            <p>TVA: ${parametres.societe_tva || ''}</p>
+            <h2>${parametres.societeNom || 'Votre Société'}</h2>
+			<p>${parametres.societeAdresse || ''}</p>
+			<p>${parametres.societeCodePostal || ''} ${parametres.societeVille || ''}</p>
+			<p>TVA: ${parametres.societeTva || ''}</p>
           </div>
           <div style="text-align: right;">
             <h1>FACTURE</h1>
@@ -230,8 +230,8 @@ export function Factures({
           ${facture.emplacement ? `<p><strong>Lieu de vente:</strong> ${facture.emplacement}</p>` : ''}
         </div>
         <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #999;">
-          <p>${parametres.societe_nom || ''} - ${parametres.societe_email || ''} - ${parametres.societe_telephone || ''}</p>
-          <p>IBAN: ${parametres.societe_iban || ''}</p>
+			<p>${parametres.societeNom || ''} - ${parametres.societeEmail || ''} - ${parametres.societeTelephone || ''}</p>
+			<p>IBAN: ${parametres.societeIban || ''}</p>
         </div>
       </body></html>
     `;

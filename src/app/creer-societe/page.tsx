@@ -37,12 +37,21 @@ useEffect(() => {
     setLoading(true);
     setError(null);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.email || user.email !== SUPER_ROOT_EMAIL) {
-      setError('Accès refusé');
-      setLoading(false);
-      return;
-    }
+	const {  { user } } = await supabase.auth.getUser();
+
+	// Vérifiez que l'utilisateur est connecté
+	if (!user || !user.email) {
+	setError('Vous devez être connecté');
+	setLoading(false);
+	return;
+	}
+
+	// Vérifiez que l'utilisateur est un Super Root
+	if (!SUPER_ROOT_EMAILS.includes(user.email)) {
+	setError('Accès refusé - Réservé au Super Root');
+	setLoading(false);
+	return;
+	}
 
     const result = await createOrganization(user.email, {
       name: nom.trim(),

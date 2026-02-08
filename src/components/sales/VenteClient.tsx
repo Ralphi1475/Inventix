@@ -28,19 +28,31 @@ export function VenteClient({
   const [clientSelectionne, setClientSelectionne] = useState<Contact | null>(null);
   const [modePaiement, setModePaiement] = useState('especes');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategorie, setSelectedCategorie] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [dateVente, setDateVente] = useState(new Date().toISOString().split('T')[0]);
   const [commentaire, setCommentaire] = useState('');
 
+  // Extraire les catégories uniques
+  const categories = useMemo(() => {
+    const cats = articles
+      .map(a => a.categorie)
+      .filter((cat): cat is string => !!cat);
+    return Array.from(new Set(cats)).sort();
+  }, [articles]);
+
+  // Filtrer articles : par recherche ET catégorie
   const articlesFiltr = useMemo(() => {
     if (!Array.isArray(articles)) return [];
     return articles.filter(a => {
       const nom = String(a.nom ?? '').toLowerCase().trim();
       const numero = String(a.numero ?? '').toLowerCase().trim();
       const search = String(searchTerm).toLowerCase().trim();
-      return nom.includes(search) || numero.includes(search);
+      const matchesSearch = nom.includes(search) || numero.includes(search);
+      const matchesCategorie = selectedCategorie ? a.categorie === selectedCategorie : true;
+      return matchesSearch && matchesCategorie;
     });
-  }, [articles, searchTerm]);
+  }, [articles, searchTerm, selectedCategorie]);
 
   const ajouterAuPanier = (article: Article) => {
     setPanier(prevPanier => {
@@ -221,32 +233,50 @@ export function VenteClient({
               />
             </div>
 
-            {/* ✅ CHANGÉ : Articles sur UNE SEULE ligne avec scroll horizontal */}
-            <div className="overflow-x-auto">
-              <div className="flex gap-3 pb-2" style={{ minWidth: 'max-content' }}>
-                {articlesFiltr.map((article: Article) => (
-                  <div 
-                    key={article.numero} 
-                    className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex flex-col items-center w-32 flex-shrink-0" 
-                    onClick={() => ajouterAuPanier(article)}
-                  >
-                    {article.image && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Filtrer par catégorie</label>
+              <select 
+                value={selectedCategorie}
+                onChange={(e) => setSelectedCategorie(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value="">Toutes les catégories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* ✅ Articles en UNE COLONNE avec scroll vertical */}
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {articlesFiltr.map((article: Article) => (
+                <div 
+                  key={article.numero} 
+                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex gap-3" 
+                  onClick={() => ajouterAuPanier(article)}
+                >
+                  {article.image && (
+                    <div className="flex-shrink-0">
                       <img 
                         src={article.image} 
                         alt={article.nom}
-                        className="w-20 h-20 object-cover rounded border mb-2"
+                        className="w-16 h-16 object-cover rounded border"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
-                    )}
-                    <p className="font-medium text-sm text-center line-clamp-2 mb-1">{article.nom}</p>
-                    <p className="text-xs text-gray-600 text-center">{article.numero}</p>
-                    <p className="text-blue-600 font-bold text-sm">{article.prixVenteTTC?.toFixed(2)} €</p>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{article.nom}</p>
+                    <p className="text-sm text-gray-600">{article.numero}</p>
+                    <p className="text-blue-600 font-bold">{article.prixVenteTTC?.toFixed(2)} €</p>
                     <p className="text-xs text-gray-500">Stock: {article.stock}</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

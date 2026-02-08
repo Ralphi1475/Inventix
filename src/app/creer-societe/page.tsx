@@ -18,10 +18,16 @@ export default function CreerSocietePage() {
 useEffect(() => {
   const checkAccess = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (SUPER_ROOT_EMAILS.includes(userEmail)) {
-      alert('Accès réservé au Super Root');
-      router.push('/gestion');
-    }
+	
+	if (!user || !user.email) {
+	alert('Vous devez être connecté');
+	router.push('/login');
+	return;
+	}
+	if (!SUPER_ROOT_EMAILS.includes(user.email)) {
+	alert('Accès réservé au Super Root');
+	router.push('/gestion');
+	}
   };
   checkAccess();
 }, [router]); // ✅ router dans les dépendances pour éviter les warnings

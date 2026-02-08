@@ -17,11 +17,16 @@ export default function AdminDemandes() {
   const checkAccessAndLoad = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
-    if (SUPER_ROOT_EMAILS.includes(userEmail)) {
-      alert('Accès réservé au Super Root');
-      router.push('/gestion');
-      return;
-    }
+		if (!user) {
+		alert('Vous devez être connecté');
+		router.push('/login');
+		return;
+		}
+		if (!SUPER_ROOT_EMAILS.includes(user.email)) {
+		alert('Accès réservé au Super Root');
+		router.push('/gestion');
+		return;
+		}
 
     loadDemandes();
   };

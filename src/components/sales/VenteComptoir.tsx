@@ -74,10 +74,10 @@ export function VenteComptoir({
 
   const ajouterAuPanier = (article: Article) => {
     setPanier(prevPanier => {
-      const existant = prevPanier.find(p => p.article.numero === article.numero);
+      const existant = prevPanier.find(p => p.article.id === article.id);
       if (existant) {
         return prevPanier.map(p => 
-          p.article.numero === article.numero ? { ...p, quantite: p.quantite + 1 } : p
+          p.article.id === article.id ? { ...p, quantite: p.quantite + 1 } : p
         );
       } else {
         return [...prevPanier, { article, quantite: 1 }];
@@ -85,10 +85,10 @@ export function VenteComptoir({
     });
   };
 
-  const modifierQuantite = (articleNumero: string, delta: number) => {
+  const modifierQuantite = (articleId: string, delta: number) => {
     setPanier(prevPanier => 
       prevPanier.map(p => {
-        if (p.article.numero === articleNumero) {
+        if (p.article.id === articleId) {
           const newQte = Math.round((p.quantite + delta) * 100) / 100;
           return newQte > 0 ? { ...p, quantite: newQte } : p;
         }
@@ -97,14 +97,14 @@ export function VenteComptoir({
     );
   };
 
-  const retirerDuPanier = (articleNumero: string) => {
-    setPanier(prevPanier => prevPanier.filter(p => p.article.numero !== articleNumero));
+  const retirerDuPanier = (articleId: string) => {
+    setPanier(prevPanier => prevPanier.filter(p => p.article.id !== articleId));
   };
 
-  const modifierPrix = (articleNumero: string, nouveauPrix: number) => {
+  const modifierPrix = (articleId: string, nouveauPrix: number) => {
     setPanier(prevPanier => 
       prevPanier.map(p => 
-        p.article.numero === articleNumero 
+        p.article.id === articleId 
           ? { ...p, prixUnitairePersonnalise: nouveauPrix } 
           : p
       )
@@ -269,7 +269,7 @@ export function VenteComptoir({
             <div key={`articles-${selectedCategorie}-${searchTerm}`} className="space-y-3 max-h-96 overflow-y-auto">
               {articlesFiltr.map((article: Article) => (
                 <div 
-                  key={article.numero} 
+                  key={article.id} 
                   className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex gap-3" 
                   onClick={() => ajouterAuPanier(article)}
                 >
@@ -309,7 +309,7 @@ export function VenteComptoir({
               {/* ✅ Liste des articles - prend tout l'espace disponible */}
               <div className="flex-1 overflow-y-auto space-y-2 mb-4">
                 {panier.map((ligne) => (
-                  <div key={ligne.article.numero} className="border-b pb-2">
+                  <div key={ligne.article.id} className="border-b pb-2">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2 flex-1">
                         {ligne.article.image && (
@@ -325,7 +325,7 @@ export function VenteComptoir({
                         <p className="font-medium text-sm">{ligne.article.nom}</p>
                       </div>
                       <button 
-                        onClick={() => retirerDuPanier(ligne.article.numero)} 
+                        onClick={() => retirerDuPanier(ligne.article.id)} 
                         className="p-1 hover:bg-red-100 text-red-600 rounded"
                       >
                         <X size={16} />
@@ -343,7 +343,7 @@ export function VenteComptoir({
                           onChange={(e) => {
                             const newPrix = parseFloat(e.target.value) || 0;
                             if (newPrix >= 0) {
-                              modifierPrix(ligne.article.numero, newPrix);
+                              modifierPrix(ligne.article.id, newPrix);
                             }
                           }}
                           className="w-full text-sm font-bold border rounded px-2 py-1"
@@ -354,7 +354,7 @@ export function VenteComptoir({
                         <label className="text-xs text-gray-600">Quantité</label>
                         <div className="flex items-center space-x-1">
                           <button 
-                            onClick={() => modifierQuantite(ligne.article.numero, -1)} 
+                            onClick={() => modifierQuantite(ligne.article.id, -1)} 
                             className="p-1 hover:bg-gray-100 rounded"
                           >
                             <Minus size={14} />
@@ -369,7 +369,7 @@ export function VenteComptoir({
                               if (newQte > 0) {
                                 setPanier(prevPanier => 
                                   prevPanier.map(p => 
-                                    p.article.numero === ligne.article.numero 
+                                    p.article.id === ligne.article.id 
                                       ? { ...p, quantite: newQte } 
                                       : p
                                   )
@@ -379,7 +379,7 @@ export function VenteComptoir({
                             className="w-14 text-center text-sm font-bold border rounded px-1 py-1"
                           />
                           <button 
-                            onClick={() => modifierQuantite(ligne.article.numero, 1)} 
+                            onClick={() => modifierQuantite(ligne.article.id, 1)} 
                             className="p-1 hover:bg-gray-100 rounded"
                           >
                             <Plus size={14} />

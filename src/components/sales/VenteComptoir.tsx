@@ -49,7 +49,7 @@ export function VenteComptoir({
     return uniqueCats;
   }, [articles]);
 
-  // Filtrer articles : par recherche ET catégorie hi hi
+  // Filtrer articles : par recherche ET catégorie
   const articlesFiltr = useMemo(() => {
     if (!Array.isArray(articles)) return [];
     
@@ -68,6 +68,8 @@ export function VenteComptoir({
     console.log('  - Catégorie sélectionnée:', selectedCategorie);
     console.log('  - Articles avant filtre:', articles.length);
     console.log('  - Articles après filtre:', filtered.length);
+    console.log('  - IDs des articles filtrés:', filtered.map(a => a.id));
+    console.log('  - Noms des articles filtrés:', filtered.map(a => a.nom));
     
     return filtered;
   }, [articles, searchTerm, selectedCategorie]);
@@ -266,33 +268,37 @@ export function VenteComptoir({
             </div>
 
             {/* ✅ Articles en UNE COLONNE avec scroll vertical */}
-            <div key={`articles-${selectedCategorie}-${searchTerm}`} className="space-y-3 max-h-96 overflow-y-auto">
-              {articlesFiltr.map((article: Article) => (
-                <div 
-                  key={article.id} 
-                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex gap-3" 
-                  onClick={() => ajouterAuPanier(article)}
-                >
-                  {article.image && (
-                    <div className="flex-shrink-0">
-                      <img 
-                        src={article.image} 
-                        alt={article.nom}
-                        className="w-16 h-16 object-cover rounded border"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {articlesFiltr.map((article: Article) => {
+                console.log('🎨 Rendu article:', article.id, article.nom);
+                return (
+                  <div 
+                    key={article.id} 
+                    className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition flex gap-3" 
+                    onClick={() => ajouterAuPanier(article)}
+                  >
+                    {article.image && (
+                      <div className="flex-shrink-0">
+                        <img 
+                          src={article.image} 
+                          alt={article.nom}
+                          className="w-16 h-16 object-cover rounded border"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{article.nom}</p>
+                      <p className="text-sm text-gray-600">{article.numero}</p>
+                      <p className="text-xs text-red-600">ID: {article.id}</p>
+                      <p className="text-blue-600 font-bold">{article.prixVenteTTC?.toFixed(2)} €</p>
+                      <p className="text-xs text-gray-500">Stock: {article.stock}</p>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{article.nom}</p>
-                    <p className="text-sm text-gray-600">{article.numero}</p>
-                    <p className="text-blue-600 font-bold">{article.prixVenteTTC?.toFixed(2)} €</p>
-                    <p className="text-xs text-gray-500">Stock: {article.stock}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

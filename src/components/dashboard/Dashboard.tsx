@@ -118,7 +118,7 @@ export function Dashboard({ stats, mouvements, articles, clients, fournisseurs, 
     let coutAchatVentes = 0;
 
     ventesFiltered.forEach(vente => {
-      const article = articles.find(a => a.id === vente.article_id);
+      const article = articles.find(a => a.id === vente.articleId);
       if (article) {
         const prixVenteTTC = article.prixVenteTTC || 0;
         const prixAchat = article.prixAchat || 0;
@@ -340,8 +340,8 @@ export function Dashboard({ stats, mouvements, articles, clients, fournisseurs, 
                 const dateAffichage = formatDisplayDate(mouv.dateCorrected);
                 
                 if (mouv.mouvementType === 'vente') {
-                  const article = articles.find(a => a.id === mouv.article_id);
-                  const contact = clients.find(c => c.id === mouv.client_id);
+				  const article = articles.find(a => a.id === mouv.articleId);
+				  const contact = clients.find(c => c.id === mouv.clientId);
                   const quantite = parseFloat(mouv.quantite?.toString() || '0') || 0;
                   const montant = article ? (article.prixVenteTTC || 0) * quantite : 0;
                   

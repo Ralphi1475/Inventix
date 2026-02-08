@@ -70,39 +70,39 @@ export default function OrganizationSelector({ userEmail, onSelect }: Organizati
     onSelect();
   };
 
-  const handleDemandeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSending(true);
-    setMessage('');
+const handleDemandeSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setSending(true);
+  setMessage('');
 
-    try {
-      const response = await fetch('/api/demande-societe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-		credentials: 'include',
-        body: JSON.stringify({
-          userEmail,
-          nomSociete,
-          description,
-          telephone
-        })
-      });
+  try {
+    // Insérer directement dans Supabase avec le client côté client
+    const { error } = await supabase
+      .from('demandes_societes')
+      .insert([{
+        user_email: userEmail,
+        nom_societe: nomSociete,
+        description: description || '',
+        telephone: telephone || ''
+      }]);
 
-      if (response.ok) {
-        setMessage('✅ Demande envoyée ! Vous serez contacté prochainement.');
-        setNomSociete('');
-        setDescription('');
-        setTelephone('');
-        setTimeout(() => setShowDemande(false), 3000);
-      } else {
-        setMessage('❌ Erreur lors de l\'envoi');
-      }
-    } catch (error) {
-      setMessage('❌ Erreur réseau');
-    } finally {
-      setSending(false);
+    if (error) {
+      console.error('❌ Erreur Supabase:', error);
+      setMessage(`❌ Erreur: ${error.message}`);
+    } else {
+      setMessage('✅ Demande envoyée ! Vous serez contacté prochainement.');
+      setNomSociete('');
+      setDescription('');
+      setTelephone('');
+      setTimeout(() => setShowDemande(false), 3000);
     }
-  };
+  } catch (error: any) {
+    console.error('💥 Erreur:', error);
+    setMessage('❌ Erreur réseau');
+  } finally {
+    setSending(false);
+  }
+};
 
   if (loading) {
     return (

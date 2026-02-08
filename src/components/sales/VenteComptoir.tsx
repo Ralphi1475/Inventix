@@ -49,7 +49,7 @@ export function VenteComptoir({
     return uniqueCats;
   }, [articles]);
 
-  // Filtrer articles : par recherche ET catégorie
+  // Filtrer articles : par recherche ET catégorie hi hi
   const articlesFiltr = useMemo(() => {
     if (!Array.isArray(articles)) return [];
     

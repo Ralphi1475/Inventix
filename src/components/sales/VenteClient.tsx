@@ -41,7 +41,7 @@ export function VenteClient({
     return Array.from(new Set(cats)).sort();
   }, [articles]);
 
-  // Filtrer articles : par recherche ET catégorie
+  // Filtrer articles : par recherche ET catégorie hihi
   const articlesFiltr = useMemo(() => {
     if (!Array.isArray(articles)) return [];
     return articles.filter(a => {

@@ -36,10 +36,10 @@ export interface Mouvement {
   id: string;
   date: string;
   type: 'entree' | 'vente' | 'venteComptoir';
-  articleId: string;
+  article_id?: string;     // ✅ Nouveau (snake_case)
   quantite: number;
-  clientId?: string;
-  fournisseurId?: string;
+  client_id?: string;      // ✅ Nouveau (snake_case)
+  fournisseur_id?: string; // ✅ Nouveau (snake_case)
   reference: string;
   modePaiement?: string;
   nomArticle?: string;

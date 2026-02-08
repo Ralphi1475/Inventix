@@ -47,11 +47,11 @@ useEffect(() => {
 	}
 
 	// Vérifiez que l'utilisateur est un Super Root
-	if (!SUPER_ROOT_EMAILS.includes(user.email)) {
-	setError('Accès refusé - Réservé au Super Root');
-	setLoading(false);
-	return;
-	}
+if (!SUPER_ROOT_EMAILS.includes(user.email)) {
+  // Si l'email N'EST PAS dans la liste → BLOQUER ✅
+  alert('Accès réservé');
+  router.push('/gestion');
+}
 
     const result = await createOrganization(user.email, {
       name: nom.trim(),

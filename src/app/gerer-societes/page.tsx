@@ -16,17 +16,17 @@ export default function GererSocietesPage() {
     checkAccess();
   }, []);
 
-  const checkAccess = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (SUPER_ROOT_EMAILS.includes(userEmail)) {
-      alert('Accès réservé au Super Root');
-      router.push('/gestion');
-      return;
-    }
+const checkAccess = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user?.email || !SUPER_ROOT_EMAILS.includes(user.email)) {
+    alert('Accès réservé au Super Root');
+    router.push('/gestion');
+    return;
+  }
 
-    loadOrganizations();
-  };
+  loadOrganizations();
+};
 
   const loadOrganizations = async () => {
     setLoading(true);

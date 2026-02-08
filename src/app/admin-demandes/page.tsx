@@ -14,22 +14,17 @@ export default function AdminDemandes() {
     checkAccessAndLoad();
   }, []);
 
-  const checkAccessAndLoad = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-		if (!user || !user.email)  {
-		alert('Vous devez être connecté');
-		router.push('/login');
-		return;
-		}
-		if (!SUPER_ROOT_EMAILS.includes(user.email)) {
-		alert('Accès réservé au Super Root');
-		router.push('/gestion');
-		return;
-		}
+const checkAccess = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user?.email || !SUPER_ROOT_EMAILS.includes(user.email)) {
+    alert('Accès réservé au Super Root');
+    router.push('/gestion');
+    return;
+  }
 
-    loadDemandes();
-  };
+  loadOrganizations();
+};
 
   const loadDemandes = async () => {
     setLoading(true);

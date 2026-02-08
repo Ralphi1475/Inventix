@@ -18,7 +18,7 @@ export default function CreerSocietePage() {
 useEffect(() => {
   const checkAccess = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.email !== SUPER_ROOT_EMAIL) {
+    if (SUPER_ROOT_EMAILS.includes(userEmail)) {
       alert('Accès réservé au Super Root');
       router.push('/gestion');
     }

@@ -37,7 +37,7 @@ useEffect(() => {
     setLoading(true);
     setError(null);
 
-	const {  { user } } = await supabase.auth.getUser();
+	const { data: { user } } = await supabase.auth.getUser();
 
 	// Vérifiez que l'utilisateur est connecté
 	if (!user || !user.email) {

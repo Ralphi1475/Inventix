@@ -338,7 +338,7 @@ const handleSaveParametres = async (params: any): Promise<boolean> => {
           <NavItem icon={<Package size={20} />} label="Catégories" active={currentPage === 'categories'} onClick={() => setCurrentPage('categories')} />
           <NavItem icon={<Settings size={20} />} label="Ma Société" active={currentPage === 'parametres'} onClick={() => setCurrentPage('parametres')} />
           <NavItem icon={<Settings size={20} />} label="Configuration" active={currentPage === 'gestion-acces'} onClick={() => setCurrentPage('gestion-acces')} />
-		  {userEmail === SUPER_ROOT_EMAIL && (
+		  {userEmail === SUPER_ROOT_EMAILS && (
   <NavItem
     icon={<Shield size={20} />}
     label="Administration"

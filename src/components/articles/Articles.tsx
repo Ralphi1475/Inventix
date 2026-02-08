@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Edit2, Trash2, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, RefreshCw, Image as ImageIcon, Download } from 'lucide-react';
 import { Article, Categorie } from '@/types';
 import { ArticleForm } from './ArticleForm';
+import * as XLSX from 'xlsx';
 
 interface ArticlesProps {
   articles: Article[];
@@ -19,6 +20,7 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategorie, setFilterCategorie] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
   const categoriesProduits = useMemo(() => {
     return categories.filter(cat => cat.type === 'produit');
   }, [categories]);
@@ -34,6 +36,55 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
       return matchSearch && matchCategorie;
     });
   }, [articles, searchTerm, filterCategorie]);
+
+  const handleExportExcel = () => {
+    try {
+      // Préparer les données pour l'export
+      const exportData = filteredArticles.map(article => ({
+        'Numéro': article.numero,
+        'Nom': article.nom,
+        'Catégorie': article.categorie || '',
+        'Prix Achat (€)': article.prixAchat || 0,
+        'Prix Vente TTC (€)': article.prixVenteTTC || 0,
+        'Unité': article.unite || '',
+        'Stock': article.stock || 0,
+      }));
+
+      // Créer un nouveau workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Créer une feuille de calcul à partir des données
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Définir la largeur des colonnes
+      const colWidths = [
+        { wch: 15 }, // Numéro
+        { wch: 35 }, // Nom
+        { wch: 20 }, // Catégorie
+        { wch: 15 }, // Prix Achat
+        { wch: 18 }, // Prix Vente TTC
+        { wch: 10 }, // Unité
+        { wch: 10 }, // Stock
+      ];
+      ws['!cols'] = colWidths;
+
+      // Ajouter la feuille au workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Articles');
+
+      // Générer le nom du fichier avec la date
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const filename = `articles_${dateStr}.xlsx`;
+
+      // Télécharger le fichier
+      XLSX.writeFile(wb, filename);
+      
+      console.log(`✅ Export Excel réussi : ${exportData.length} articles exportés`);
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'export Excel:', error);
+      alert('Erreur lors de l\'export Excel');
+    }
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -82,6 +133,13 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
             <span>{isRefreshing ? 'Actualisation...' : 'Actualiser'}</span>
           </button>
           <button 
+            onClick={handleExportExcel}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-700"
+          >
+            <Download size={20} />
+            <span>Télécharger Excel</span>
+          </button>
+          <button 
             onClick={() => { setShowForm(true); setEditingArticle(null); }} 
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"
           >
@@ -106,6 +164,13 @@ export function Articles({ articles, categories, setArticles, onSave, onDelete, 
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-4 mb-4">
+        <p className="text-sm text-gray-600">
+          {filteredArticles.length} article{filteredArticles.length > 1 ? 's' : ''} affiché{filteredArticles.length > 1 ? 's' : ''}
+          {searchTerm || filterCategorie ? ` (filtré${filteredArticles.length > 1 ? 's' : ''} sur ${articles.length} total)` : ''}
+        </p>
       </div>
       
       <div className="bg-white rounded-lg shadow overflow-hidden">

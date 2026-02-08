@@ -17,7 +17,7 @@ export default function CreerSocietePage() {
   // ✅ Vérification d'accès Super Root au montage du composant
 useEffect(() => {
   const checkAccess = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { { user } } = await supabase.auth.getUser();
 	
 	if (!user || !user.email) {
 	alert('Vous devez être connecté');
@@ -37,7 +37,7 @@ useEffect(() => {
     setLoading(true);
     setError(null);
 
-	const { data: { user } } = await supabase.auth.getUser();
+	const { { user } } = await supabase.auth.getUser();
 
 	// Vérifiez que l'utilisateur est connecté
 	if (!user || !user.email) {

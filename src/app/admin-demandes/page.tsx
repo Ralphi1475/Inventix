@@ -10,9 +10,9 @@ export default function AdminDemandes() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAccessAndLoad();
-  }, []);
+useEffect(() => {
+  checkAccess();  // ✅ Appeler la bonne fonction
+}, []);
 
 const checkAccess = async () => {
   const { data: { user } } = await supabase.auth.getUser();
